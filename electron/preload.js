@@ -1,0 +1,12 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
+  openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder'),
+  readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
+  saveFile: (data) => ipcRenderer.invoke('fs:saveFile', data),
+  runNativeCode: (data) => ipcRenderer.invoke('code:runNative', data),
+  minimizeWindow: () => ipcRenderer.send('window:minimize'),
+  maximizeWindow: () => ipcRenderer.send('window:maximize'),
+  closeWindow: () => ipcRenderer.send('window:close'),
+});
