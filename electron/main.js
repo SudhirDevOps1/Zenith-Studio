@@ -575,30 +575,61 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
         console.warn(`[AI Fetch] Non-whitelisted host: ${urlObj.hostname} — proceeding anyway for custom provider support.`);
       }
 
-      // Serialize body first so we can set Content-Length (required by some providers like Groq)
-      const bodyStr = body != null
-        ? (typeof body === 'string' ? body : JSON.stringify(body))
-        : null;
-
+      // Prepare headers
       const reqHeaders = {
         'Content-Type': 'application/json',
         'User-Agent': 'Zenith-Studio-IDE/1.0.3',
         ...(headers || {}),
       };
 
-      // Content-Length is mandatory for POST — without it Groq/OpenAI may reject or stall
-      if (bodyStr) {
-        reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr, 'utf8').toString();
+      const bodyStr = body != null
+        ? (typeof body === 'string' ? body : JSON.stringify(body))
+        : null;
+
+      // ── Method 1: net.fetch (Electron 21+ Chromium Network Stack, 100% Reliable) ──
+      if (typeof net.fetch === 'function') {
+        const fetchOptions = {
+          method: (method || 'POST').toUpperCase(),
+          headers: reqHeaders,
+        };
+        if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+          fetchOptions.body = bodyStr;
+        }
+
+        net.fetch(url, fetchOptions)
+          .then(async (response) => {
+            const contentType = response.headers.get('content-type') || '';
+            let data;
+            if (contentType.includes('application/json')) {
+              data = await response.json().catch(() => ({}));
+            } else {
+              data = await response.text().catch(() => '');
+            }
+
+            console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${response.status}`);
+            resolve({
+              ok: response.ok,
+              status: response.status,
+              statusText: response.statusText,
+              data,
+            });
+          })
+          .catch((err) => {
+            console.error('[AI Fetch] net.fetch error:', err.message);
+            resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
+          });
+        return;
       }
 
+      // ── Method 2: net.request using direct `url` string ──
       const req = net.request({
         method: (method || 'POST').toUpperCase(),
-        protocol: urlObj.protocol,
-        hostname: urlObj.hostname,
-        port: urlObj.port ? Number(urlObj.port) : undefined,
-        path: urlObj.pathname + urlObj.search,
-        headers: reqHeaders,
+        url: url,
       });
+
+      for (const [k, v] of Object.entries(reqHeaders)) {
+        if (v != null) req.setHeader(k, String(v));
+      }
 
       let responseBody = '';
 
@@ -634,7 +665,9 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
         resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
       });
 
-      if (bodyStr) req.write(bodyStr);
+      if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+        req.write(bodyStr);
+      }
       req.end();
 
     } catch (err) {
