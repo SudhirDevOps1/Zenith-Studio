@@ -10,6 +10,15 @@ interface TerminalEntry {
   timestamp: string;
 }
 
+// Strip raw ANSI escape color codes from terminal output
+const cleanAnsi = (str: string): string => {
+  if (!str) return '';
+  return str
+    .replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '')
+    .replace(/\[\d+;?\d*m/g, '')
+    .replace(/\[\d+m/g, '');
+};
+
 export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [height, setHeight] = useState(240);
   const [isDragging, setIsDragging] = useState(false);
@@ -24,27 +33,32 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { files, rootFolderPath, createFile, deleteFileItem, openFileInTab } = useFileStore();
-  const [cwd, setCwd] = useState<string>(rootFolderPath || '');
+  
+  const savedFolder = typeof window !== 'undefined' ? localStorage.getItem('codestudio_root_folder_path') || '' : '';
+  const initialPath = rootFolderPath || savedFolder || '';
+  const [cwd, setCwd] = useState<string>(initialPath);
   const isDesktop = isElectron();
 
+  // Auto-sync cwd when active project folder changes
   useEffect(() => {
-    if (rootFolderPath && !cwd) {
+    if (rootFolderPath && rootFolderPath !== cwd) {
       setCwd(rootFolderPath);
     }
-  }, [rootFolderPath, cwd]);
+  }, [rootFolderPath]);
 
   useEffect(() => {
+    const activePath = rootFolderPath || savedFolder;
     if (isDesktop) {
-      addEntry('info', '💻 CodeStudio Native Desktop Shell Ready (PowerShell / System Shell)');
-      if (rootFolderPath) {
-        addEntry('info', `📂 Workspace Working Directory: ${rootFolderPath}`);
+      addEntry('info', '💻 CodeStudio Native Desktop Shell (PowerShell)');
+      if (activePath) {
+        addEntry('info', `📂 Active Project Folder: ${activePath}`);
       } else {
         addEntry(
           'info',
-          '💡 Tip: Open your project folder via (File > Open Folder) or use "cd <path>" to set your project root directory.'
+          '💡 Tip: Open your project folder (File > Open Folder) or use "cd <path>" to navigate.'
         );
       }
-      addEntry('info', 'Type any command: npm, git, node, python, dir, cd, cargo, echo, etc.');
+      addEntry('info', 'Ready: npm, git, node, python, dir, cd, cargo, echo, etc.');
     } else {
       addEntry('info', '🚀 CodeStudio Integrated Terminal Ready (Web Sandbox)');
       addEntry('info', 'Type "help" for available commands (ls, cat, touch, rm, open, stats, eval, echo).');
@@ -59,12 +73,13 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
   }, [entries, isRunning]);
 
   const addEntry = (type: TerminalEntry['type'], text: string) => {
+    const cleanedText = cleanAnsi(text);
     setEntries((prev) => [
       ...prev,
       {
         id: Date.now().toString() + Math.random(),
         type,
-        text,
+        text: cleanedText,
         timestamp: new Date().toLocaleTimeString(),
       },
     ]);
@@ -87,13 +102,17 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
     if (isDesktop && (window as any).electronAPI?.execTerminalCommand) {
       setIsRunning(true);
       try {
+        const activeDir = cwd || rootFolderPath || savedFolder || undefined;
         const result = await (window as any).electronAPI.execTerminalCommand({
           command: trimmed,
-          cwd: cwd || rootFolderPath || undefined,
+          cwd: activeDir,
         });
 
         if (result.cwd) {
           setCwd(result.cwd);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('codestudio_root_folder_path', result.cwd);
+          }
         }
 
         if (result.stdout) {
@@ -326,10 +345,8 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
     };
   }, [isDragging]);
 
-  const displayCwd = cwd
-    ? cwd.length > 40
-      ? '...' + cwd.slice(-36)
-      : cwd
+  const activeFolderName = cwd
+    ? cwd.replace(/\\/g, '/').split('/').filter(Boolean).pop() || cwd
     : 'Workspace';
 
   return (
@@ -351,7 +368,7 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
           {isDesktop ? (
             <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[9px] font-mono border border-emerald-500/30 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              PowerShell Native
+              PowerShell
             </span>
           ) : (
             <span className="px-1.5 py-0.2 bg-blue-500/20 text-blue-300 rounded text-[9px] font-mono border border-blue-500/30">
@@ -360,10 +377,10 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
           )}
 
           {cwd && (
-            <span className="hidden sm:flex items-center gap-1 text-[10px] text-slate-500 font-mono">
-              <FolderOpen className="w-3 h-3 text-amber-400/70" />
-              <span className="truncate max-w-[200px]" title={cwd}>
-                {cwd}
+            <span className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-900/80 border border-slate-800 rounded text-[10px] text-amber-300/90 font-mono">
+              <FolderOpen className="w-3 h-3 text-amber-400" />
+              <span className="font-semibold" title={cwd}>
+                {activeFolderName}
               </span>
             </span>
           )}
@@ -433,8 +450,16 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
 
       {/* Command Input Prompt */}
       <div className="flex items-center gap-2 p-2 bg-[#12131c] border-t border-slate-800/80">
-        <span className="text-cyan-400 font-bold pl-1 select-none whitespace-nowrap text-[11px]">
-          {isDesktop ? `PS ${displayCwd}>` : '❯'}
+        <span className="text-cyan-400 font-bold pl-1 select-none whitespace-nowrap text-[11px] flex items-center gap-1">
+          {isDesktop ? (
+            <>
+              <span className="text-emerald-400 font-bold">PS</span>
+              <span className="text-slate-400">{activeFolderName}</span>
+              <span className="text-cyan-400">&gt;</span>
+            </>
+          ) : (
+            '❯'
+          )}
         </span>
         <input
           ref={inputRef}

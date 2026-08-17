@@ -2,6 +2,15 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Auto Project Folder Sync & ANSI Color Cleaner in Terminal
+* **User Feedback:** Active opened folder should be automatically detected and displayed in terminal, and clean terminal outputs without raw ANSI codes.
+* **Fixes & Enhancements:**
+  - Implemented `cleanAnsi()` parser to automatically strip raw terminal color codes (`[36m`, `[32m`, `[39m`) so command outputs (like `vite build`) are crisp and clean.
+  - Initialized terminal CWD directly to the active workspace project folder upon launch and on every folder change.
+  - Formatted prompt with styled active folder name (`PS CodeStudio>`) and header badge with full path tooltip.
+* **Files Modified:** `src/components/ui/IntegratedTerminal.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Terminal Working Directory (CWD) Tracking & Persistent CD Support
 * **Issue Reported:** `npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C:\Users\DELL\AppData\Local\Programs\codestudio\package.json'` (Terminal ran in app install folder instead of user's project workspace).
 * **Fixes & Enhancements:**
