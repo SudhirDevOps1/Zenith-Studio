@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useDialogStore } from '../../stores/useDialogStore';
+import { useUpdateStore } from '../../stores/useUpdateStore';
 import { createZipFromFiles, isElectron } from '../../utils/fileUtils';
 import {
   Code2,
@@ -19,12 +20,14 @@ import {
   X,
   Blocks,
   Globe,
+  Sparkles,
 } from 'lucide-react';
 
 export const MenuBar: React.FC = () => {
   const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
   const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab } = useSettingsStore();
   const { openDialog } = useDialogStore();
+  const { checkForUpdates, hasUpdate } = useUpdateStore();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const isDesktop = isElectron();
@@ -267,6 +270,19 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
               >
                 <Settings className="w-3.5 h-3.5 text-slate-400" /> Settings
+              </button>
+
+              <button
+                onClick={() => {
+                  checkForUpdates(true);
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left cursor-pointer"
+              >
+                <span className="flex items-center gap-2 text-slate-200">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Check for Updates...
+                </span>
+                {hasUpdate && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
               </button>
 
               <div className="border-t border-slate-800 my-1" />

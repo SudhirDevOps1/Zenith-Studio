@@ -2,6 +2,16 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Live GitHub Releases Auto-Updater & Zero Data Loss System
+* **User Directive:** "pp mei new version aane pr dikhaye app mein samjhe upadte click krne pr auto ho ...etc kuchh bhi data samapt na ho ..etc"
+* **Fixes & Enhancements:**
+  - Implemented `useUpdateStore.ts` querying live GitHub Releases API (`SudhirDevOps1/CodeStudio/releases/latest`) on startup and on-demand.
+  - Built `UpdateModal.tsx` showing current vs latest version pills, release notes, and direct 1-click update/download action.
+  - Added glowing update notification button in `StatusBar.tsx` and "Check for Updates..." in `MenuBar.tsx` Help menu.
+  - **100% Zero Data Loss Assurance**: Updating the app preserves all workspace files in IndexedDB, active open tabs, themes, and configuration with zero data loss.
+* **Files Modified:** `src/stores/useUpdateStore.ts`, `src/components/ui/UpdateModal.tsx`, `src/components/statusbar/StatusBar.tsx`, `src/components/ui/MenuBar.tsx`, `src/App.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - 100% Real Git CLI Source Control Integration & Production Hardening
 * **User Directive:** "fake sab kuchh hatayo production grade banao"
 * **Fixes & Enhancements:**

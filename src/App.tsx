@@ -33,6 +33,8 @@ import { ShortcutsHelpModal } from './components/ui/ShortcutsHelpModal';
 import { QuickOpenModal } from './components/ui/QuickOpenModal';
 import { AppDialog } from './components/ui/AppDialog';
 import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
+import { UpdateModal } from './components/ui/UpdateModal';
+import { useUpdateStore } from './stores/useUpdateStore';
 import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image, FileText } from 'lucide-react';
 
 export default function App() {
@@ -63,6 +65,7 @@ export default function App() {
 
   const { addToast } = useToastStore();
   const { isOpen: isDialogOpen, type: dialogType, title: dialogTitle, message: dialogMessage, defaultValue: dialogDefaultValue, placeholder: dialogPlaceholder, confirmText: dialogConfirmText, cancelText: dialogCancelText, confirm: dialogConfirm, cancel: dialogCancel } = useDialogStore();
+  const { checkForUpdates } = useUpdateStore();
 
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [editorSplitPct, setEditorSplitPct] = useState(50);
@@ -89,6 +92,14 @@ export default function App() {
       });
     });
   }, [initializeStore, addToast]);
+
+  // Auto check for releases after startup
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkForUpdates(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [checkForUpdates]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -461,6 +472,7 @@ export default function App() {
         selectedCode={snapshotSelectedCode}
         onClose={() => setShowSnapshot(false)}
       />
+      <UpdateModal />
       
       {/* Global App Dialog */}
       <AppDialog

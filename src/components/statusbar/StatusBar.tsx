@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
+import { useUpdateStore } from '../../stores/useUpdateStore';
 import { getLanguageFromExtension, isElectron } from '../../utils/fileUtils';
-import { Terminal, Check, RefreshCw, Cpu, HardDrive, FileCode2, WrapText } from 'lucide-react';
+import { Terminal, Check, RefreshCw, Cpu, HardDrive, FileCode2, WrapText, Sparkles } from 'lucide-react';
 
 interface StatusBarProps {
   onOpenGoToLine?: () => void;
@@ -13,6 +14,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
   const { files, activeFileId, saveCurrentFile } = useFileStore();
   const { settings, toggleZenMode, setCommandPaletteOpen, updateSettings, setSettingsOpen } = useSettingsStore();
   const { addToast } = useToastStore();
+  const { hasUpdate, latestVersion, openUpdateModal } = useUpdateStore();
 
   const [showIndentMenu, setShowIndentMenu] = useState(false);
   const indentMenuRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,18 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
         >
           {language}
         </button>
+
+        {/* Update Notification Badge */}
+        {hasUpdate && (
+          <button
+            onClick={openUpdateModal}
+            className="flex items-center gap-1 bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] animate-pulse hover:bg-amber-300 transition shadow-sm cursor-pointer"
+            title={`CodeStudio v${latestVersion} is available! Click to update.`}
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>v{latestVersion} Available</span>
+          </button>
+        )}
 
         {/* Zen Mode */}
         <button
