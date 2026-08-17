@@ -3,8 +3,11 @@
 > Keep this updated. Mark completed items with `[x]` and pending with `[ ]`.
 
 ## Completed Core Deliverables (v1.0.3 Production)
+
+- [x] Advanced Customizable Integrated Terminal (Multi-Tabs, Dual Split-Pane, Themes, Quick Task Runners, Prompt Glyphs, Buffer Search, Log Export).
 - [x] Universal AI Multi-Provider Assistant (Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, Custom).
 - [x] Remote Model Discovery (`/v1/models` call with manual preset priority & text combobox).
+
 - [x] Native System Python 3.12 & MinGW GCC/G++ Execution with Windows PATH context.
 - [x] Universal Multi-Language Formatter (`Shift+Alt+F` & Format-on-Save).
 - [x] Live Problems & Diagnostics drawer linked to Monaco marker changes.

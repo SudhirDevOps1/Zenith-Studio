@@ -4,6 +4,8 @@
   "version": "1.0.3",
   "description": "CodeStudio — Modern, lightweight, high-performance VS Code alternative with Extensions Marketplace, Monaco Editor, Integrated Terminal, Webview Browser, and multi-language support.",
 
+
+
   "author": "SudhirDevOps",
   "main": "electron/main.js",
   "scripts": {

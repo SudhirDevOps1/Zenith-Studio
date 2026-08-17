@@ -1,8 +1,11 @@
 # 🚀 FEATURES (CodeStudio Evolution & Matrix)
 
 ## 1. What was built recently? (v1.0.3 Release)
+
+* **Advanced Customizable Integrated Terminal:** Multi-session tabs (`PowerShell`, `CMD`, `Git Bash`, `Node.js`, `Python`), dual split-pane execution, 8 color themes (Matrix, Cyberpunk, Dracula, OLED Black), custom font selector, prompt glyphs (`❯`, `➜`, `$`), `Ctrl + F` buffer search, log export, and 1-click Quick Task Runner chips.
 * **Universal AI Multi-Provider & Model Discovery (`AiSetupModal.tsx`):** Complete integration for Google Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, and Custom OpenAI-compatible endpoints with `/v1/models` remote auto-discovery, manual model override priority, and millisecond latency test.
 * **Native System Python 3.12 & MinGW GCC/G++ Execution:** Direct execution of local Python 3.12 and MinGW GCC/G++ compilers with Windows PATH environment support and 1-click `▶ Run` button in `TabsBar.tsx`.
+
 * **Universal Multi-Language Code Formatter:** Prettier-style formatting for JS/TS/JSX/TSX, HTML/SVG, CSS/SCSS, JSON, Markdown, and Python (`Shift + Alt + F` and format-on-save).
 * **Problems & Diagnostics Panel:** Live Monaco marker sync with real-time error/warning counters in StatusBar and instant jump-to-line navigation.
 * **Clean Code Viewport:** 100% full-screen Monaco editor for YAML, JSON, and source code files with zero unwanted empty preview sidebars.

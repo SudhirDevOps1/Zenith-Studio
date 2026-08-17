@@ -2,7 +2,30 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - v1.0.3 Universal AI, Multi-Tab Customizable Terminal & Native Execution
+
+* **User Directive:** "terminal ko advanced banao jaise vs code mein hota hain ya kuchh alag tarah se samjhe customizable ho"
+* **Fixes & Enhancements:**
+  - **Multi-Terminal Tabs & Sessions (`useTerminalStore.ts` & `TerminalTabsHeader.tsx`)**:
+    - Manage concurrent named terminal instances (PowerShell, Command Prompt, Git Bash / WSL, Node.js REPL, Python).
+    - `+ New Terminal` instant creation, active session switcher, live execution spinner, and individual session kill buttons.
+  - **Dual Split-Pane Terminal View (`TerminalPane.tsx`)**:
+    - Side-by-side terminal dual session runner with independent execution buffers, allowing users to run dev servers and build commands simultaneously.
+  - **Comprehensive Terminal Customization (`TerminalSettingsModal.tsx`)**:
+    - 8 Terminal Color Themes: `VS Code Dark`, `Matrix Hacker Green`, `Cyberpunk Neon`, `Dracula`, `Monokai Pro`, `Solarized Dark`, `Nord Frost`, `OLED Pure Black`.
+    - Custom Typography: Font family selection (`Fira Code`, `JetBrains Mono`, `Cascadia Code`), slider font size (`10px - 18px`), and cursor styles (`Block █`, `Line |`, `Underline _`).
+    - Custom Prompt Glyphs: `❯`, `➜`, `$`, `>`, `λ`, `⚡`.
+    - Inline execution timestamps toggle.
+  - **1-Click Quick Task Runner Bar (`TerminalQuickBar.tsx`)**:
+    - 1-click execution chips (`npm run dev`, `npm run build`, `npm test`, `git status`, `git log`, `python`, `gcc`, `cls`) with ability for users to save custom one-click commands.
+  - **In-Buffer Search & Log Export**:
+    - `Ctrl + F` in-terminal buffer search with real-time text highlights.
+    - One-click copy buffer and `.txt` log file export.
+* **Files Modified:** `src/stores/useTerminalStore.ts`, `src/components/terminal/TerminalTabsHeader.tsx`, `src/components/terminal/TerminalPane.tsx`, `src/components/terminal/TerminalQuickBar.tsx`, `src/components/terminal/TerminalSettingsModal.tsx`, `src/components/ui/IntegratedTerminal.tsx`, `skill.md/CHANGELOG.md`, `skill.md/FEATURES.md`, `skill.md/TODO.md`, `skill.md/brain.md`.
+
+---
 ## [2026-08-17] - v1.0.3 Universal AI Multi-Provider, Remote Model Auto-Discovery, Viewport & Native Runner Overhaul
+
 * **User Directive:** "https://api.example.com/v1/models call karega aur saare discovered models register kar lega. Manually defined models pehle aayenge... localy git add comit new tag kro"
 * **Fixes & Enhancements:**
   - **Universal AI Setup & Remote Model Discovery (`AiSetupModal.tsx` & `aiService.ts`)**:

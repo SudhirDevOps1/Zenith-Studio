@@ -157,6 +157,8 @@ export const WelcomeScreen: React.FC = () => {
             <span className="px-2.5 py-0.5 bg-blue-950/60 text-blue-300 rounded-full border border-blue-500/40 font-bold">v1.0.3</span>
             <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
 
+
+
               <Globe className="w-2.5 h-2.5 text-blue-400" /> Web & Desktop
             </span>
             <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">

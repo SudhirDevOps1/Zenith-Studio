@@ -5,7 +5,8 @@
 ## 📋 Current Project Status
 * **Project:** CodeStudio (Production-Grade VS Code / VSCodium Alternative)
 * **Version:** `1.0.3` (Production Released & Tagged)
-* **Active Enhancement:** Advanced Customizable Integrated Terminal (Multi-Tabs, Split View, Themes, Quick Task Runners)
+* **Active Enhancement:** Advanced Customizable Integrated Terminal (Multi-Tabs, Split View, Themes, Quick Task Runners) — COMPLETED
+
 
 ## 🎯 Project Overview
 * **Goal:** A modern, lightweight, high-performance web and desktop code editor alternative to VS Code/VSCodium.
@@ -27,13 +28,16 @@
 * `[2026-08-17]` - Universal AI Engine: Remote model discovery queries `/v1/models` while prioritizing manually defined models and custom presets first without overwriting.
 * `[2026-08-17]` - Native Windows Shell & Compiler: `code:runNative` in Electron uses `shell: true` and `process.env` to inherit system PATH for MinGW GCC/G++ and local Python 3.12.
 * `[2026-08-17]` - Clean Viewport: Monaco Editor takes 100% full-screen width on YAML, JSON, and source code files, eliminating unwanted empty preview placeholder sidebars.
+* `[2026-08-17]` - Advanced Terminal: Multi-tab session architecture with Zustand state persistence, dual split-pane execution, 8 color themes, and custom Quick Task Runner chips.
 
 ## 📝 Pending / Verified Status
 * [x] TypeScript Strict Mode passes with 0 errors (`npx tsc --noEmit`).
 * [x] Singlefile production build passes (`npm run build` -> `dist/index.html` 9.63 MB).
+* [x] Advanced Integrated Terminal with Multi-Tabs, Split View, Themes, and Quick Runners.
 * [x] All version references synchronized to `1.0.3`.
 * [x] Git Tag `v1.0.3` created locally.
-* [ ] Advanced Integrated Terminal with Multi-Tabs, Split View, Themes, and Quick Runners.
+
+
 
 ## 📂 System File Pointers (For AI Reference)
 * **The Core Brain (Router & Rules):** `01_SYSTEM_CORE.md`
