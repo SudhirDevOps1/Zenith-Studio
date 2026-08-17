@@ -93,6 +93,13 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     };
   }, [fileId]);
 
+  // Reactive theme update
+  useEffect(() => {
+    if (monacoRef.current && settings.theme) {
+      monacoRef.current.editor.setTheme(settings.theme);
+    }
+  }, [settings.theme]);
+
   return (
     <div className="w-full h-full overflow-hidden relative bg-[#14141f]">
       <Editor

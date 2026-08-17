@@ -2,6 +2,7 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
 import { useExtensionStore } from '../../stores/useExtensionStore';
 import { createZipFromFiles, isElectron } from '../../utils/fileUtils';
+import { ACCENT_PALETTE } from '../../utils/accentThemes';
 import {
   Files,
   Search,
@@ -28,9 +29,11 @@ export const ActivityBar: React.FC = () => {
     setShortcutsModalOpen,
     isZenMode,
     toggleZenMode,
+    settings,
   } = useSettingsStore();
 
   const { files } = useFileStore();
+  const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
 
   const handleExportZip = async () => {
     try {
@@ -57,7 +60,8 @@ export const ActivityBar: React.FC = () => {
         {/* Logo Icon */}
         <div
           onClick={() => setActiveSidebarTab('explorer')}
-          className="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-600/30 mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"
+          style={{ background: `linear-gradient(135deg, ${currentAccent.primary}, #4f46e5)` }}
+          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"
           title="CodeStudio Home"
         >
           CS
@@ -66,15 +70,16 @@ export const ActivityBar: React.FC = () => {
         {/* Explorer */}
         <button
           onClick={() => setActiveSidebarTab('explorer')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'explorer' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'explorer'
-              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="File Explorer (Ctrl+Shift+E)"
         >
           {activeSidebarTab === 'explorer' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Files className="w-4.5 h-4.5" />
         </button>
@@ -82,15 +87,16 @@ export const ActivityBar: React.FC = () => {
         {/* Search */}
         <button
           onClick={() => setActiveSidebarTab('search')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'search' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'search'
-              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Search in Workspace (Ctrl+Shift+F)"
         >
           {activeSidebarTab === 'search' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Search className="w-4.5 h-4.5" />
         </button>
@@ -98,15 +104,16 @@ export const ActivityBar: React.FC = () => {
         {/* Git Control */}
         <button
           onClick={() => setActiveSidebarTab('git')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'git' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'git'
-              ? 'bg-orange-600/20 text-orange-400 shadow-inner border border-orange-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Source Control / Git"
         >
           {activeSidebarTab === 'git' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-orange-400 to-amber-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <GitBranch className="w-4.5 h-4.5" />
           {modifiedCount > 0 && (
@@ -117,15 +124,16 @@ export const ActivityBar: React.FC = () => {
         {/* Snippets Library */}
         <button
           onClick={() => setActiveSidebarTab('snippets')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'snippets' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'snippets'
-              ? 'bg-purple-600/20 text-purple-400 shadow-inner border border-purple-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Snippet Library"
         >
           {activeSidebarTab === 'snippets' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-purple-400 to-pink-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Sparkles className="w-4.5 h-4.5" />
         </button>
@@ -133,19 +141,20 @@ export const ActivityBar: React.FC = () => {
         {/* Extensions Marketplace */}
         <button
           onClick={() => setActiveSidebarTab('extensions')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'extensions' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'extensions'
-              ? 'bg-cyan-600/20 text-cyan-400 shadow-inner border border-cyan-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Extensions Marketplace (Ctrl+Shift+X)"
         >
           {activeSidebarTab === 'extensions' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Blocks className="w-4.5 h-4.5" />
           {installedExtensionsCount > 0 && (
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-[#0c0d14]" />
+            <span style={{ backgroundColor: currentAccent.primary }} className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#0c0d14]" />
           )}
         </button>
 
@@ -161,15 +170,16 @@ export const ActivityBar: React.FC = () => {
         {/* Info */}
         <button
           onClick={() => setActiveSidebarTab('info')}
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
+          style={activeSidebarTab === 'info' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
             activeSidebarTab === 'info'
-              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
-              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Workspace & Platform Info"
         >
           {activeSidebarTab === 'info' && (
-            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Info className="w-4.5 h-4.5" />
         </button>

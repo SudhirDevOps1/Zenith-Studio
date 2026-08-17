@@ -35,6 +35,7 @@ import { AppDialog } from './components/ui/AppDialog';
 import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
 import { UpdateModal } from './components/ui/UpdateModal';
 import { useUpdateStore } from './stores/useUpdateStore';
+import { applyAccentToDOM } from './utils/accentThemes';
 import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image, FileText } from 'lucide-react';
 
 export default function App() {
@@ -61,6 +62,7 @@ export default function App() {
     setCommandPaletteOpen,
     setShortcutsModalOpen,
     setSettingsOpen,
+    settings,
   } = useSettingsStore();
 
   const { addToast } = useToastStore();
@@ -81,6 +83,11 @@ export default function App() {
   const isDraggingSplit = useRef(false);
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
+
+  // Sync accent color to DOM
+  useEffect(() => {
+    applyAccentToDOM(settings.accentColor);
+  }, [settings.accentColor]);
 
   // Initialize store
   useEffect(() => {

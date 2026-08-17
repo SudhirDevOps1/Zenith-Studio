@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { FileIcon } from '../filetree/FileIcon';
+import { ACCENT_PALETTE } from '../../utils/accentThemes';
 import { X, ChevronRight, Split, Layers, Columns, Globe, Folder } from 'lucide-react';
 
 export const TabsBar: React.FC = () => {
@@ -9,6 +10,7 @@ export const TabsBar: React.FC = () => {
   const { settings } = useSettingsStore();
   const [tabContextMenu, setTabContextMenu] = useState<{ x: number; y: number; fileId: string } | null>(null);
 
+  const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
   const activeFile = files.find(f => f.id === activeFileId);
 
   // Split path into breadcrumb tokens
@@ -31,9 +33,10 @@ export const TabsBar: React.FC = () => {
                 key={tab.fileId}
                 onClick={() => setActiveFile(tab.fileId)}
                 onContextMenu={(e) => handleTabContextMenu(e, tab.fileId)}
+                style={isActive ? { borderTopColor: currentAccent.primary } : {}}
                 className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-t-lg border-t-2 cursor-pointer text-xs transition-all min-w-[130px] max-w-[210px] shrink-0 font-mono ${
                   isActive
-                    ? 'bg-[#141522] text-white font-medium border-t-blue-500 shadow-md'
+                    ? 'bg-[#141522] text-white font-medium shadow-md'
                     : 'bg-transparent text-slate-400 hover:bg-[#141522]/50 hover:text-slate-200 border-t-transparent'
                 }`}
               >

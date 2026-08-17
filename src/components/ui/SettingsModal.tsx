@@ -1,12 +1,15 @@
 import React from 'react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { ThemeMode, AccentColor } from '../../types/settings';
-import { X, Settings, RotateCcw, Palette, Sliders, Type, Layout, Terminal } from 'lucide-react';
+import { ACCENT_PALETTE } from '../../utils/accentThemes';
+import { X, Settings, RotateCcw, Palette, Sliders, Type, Layout, Terminal, Check } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
   const { isSettingsOpen, setSettingsOpen, settings, updateSettings, resetSettings } = useSettingsStore();
 
   if (!isSettingsOpen) return null;
+
+  const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
 
   const accentColors: Array<{ id: AccentColor; name: string; bg: string }> = [
     { id: 'blue', name: 'Electric Blue', bg: 'bg-blue-600' },
@@ -19,16 +22,16 @@ export const SettingsModal: React.FC = () => {
 
   return (
     <div onClick={() => setSettingsOpen(false)} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded-xl overflow-hidden text-slate-200 font-sans flex flex-col max-h-[90vh]">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-[#141524] border border-slate-700 shadow-2xl rounded-2xl overflow-hidden text-slate-200 font-sans flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-[#181825]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-[#0f1019]">
           <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-400" />
+            <Settings style={{ color: currentAccent.primary }} className="w-5 h-5" />
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">CodeStudio Preferences</h2>
           </div>
           <button
             onClick={() => setSettingsOpen(false)}
-            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
+            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -38,24 +41,44 @@ export const SettingsModal: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs">
           {/* Accent Color Section */}
           <div className="space-y-2">
-            <label className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <Palette className="w-4 h-4 text-purple-400" /> UI Accent Color
+            <label className="font-semibold text-slate-300 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Palette className="w-4 h-4 text-purple-400" /> UI Accent Color
+              </span>
+              <span style={{ color: currentAccent.primary }} className="text-[11px] font-mono font-bold capitalize">
+                Active: {currentAccent.name}
+              </span>
             </label>
             <div className="grid grid-cols-6 gap-2">
-              {accentColors.map((color) => (
-                <button
-                  key={color.id}
-                  onClick={() => updateSettings({ accentColor: color.id })}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition ${
-                    settings.accentColor === color.id
-                      ? 'border-white bg-slate-800 ring-2 ring-blue-500/50'
-                      : 'border-slate-800 bg-slate-900/60 hover:bg-slate-800'
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full ${color.bg} shadow-md`} />
-                  <span className="text-[9px] text-slate-400 truncate">{color.id}</span>
-                </button>
-              ))}
+              {accentColors.map((color) => {
+                const isSelected = settings.accentColor === color.id;
+                const palette = ACCENT_PALETTE[color.id];
+                return (
+                  <button
+                    key={color.id}
+                    onClick={() => updateSettings({ accentColor: color.id })}
+                    style={
+                      isSelected
+                        ? {
+                            borderColor: palette.primary,
+                            backgroundColor: palette.bgSubtle,
+                            boxShadow: `0 0 12px ${palette.glow}`,
+                          }
+                        : {}
+                    }
+                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'scale-105 ring-2 ring-white/20'
+                        : 'border-slate-800 bg-slate-900/60 hover:bg-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full ${color.bg} shadow-md flex items-center justify-center ${isSelected ? 'ring-2 ring-white scale-110' : ''} transition-transform`}>
+                      {isSelected && <Check className="w-3 h-3 text-white" />}
+                    </span>
+                    <span className={`text-[10px] capitalize ${isSelected ? 'text-white font-bold' : 'text-slate-400'}`}>{color.id}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -287,7 +310,8 @@ export const SettingsModal: React.FC = () => {
           </button>
           <button
             onClick={() => setSettingsOpen(false)}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition"
+            style={{ backgroundColor: currentAccent.primary }}
+            className="px-5 py-1.5 hover:opacity-90 text-white rounded-xl text-xs font-bold transition shadow-md cursor-pointer"
           >
             Done
           </button>
