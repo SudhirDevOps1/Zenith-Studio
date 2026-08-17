@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { isElectron } from '../../utils/fileUtils';
+import { ACCENT_PALETTE } from '../../utils/accentThemes';
 import {
   GitBranch,
   GitCommit,
@@ -14,6 +16,9 @@ import {
   UploadCloud,
   DownloadCloud,
   Loader2,
+  FolderOpen,
+  Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 
 interface RealGitCommit {
@@ -30,8 +35,11 @@ interface GitFileStatus {
 }
 
 export const GitControlPanel: React.FC = () => {
-  const { files, rootFolderPath, markFileSaved } = useFileStore();
+  const { files, rootFolderPath, markFileSaved, openSystemFolder } = useFileStore();
+  const { settings } = useSettingsStore();
   const { addToast } = useToastStore();
+
+  const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
 
   const [branch, setBranch] = useState<string>('main');
   const [commitMsg, setCommitMsg] = useState('');
@@ -40,6 +48,7 @@ export const GitControlPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [pulling, setPulling] = useState(false);
+  const [isGitRepo, setIsGitRepo] = useState<boolean>(true);
 
   const isDesktop = isElectron();
 
@@ -55,12 +64,29 @@ export const GitControlPanel: React.FC = () => {
           isStaged: false,
         }));
       setGitStatusFiles(webModified);
+      setIsGitRepo(true);
       return;
     }
 
     setLoading(true);
     try {
       const cwd = rootFolderPath || undefined;
+
+      // Check if folder is a git repo
+      const checkRepo = await (window as any).electronAPI.execTerminalCommand({
+        command: 'git rev-parse --is-inside-work-tree',
+        cwd,
+      });
+
+      if (checkRepo.stdout?.trim() !== 'true') {
+        setIsGitRepo(false);
+        setGitStatusFiles([]);
+        setCommits([]);
+        setLoading(false);
+        return;
+      }
+
+      setIsGitRepo(true);
 
       // 1. Get real active branch
       const branchRes = await (window as any).electronAPI.execTerminalCommand({
@@ -121,7 +147,7 @@ export const GitControlPanel: React.FC = () => {
         setCommits([]);
       }
     } catch {
-      // Ignore git errors if folder is not a git repo yet
+      setIsGitRepo(false);
     } finally {
       setLoading(false);
     }
@@ -130,6 +156,36 @@ export const GitControlPanel: React.FC = () => {
   useEffect(() => {
     fetchGitData();
   }, [fetchGitData]);
+
+  // Handle Git Init
+  const handleGitInit = async () => {
+    if (!isDesktop || !(window as any).electronAPI?.execTerminalCommand) {
+      addToast({ type: 'success', title: 'Git Initialized', message: 'Workspace initialized with local version control.' });
+      setIsGitRepo(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cwd = rootFolderPath || undefined;
+      const res = await (window as any).electronAPI.execTerminalCommand({
+        command: 'git init',
+        cwd,
+      });
+
+      if (res.code === 0) {
+        addToast({ type: 'success', title: 'Git Initialized', message: 'Created a new Git repository.' });
+        setIsGitRepo(true);
+        fetchGitData();
+      } else {
+        addToast({ type: 'error', title: 'Git Init Failed', message: res.stderr || 'Could not initialize git.' });
+      }
+    } catch (err: any) {
+      addToast({ type: 'error', title: 'Git Init Failed', message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Stage or Unstage a single file
   const handleToggleStage = async (file: GitFileStatus) => {
@@ -313,170 +369,215 @@ export const GitControlPanel: React.FC = () => {
       {/* Header */}
       <div className="p-3 border-b border-slate-800 bg-[#1e1e2e] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <GitBranch className="w-4 h-4 text-orange-400" />
+          <GitBranch style={{ color: currentAccent.primary }} className="w-4 h-4" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200">
             Source Control
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-mono bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30 flex items-center gap-1">
-            <GitBranch className="w-2.5 h-2.5" /> {branch}
-          </span>
+          {isGitRepo && (
+            <span
+              style={{
+                backgroundColor: currentAccent.bgSubtle,
+                color: currentAccent.primary,
+                borderColor: currentAccent.borderSubtle,
+              }}
+              className="text-[10px] font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 font-bold"
+            >
+              <GitBranch className="w-2.5 h-2.5" /> {branch}
+            </span>
+          )}
           <button
             onClick={fetchGitData}
             disabled={loading}
-            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
+            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition cursor-pointer"
             title="Refresh Git Status"
           >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin text-orange-400' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       <div className="p-3 space-y-4 text-xs">
-        {/* Remote Sync Buttons (Push / Pull) */}
-        {isDesktop && (
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handlePull}
-              disabled={pulling}
-              className="flex items-center justify-center gap-1 py-1 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded font-medium text-[11px] transition shadow-sm"
-              title="Pull from remote (git pull)"
-            >
-              {pulling ? <Loader2 className="w-3 h-3 animate-spin text-cyan-400" /> : <DownloadCloud className="w-3 h-3 text-cyan-400" />}
-              <span>Pull</span>
-            </button>
-            <button
-              onClick={handlePush}
-              disabled={pushing}
-              className="flex items-center justify-center gap-1 py-1 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded font-medium text-[11px] transition shadow-sm"
-              title="Push to remote (git push)"
-            >
-              {pushing ? <Loader2 className="w-3 h-3 animate-spin text-emerald-400" /> : <UploadCloud className="w-3 h-3 text-emerald-400" />}
-              <span>Push</span>
-            </button>
-          </div>
-        )}
-
-        {/* Commit Form */}
-        <form onSubmit={handleCommit} className="space-y-2">
-          <textarea
-            rows={2}
-            value={commitMsg}
-            onChange={(e) => setCommitMsg(e.target.value)}
-            placeholder="Commit message (e.g. feat: add terminal)..."
-            className="w-full bg-slate-900 border border-slate-700/80 rounded p-2 text-xs text-white placeholder-slate-500 outline-none focus:border-orange-500 font-mono transition resize-none"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded text-xs font-semibold shadow transition cursor-pointer"
-          >
-            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitCommit className="w-3.5 h-3.5" />}
-            <span>Commit ({gitStatusFiles.length})</span>
-          </button>
-        </form>
-
-        {/* Changes List Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            <span>Changes ({gitStatusFiles.length})</span>
-            {gitStatusFiles.length > 0 && (
-              <button
-                onClick={handleStageAll}
-                className="hover:text-orange-400 p-0.5 text-[10px] underline cursor-pointer"
-                title="Stage all changes (git add -A)"
-              >
-                Stage All
-              </button>
-            )}
-          </div>
-
-          {gitStatusFiles.length === 0 ? (
-            <div className="p-3 bg-slate-900/50 border border-slate-800/80 rounded text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Working tree clean</span>
+        {!isGitRepo ? (
+          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <AlertCircle className="w-5 h-5" />
             </div>
-          ) : (
-            <div className="space-y-1">
-              {gitStatusFiles.map((file) => (
-                <div
-                  key={file.path}
-                  className={`flex items-center justify-between p-2 rounded text-xs transition border ${
-                    file.isStaged
-                      ? 'bg-orange-950/30 border-orange-800/60 text-white'
-                      : 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80 text-slate-300'
-                  }`}
+            <div>
+              <h3 className="text-xs font-bold text-slate-200">No Git Repository Found</h3>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                The active workspace folder ({rootFolderPath ? rootFolderPath.split(/[/\\]/).pop() : 'current'}) is not tracked by Git.
+              </p>
+            </div>
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={handleGitInit}
+                disabled={loading}
+                style={{ backgroundColor: currentAccent.primary }}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 text-white rounded-xl text-xs font-bold transition shadow-md hover:opacity-90 cursor-pointer"
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                <span>Initialize Git Repository</span>
+              </button>
+              <button
+                onClick={openSystemFolder}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Open Project Folder...</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Remote Sync Buttons (Push / Pull) */}
+            {isDesktop && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handlePull}
+                  disabled={pulling}
+                  className="flex items-center justify-center gap-1 py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-xl font-medium text-[11px] transition shadow-sm cursor-pointer"
+                  title="Pull from remote (git pull)"
                 >
-                  <div className="flex items-center gap-2 truncate flex-1 font-mono text-[11px]">
-                    <FileCode className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                    <span className="truncate" title={file.path}>
-                      {file.path}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span
-                      className={`text-[10px] font-mono font-bold ${
-                        file.status === 'M'
-                          ? 'text-amber-400'
-                          : file.status === 'A' || file.status === '?'
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
+                  {pulling ? <Loader2 className="w-3 h-3 animate-spin text-cyan-400" /> : <DownloadCloud className="w-3 h-3 text-cyan-400" />}
+                  <span>Pull</span>
+                </button>
+                <button
+                  onClick={handlePush}
+                  disabled={pushing}
+                  className="flex items-center justify-center gap-1 py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-xl font-medium text-[11px] transition shadow-sm cursor-pointer"
+                  title="Push to remote (git push)"
+                >
+                  {pushing ? <Loader2 className="w-3 h-3 animate-spin text-emerald-400" /> : <UploadCloud className="w-3 h-3 text-emerald-400" />}
+                  <span>Push</span>
+                </button>
+              </div>
+            )}
+
+            {/* Commit Form */}
+            <form onSubmit={handleCommit} className="space-y-2">
+              <textarea
+                rows={2}
+                value={commitMsg}
+                onChange={(e) => setCommitMsg(e.target.value)}
+                placeholder="Commit message (e.g. feat: add terminal)..."
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 font-mono transition resize-none"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                style={{ backgroundColor: currentAccent.primary }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-white rounded-xl text-xs font-bold shadow-lg transition hover:opacity-90 cursor-pointer"
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitCommit className="w-3.5 h-3.5" />}
+                <span>Commit ({gitStatusFiles.length})</span>
+              </button>
+            </form>
+
+            {/* Changes List Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <span>Changes ({gitStatusFiles.length})</span>
+                {gitStatusFiles.length > 0 && (
+                  <button
+                    onClick={handleStageAll}
+                    style={{ color: currentAccent.primary }}
+                    className="p-0.5 text-[10px] underline cursor-pointer hover:opacity-80"
+                    title="Stage all changes (git add -A)"
+                  >
+                    Stage All
+                  </button>
+                )}
+              </div>
+
+              {gitStatusFiles.length === 0 ? (
+                <div className="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Working tree clean</span>
+                </div>
+              ) : (
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {gitStatusFiles.map((file) => (
+                    <div
+                      key={file.path}
+                      className={`flex items-center justify-between p-2 rounded-lg text-xs transition border ${
+                        file.isStaged
+                          ? 'bg-blue-950/30 border-blue-800/60 text-white'
+                          : 'bg-slate-900/60 border-slate-800 hover:bg-slate-800/80 text-slate-300'
                       }`}
                     >
-                      {file.status}
-                    </span>
-                    <button
-                      onClick={() => handleToggleStage(file)}
-                      className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition cursor-pointer"
-                      title={file.isStaged ? 'Unstage file' : 'Stage file'}
-                    >
-                      {file.isStaged ? (
-                        <Minus className="w-3 h-3 text-orange-400" />
-                      ) : (
-                        <Plus className="w-3 h-3 text-emerald-400" />
-                      )}
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-2 truncate flex-1 font-mono text-[11px]">
+                        <FileCode className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                        <span className="truncate" title={file.path}>
+                          {file.path}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className={`text-[10px] font-mono font-bold ${
+                            file.status === 'M'
+                              ? 'text-amber-400'
+                              : file.status === 'A' || file.status === '?'
+                              ? 'text-emerald-400'
+                              : 'text-rose-400'
+                          }`}
+                        >
+                          {file.status}
+                        </span>
+                        <button
+                          onClick={() => handleToggleStage(file)}
+                          className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition cursor-pointer"
+                          title={file.isStaged ? 'Unstage file' : 'Stage file'}
+                        >
+                          {file.isStaged ? (
+                            <Minus className="w-3 h-3 text-orange-400" />
+                          ) : (
+                            <Plus className="w-3 h-3 text-emerald-400" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Commit Log History */}
-        <div className="space-y-2 pt-2 border-t border-slate-800">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            <span>Commit History</span>
-            <GitPullRequest className="w-3.5 h-3.5 text-slate-500" />
-          </div>
-          <div className="space-y-1.5">
-            {commits.length === 0 ? (
-              <div className="p-2 text-center text-slate-500 text-[11px]">
-                No recent commits found.
+            {/* Commit Log History */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <span>Commit History</span>
+                <GitPullRequest className="w-3.5 h-3.5 text-slate-500" />
               </div>
-            ) : (
-              commits.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-2 bg-slate-900/40 border border-slate-800/80 rounded text-xs space-y-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-orange-400 font-bold">
-                      {c.id}
-                    </span>
-                    <span className="text-[10px] text-slate-500">{c.date}</span>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {commits.length === 0 ? (
+                  <div className="p-2 text-center text-slate-500 text-[11px]">
+                    No recent commits found.
                   </div>
-                  <p className="text-[11px] text-slate-200 truncate">{c.msg}</p>
-                  {c.author && (
-                    <div className="text-[9px] text-slate-500">by {c.author}</div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+                ) : (
+                  commits.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-2 bg-slate-900/40 border border-slate-800/80 rounded-lg text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span style={{ color: currentAccent.primary }} className="font-mono text-[10px] font-bold">
+                          {c.id}
+                        </span>
+                        <span className="text-[10px] text-slate-500">{c.date}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-200 truncate">{c.msg}</p>
+                      {c.author && (
+                        <div className="text-[9px] text-slate-500">by {c.author}</div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
