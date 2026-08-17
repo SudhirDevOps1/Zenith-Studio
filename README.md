@@ -64,7 +64,8 @@ Zenith Studio connects with your favorite LLM provider out of the box:
 - **Batch Replace All**: Replace matches in individual files or click **"All"** to execute a workspace-wide batch replacement with atomic state saves and success toasts.
 
 ### 🧩 3. Extensions Marketplace (`Ctrl + Shift + X`)
-Just like VS Code and VSCodium, CodeStudio features a full **Extensions Marketplace**:
+Just like VS Code and VSCodium, Zenith Studio features a full **Extensions Marketplace**:
+
 - **Marketplace Tab**: Browse curated developer tools and live query the **Open VSX Registry** (`https://open-vsx.org/api/-/search`).
 - **Installed Tab**: Real-time counter badge, enable/disable toggles, and one-click uninstall.
 - **Popular Tab**: Filter community-favorite and highly-rated extensions.
@@ -170,7 +171,7 @@ Browse live documentation and test local development servers right next to your 
 
 ## 🤖 Automated CI/CD & Release Workflow
 
-CodeStudio includes a production-grade **GitHub Actions CI/CD Pipeline** (`.github/workflows/build.yml`):
+Zenith Studio includes a production-grade **GitHub Actions CI/CD Pipeline** (`.github/workflows/build.yml`):
 - 🌐 **Web Build Job**: Automatically runs strict TypeScript check (`npm run typecheck`) and packages single-file web bundle (`npm run build`).
 - 🖥️ **Windows Desktop Build Job**: Automatically compiles Electron runtime, bundles assets, and builds Windows NSIS Installer (`.exe`) and Portable executable on `windows-latest`.
 - 🚀 **Automated Tag Releases**: Pushing any tag (e.g. `git tag v1.0.0 && git push --tags`) automatically creates a GitHub Release with installer `.exe` attachments and web `.zip` archives.
@@ -180,7 +181,7 @@ CodeStudio includes a production-grade **GitHub Actions CI/CD Pipeline** (`.gith
 ## 🛠️ Tech Stack & Architecture
 
 ```
-CodeStudio Core Stack
+Zenith Studio Core Stack
 ├── Frontend Engine: React 18 + Vite 7 + Tailwind CSS 4
 ├── Code Editing: Monaco Editor Core (@monaco-editor/react + monaco-editor bundled)
 ├── Extensions Engine: Zustand + IndexedDB (idb-keyval) + Open VSX API
@@ -204,7 +205,6 @@ git clone https://github.com/SudhirDevOps1/Zenith-Studio.git
 cd Zenith-Studio
 npm install
 ```
-
 
 ### 3. Local Web Development
 ```bash
@@ -233,16 +233,15 @@ npm run electron:dev
 ### 7. Build Windows Executable Installer (`.exe`)
 ```bash
 npm run electron:build
-# Generates CodeStudio Setup 1.0.3.exe (NSIS Installer) and CodeStudio 1.0.3.exe (Portable) in dist-electron/
+# Generates Zenith Studio Setup 1.0.3.exe (NSIS Installer) and Zenith Studio 1.0.3.exe (Portable) in dist-electron/
 ```
-
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-CodeStudio/
+Zenith-Studio/
 ├── .github/
 │   └── workflows/
 │       └── build.yml               # Automated CI/CD Web & Desktop Electron Release pipeline
@@ -253,7 +252,9 @@ CodeStudio/
 │   └── preload.js                  # Context-isolated secure bridge
 ├── src/
 │   ├── components/
-│   │   ├── editor/                 # Monaco Editor wrapper, local loader & 10 theme definitions
+│   │   ├── composer/               # Cursor-grade Multi-File AI Composer modal & diffs
+│   │   ├── debugger/               # DAP Step-by-Step debugger toolbar & panel
+│   │   ├── editor/                 # Monaco Editor wrapper, breakpoint gutter & 3-way conflict resolver
 │   │   ├── extensions/             # Extension details modal & README reader
 │   │   ├── filetree/               # Explorer tree, Drag & Drop, icons, and dialogs
 │   │   ├── preview/                # Markdown, Mermaid, HTML, Simple Browser Webview, Spreadsheets, Media
@@ -262,7 +263,7 @@ CodeStudio/
 │   │   ├── tabs/                   # Tab bar with preview mode toggles & webview button
 │   │   └── ui/                     # QuickOpenModal, Terminal, Command Palette, Modals, MenuBar
 │   ├── data/                       # Default extensions catalog (Live Preview, Themes, Snippets)
-│   ├── stores/                     # Zustand stores (Files, Settings, Extensions, Dialogs)
+│   ├── stores/                     # Zustand stores (Files, Settings, Extensions, Dialogs, Composer, Debug)
 │   ├── types/                      # TypeScript definitions (Files, Settings, Extensions)
 │   ├── utils/                      # File helpers, base64 binary converters, ZIP handlers
 │   ├── App.tsx                     # Main layout & global keyboard shortcut hub
@@ -277,10 +278,13 @@ CodeStudio/
 
 ---
 
-## 🥊 CodeStudio vs VS Code / VSCodium
+## 🥊 Zenith Studio vs VS Code / VSCodium
 
-| Feature | Standard VS Code | CodeStudio |
+| Feature | Standard VS Code | Zenith Studio |
 |---|---|---|
+| **Multi-File AI Composer** | Not Built-in (Requires Cursor) | **Built-in `Ctrl+Shift+I` Multi-File Agent** |
+| **Step-by-Step Debugger** | Complex setup | **Built-in Red Breakpoints & Control Toolbar** |
+| **3-Way Git Conflict Resolver** | Extension needed | **Built-in Visual 1-Click CodeLens Resolver** |
 | **Installation** | Required (~300MB download) | **Zero-Install Web** or Lightweight Desktop App |
 | **Startup Time** | 2–5 Seconds | **< 800ms Instant Startup** |
 | **Quick Open & Line Jump** | Built-in | **Built-in `Ctrl + P` & `Ctrl + G`** |
@@ -311,8 +315,9 @@ Distributed under the **MIT License**. Free for personal, commercial, and open-s
 ---
 
 <p align="center">
-  Crafted with ❤️ by <strong>SudhirDevOps</strong> • Universal CodeStudio Editor
+  Crafted with ❤️ by <strong>SudhirDevOps</strong> • Universal Zenith Studio AI Editor
 </p>
 <p align="center">
   <strong>⭐ Star this repository on GitHub if you love this project!</strong>
 </p>
+
