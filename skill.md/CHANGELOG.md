@@ -2,6 +2,24 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Universal Emmet Engine for All Languages & Custom Syntax Parser
+* **User Directive:** "emet add kro all language ke liye bina kuchh hataye bahut kuchh customization features h es app mein"
+* **Fixes & Enhancements:**
+  - Expanded Emmet across all supported languages: **HTML, JSX/TSX, React, Vue, Svelte, PHP, XML, SVG, Markdown, CSS, SCSS, LESS, Stylus, PostCSS, Handlebars, Twig, Blade, Razor**.
+  - Built universal syntax parser supporting text nodes (`{text}`), custom attributes (`[attr=val]`), dynamic numbering (`$`), class chaining (`.class1.class2`), ID selectors (`#id`), multipliers (`*N`), and auto `className` translation in JSX/TSX.
+  - Added self-closing tag handling for `img`, `input`, `br`, `hr`, `meta`, `link`, and comprehensive CSS shorthand properties.
+* **Files Modified:** `src/components/editor/emmetProvider.ts`, `skill.md/CHANGELOG.md`.
+
+---
+## [2026-08-17] - VS Code-Grade Emmet Abbreviation Expander & Multi-Language Auto-Suggestions
+* **User Directive:** "emmet add kro to and auto suggentions ad kro jaise vs code mein hota hain"
+* **Fixes & Enhancements:**
+  - Implemented dynamic **HTML & CSS Emmet Engine (`emmetProvider.ts`)** supporting `!`, `html:5`, `div.card>h2+p`, `ul>li*5`, `input:text/password/email`, `form:post`, `df`, `jcc`, `aic`, `pos:a`, `bdrs`, `flex-center`.
+  - Built **Multi-Language VS Code Snippets & Auto-Suggestions (`suggestionsProvider.ts`)** for React (`rfc`, `rafce`, `useState`, `useEffect`), JavaScript/TypeScript (`clg`, `trycatch`, `fetchapi`), Python (`def`, `class`, `ifmain`), C++ (`main`, `cout`, `fori`), and Java (`psvm`, `sout`).
+  - Configured Monaco editor with `tabCompletion: 'on'`, `snippetSuggestions: 'top'`, `quickSuggestions`, `autoClosingQuotes`, and `autoSurround`.
+* **Files Modified:** `src/components/editor/emmetProvider.ts`, `src/components/editor/suggestionsProvider.ts`, `src/components/editor/MonacoEditorWrapper.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Live GitHub Releases Auto-Updater & Zero Data Loss System
 * **User Directive:** "pp mei new version aane pr dikhaye app mein samjhe upadte click krne pr auto ho ...etc kuchh bhi data samapt na ho ..etc"
 * **Fixes & Enhancements:**

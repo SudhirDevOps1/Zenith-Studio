@@ -5,6 +5,8 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
 import { getLanguageFromExtension } from '../../utils/fileUtils';
 import { registerCustomThemes } from './monacoThemes';
+import { registerEmmetProviders } from './emmetProvider';
+import { registerLanguageSnippets } from './suggestionsProvider';
 import { Loader2 } from 'lucide-react';
 
 // Configure local monaco bundle (offline & Electron safe, 0 CDN dependency)
@@ -39,6 +41,8 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
 
   const handleEditorWillMount = (monaco: any) => {
     registerCustomThemes(monaco);
+    registerEmmetProviders(monaco);
+    registerLanguageSnippets(monaco);
   };
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
@@ -115,6 +119,10 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
           minimap: { enabled: settings.minimap },
           lineNumbers: settings.lineNumbers,
           autoClosingBrackets: settings.autoClosingBrackets,
+          autoClosingQuotes: 'always',
+          autoClosingDelete: 'always',
+          autoClosingOvertype: 'always',
+          autoSurround: 'languageDefined',
           cursorStyle: settings.cursorStyle,
           automaticLayout: true,
           scrollBeyondLastLine: false,
@@ -125,6 +133,31 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
           renderWhitespace: 'selection',
           formatOnPaste: true,
           formatOnType: true,
+          quickSuggestions: {
+            other: true,
+            comments: false,
+            strings: true,
+          },
+          suggestOnTriggerCharacters: true,
+          acceptSuggestionOnEnter: 'on',
+          tabCompletion: 'on',
+          wordBasedSuggestions: 'allDocuments',
+          snippetSuggestions: 'top',
+          parameterHints: { enabled: true },
+          suggest: {
+            showSnippets: true,
+            showWords: true,
+            showClasses: true,
+            showFunctions: true,
+            showConstructors: true,
+            showVariables: true,
+            showInterfaces: true,
+            showModules: true,
+            showProperties: true,
+            showKeywords: true,
+            showIcons: true,
+            preview: true,
+          },
         }}
       />
     </div>
