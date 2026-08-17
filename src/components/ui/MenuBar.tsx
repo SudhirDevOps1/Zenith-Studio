@@ -28,7 +28,9 @@ import {
   ZoomIn,
   ZoomOut,
   Search,
+  Camera,
 } from 'lucide-react';
+
 import { AiSetupModal } from './AiSetupModal';
 
 export const MenuBar: React.FC = () => {
@@ -191,6 +193,19 @@ export const MenuBar: React.FC = () => {
               >
                 <Download className="w-3.5 h-3.5 text-cyan-400" /> Export Workspace ZIP
               </button>
+
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('zenith:open-snapshot'));
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Camera className="w-3.5 h-3.5 text-purple-400" /> Code Snapshot Image
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Alt+S</kbd>
+              </button>
             </div>
           )}
         </div>
@@ -231,9 +246,25 @@ export const MenuBar: React.FC = () => {
                 </span>
                 <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+F</kbd>
               </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('zenith:open-snapshot'));
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Camera className="w-3.5 h-3.5 text-purple-400" /> Capture Code Snapshot
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Alt+S</kbd>
+              </button>
             </div>
           )}
         </div>
+
 
         {/* View Menu */}
         <div className="relative">

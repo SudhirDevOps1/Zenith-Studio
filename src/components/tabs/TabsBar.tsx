@@ -3,7 +3,12 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { FileIcon } from '../filetree/FileIcon';
 import { ACCENT_PALETTE } from '../../utils/accentThemes';
-import { X, ChevronRight, Split, Layers, Columns, Globe, Folder, Play } from 'lucide-react';
+import { X, ChevronRight, Split, Layers, Columns, Globe, Folder, Play, Camera } from 'lucide-react';
+
+
+
+
+
 
 export const TabsBar: React.FC = () => {
   const { openTabs, activeFileId, setActiveFile, closeTab, closeOtherTabs, closeAllTabs, files, activePreviewMode, setActivePreviewMode } = useFileStore();
@@ -116,9 +121,18 @@ export const TabsBar: React.FC = () => {
             >
               <Globe className="w-3.5 h-3.5" />
             </button>
+
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('zenith:open-snapshot'))}
+              className="p-1.5 rounded-lg hover:bg-slate-800 hover:text-cyan-300 text-slate-400 transition"
+              title="Code Snapshot Image Generator"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
       </div>
+
 
       {/* Breadcrumb Path navigation */}
       {settings.showBreadcrumbs && activeFile && (

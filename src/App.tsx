@@ -180,6 +180,9 @@ export default function App() {
         setSidebarOpen(true);
         setActiveSidebarTab('search');
 
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        setShowSnapshot(true);
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         saveCurrentFile();
@@ -207,8 +210,13 @@ export default function App() {
       }
     };
 
+    const handleOpenSnapshotEvent = () => setShowSnapshot(true);
+    window.addEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder]);
 
   // Mouse move resize handling

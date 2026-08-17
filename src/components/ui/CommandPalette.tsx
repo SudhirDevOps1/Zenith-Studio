@@ -23,7 +23,9 @@ import {
   AlertCircle,
   Sparkles,
   SlidersHorizontal,
+  Camera,
 } from 'lucide-react';
+
 
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { formatCode } from '../../utils/codeFormatter';
@@ -90,8 +92,20 @@ export const CommandPalette: React.FC = () => {
     },
 
     {
+      id: 'code-snapshot',
+      title: 'Tools: Capture & Export Beautiful Code Snapshot Image',
+      category: 'Tools',
+      icon: <Camera className="w-4 h-4 text-purple-400" />,
+      shortcut: 'Alt+S',
+      action: () => {
+        window.dispatchEvent(new CustomEvent('zenith:open-snapshot'));
+      },
+    },
+
+    {
       id: 'problems-panel',
       title: 'View: Toggle Problems & Diagnostics Panel',
+
       category: 'View',
       icon: <AlertCircle className="w-4 h-4 text-red-400" />,
       action: () => {
