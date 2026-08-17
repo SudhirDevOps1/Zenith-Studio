@@ -66,12 +66,13 @@ export const ActivityBar: React.FC = () => {
         {/* Logo Icon */}
         <div
           onClick={() => setActiveSidebarTab('explorer')}
-          style={{ background: `linear-gradient(135deg, ${currentAccent.primary}, #4f46e5)`, width: '34px', height: '34px' }}
-          className="rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"
+          style={{ width: '34px', height: '34px' }}
+          className="rounded-xl overflow-hidden flex items-center justify-center shadow-lg mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 border border-cyan-500/40 p-0.5 bg-slate-900"
           title="Zenith Studio Home"
         >
-          ZS
+          <img src="/icon.png" alt="Zenith Studio" className="w-full h-full rounded-lg object-cover" />
         </div>
+
 
 
         {/* Explorer */}

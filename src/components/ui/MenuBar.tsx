@@ -76,12 +76,13 @@ export const MenuBar: React.FC = () => {
       {/* Left App Brand & Top Menu Items */}
       <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
         <div className="flex items-center gap-2 font-bold text-white mr-2.5 px-1 py-0.5 rounded-lg hover:bg-white/5 transition cursor-pointer">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-sm">
-            <Code2 className="w-3.5 h-3.5 text-white" />
+          <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center shadow-sm border border-cyan-500/30">
+            <img src="/icon.png" alt="Zenith Studio" className="w-full h-full object-cover" />
           </div>
           <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent tracking-tight">
             Zenith Studio
           </span>
+
           <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.3</span>
         </div>
 
