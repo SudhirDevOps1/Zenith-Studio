@@ -9,6 +9,7 @@ import { formatCode } from "../../utils/codeFormatter";
 import { registerCustomThemes } from "./monacoThemes";
 import { registerEmmetProviders } from "./emmetProvider";
 import { registerLanguageSnippets } from "./suggestionsProvider";
+import { configureLanguageServer, syncWorkspaceFilesToLanguageServer } from "./languageServer";
 import { Loader2 } from "lucide-react";
 
 loader.config({ monaco: monacoInstance });
@@ -61,6 +62,7 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
   }, [extension, language, settings.tabSize, onChange]);
 
   const handleEditorWillMount = (monaco: any) => {
+    configureLanguageServer(monaco);
     registerCustomThemes(monaco);
     registerEmmetProviders(monaco);
     registerLanguageSnippets(monaco);
@@ -71,6 +73,10 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     monacoRef.current = monaco;
     if (parentEditorRef) parentEditorRef.current = editor;
     if (parentMonacoRef) parentMonacoRef.current = monaco;
+
+    // Sync workspace files for instant cross-file type resolution & auto-complete
+    syncWorkspaceFilesToLanguageServer(monaco, files, fileId);
+
 
     // Ctrl+S: Save (with optional Format on Save)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
@@ -122,9 +128,14 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     }
   };
 
-  useEffect(() => { return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); }; }, [fileId]);
+  useEffect(() => {
+    if (monacoRef.current) {
+      syncWorkspaceFilesToLanguageServer(monacoRef.current, files, fileId);
+    }
+  }, [files, fileId]);
 
   useEffect(() => { if (monacoRef.current && settings.theme) monacoRef.current.editor.setTheme(settings.theme); }, [settings.theme]);
+
   useEffect(() => { if (editorRef.current) editorRef.current.updateOptions({ fontSize: effectiveFontSize }); }, [effectiveFontSize]);
   useEffect(() => {
     if (editorRef.current) {

@@ -29,6 +29,9 @@
 * `[2026-08-17]` - Native Windows Shell & Compiler: `code:runNative` in Electron uses `shell: true` and `process.env` to inherit system PATH for MinGW GCC/G++ and local Python 3.12.
 * `[2026-08-17]` - Clean Viewport: Monaco Editor takes 100% full-screen width on YAML, JSON, and source code files, eliminating unwanted empty preview placeholder sidebars.
 * `[2026-08-17]` - Advanced Terminal: Multi-tab session architecture with Zustand state persistence, dual split-pane execution, 8 color themes, and custom Quick Task Runner chips.
+* `[2026-08-17]` - Full Language Server: Configured Monaco TypeScript compiler options with React ambient types, JSON schemas, and dynamic workspace extraLib sync for cross-file auto-completion.
+* `[2026-08-17]` - Open VSX Native IPC: Exposing zero-CORS direct API queries in Electron desktop mode with resilient multi-proxy fallback for web mode.
+
 
 ## 📝 Pending / Verified Status
 * [x] TypeScript Strict Mode passes with 0 errors (`npx tsc --noEmit`).

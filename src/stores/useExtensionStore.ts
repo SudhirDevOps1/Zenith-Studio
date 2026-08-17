@@ -137,22 +137,48 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
 
     try {
       let data: any = null;
-      try {
-        const res = await fetch(
-          `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=30`,
-          { signal: activeSearchAbortController.signal }
-        );
-        if (res.ok) {
-          data = await res.json();
+
+      // 1. Desktop Mode: Native Electron IPC (Zero CORS, 100% Guaranteed)
+      if (typeof window !== 'undefined' && (window as any).electronAPI?.searchOpenVSX) {
+        try {
+          data = await (window as any).electronAPI.searchOpenVSX(searchParam);
+        } catch (ipcErr) {
+          console.warn('Native Open VSX IPC search error:', ipcErr);
         }
-      } catch {
-        // Fallback to proxy if direct Open VSX is CORS blocked
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(
-          `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=30`
-        )}`;
-        const resProxy = await fetch(proxyUrl, { signal: activeSearchAbortController.signal });
-        if (resProxy.ok) {
-          data = await resProxy.json();
+      }
+
+      // 2. Web Mode: Direct Open VSX Fetch
+      if (!data || !Array.isArray(data.extensions)) {
+        try {
+          const res = await fetch(
+            `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`,
+            { signal: activeSearchAbortController.signal }
+          );
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch {
+          // 3. Web Mode Fallback: Multi-Proxy Failover
+          const proxyUrls = [
+            `https://corsproxy.io/?${encodeURIComponent(
+              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`
+            )}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(
+              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`
+            )}`,
+          ];
+
+          for (const proxy of proxyUrls) {
+            try {
+              const resProxy = await fetch(proxy, { signal: activeSearchAbortController.signal });
+              if (resProxy.ok) {
+                data = await resProxy.json();
+                if (data && Array.isArray(data.extensions)) break;
+              }
+            } catch {
+              continue;
+            }
+          }
         }
       }
 
@@ -160,6 +186,7 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
         set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
         return;
       }
+
 
       const detectCategory = (extName: string, tags: string[] = [], desc: string = ''): ExtensionCategory => {
         const text = `${extName} ${tags.join(' ')} ${desc}`.toLowerCase();

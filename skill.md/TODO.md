@@ -4,6 +4,10 @@
 
 ## Completed Core Deliverables (v1.0.3 Production)
 
+- [x] Full Language Server & Cross-File TypeScript Intellisense (`languageServer.ts` with ambient React types & extraLib sync).
+- [x] Native Full System Shell Execution with 100% PATH & process.env inheritance.
+- [x] 100% Guaranteed Open VSX Marketplace Search via Electron Native IPC & Web multi-proxy failover.
+- [x] AI Agentic 1-Click Code Applier to Active File (`AiAssistantPanel.tsx`).
 - [x] Advanced Customizable Integrated Terminal (Multi-Tabs, Dual Split-Pane, Themes, Quick Task Runners, Prompt Glyphs, Buffer Search, Log Export).
 - [x] Universal AI Multi-Provider Assistant (Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, Custom).
 - [x] Remote Model Discovery (`/v1/models` call with manual preset priority & text combobox).

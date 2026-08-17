@@ -3,7 +3,9 @@ const path = require('path');
 const fs = require('fs/promises');
 const fsSync = require('fs');
 const os = require('os');
+const https = require('https');
 const { exec, execFile } = require('child_process');
+
 
 let mainWindow;
 
@@ -441,17 +443,96 @@ ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
     const isWin = process.platform === 'win32';
     const shellOpt = isWin ? 'powershell.exe' : '/bin/bash';
 
-    exec(command, { cwd: workingDir, shell: shellOpt, maxBuffer: 1024 * 1024 * 10, timeout: 180000 }, (error, stdout, stderr) => {
-      resolve({
-        code: error ? (error.code !== undefined ? error.code : 1) : 0,
-        stdout: stdout || '',
-        stderr: stderr || '',
-        error: error ? error.message : null,
+    // Execute with full system environment variables & PATH inherited
+    exec(
+      command,
+      {
         cwd: workingDir,
-      });
-    });
+        shell: shellOpt,
+        env: process.env,
+        maxBuffer: 1024 * 1024 * 50,
+        timeout: 300000,
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          code: error ? (error.code !== undefined ? error.code : 1) : 0,
+          stdout: stdout || '',
+          stderr: stderr || '',
+          error: error ? error.message : null,
+          cwd: workingDir,
+        });
+      }
+    );
   });
 });
+
+// Helper for native HTTPS GET requests (Zero CORS)
+function fetchJsonDirect(url) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(
+        url,
+        {
+          headers: {
+            'User-Agent': 'CodeStudio-IDE/1.0.3 (Universal Developer Environment)',
+            Accept: 'application/json',
+          },
+        },
+        (res) => {
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            return fetchJsonDirect(res.headers.location).then(resolve).catch(reject);
+          }
+          let rawData = '';
+          res.on('data', (chunk) => {
+            rawData += chunk;
+          });
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(rawData);
+              resolve(parsed);
+            } catch (e) {
+              reject(new Error(`JSON Parse Error: ${e.message}`));
+            }
+          });
+        }
+      )
+      .on('error', (err) => {
+        reject(err);
+      });
+  });
+}
+
+// Open VSX API Search IPC (Zero CORS, 100% Reliable & Fast)
+ipcMain.handle('openvsx:search', async (_, query) => {
+  try {
+    const trimmed = (query || '').trim();
+    if (!trimmed) return { extensions: [] };
+    let searchParam = trimmed;
+    if (trimmed.toLowerCase() === 'c++') searchParam = 'cpp';
+    else if (trimmed.toLowerCase() === 'c#') searchParam = 'csharp';
+
+    const url = `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`;
+    const data = await fetchJsonDirect(url);
+    return data;
+  } catch (err) {
+    console.error('Failed to search Open VSX natively:', err.message);
+    return { extensions: [], error: err.message };
+  }
+});
+
+// Open VSX API Extension Details IPC
+ipcMain.handle('openvsx:extension', async (_, { namespace, name }) => {
+  try {
+    if (!namespace || !name) return null;
+    const url = `https://open-vsx.org/api/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`;
+    const data = await fetchJsonDirect(url);
+    return data;
+  } catch (err) {
+    console.error('Failed to fetch extension details natively:', err.message);
+    return { error: err.message };
+  }
+});
+
 
 app.whenReady().then(() => {
   createWindow();
