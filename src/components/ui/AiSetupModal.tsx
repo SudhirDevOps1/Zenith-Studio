@@ -117,12 +117,15 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
     try {
       const result = await testAiConnection({
         aiProvider: provider,
-        aiApiKey: apiKey,
-        geminiApiKey: apiKey,
-        aiCustomEndpoint: customEndpoint,
-        aiModel: model,
+        aiApiKey: apiKey.trim(),
+        geminiApiKey: apiKey.trim(),
+        aiCustomEndpoint: customEndpoint.trim(),
+        aiCustomModelName: (customModelName || model).trim(),
+        aiModel: (model || customModelName).trim(),
+        aiTemperature: temperature,
       });
       setTestResult(result);
+
       if (result.success) {
         handleDetectModels(false);
         addToast({

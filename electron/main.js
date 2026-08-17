@@ -536,6 +536,47 @@ ipcMain.handle('openvsx:extension', async (_, { namespace, name }) => {
   }
 });
 
+// AI Universal Native Fetch IPC (Zero CORS, 100% Reliable for all LLM providers)
+ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
+  try {
+    const fetchOptions = {
+      method,
+      headers: {
+        'User-Agent': 'Zenith-Studio-IDE/1.0.3',
+        ...headers,
+      },
+    };
+    if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(url, fetchOptions);
+    const contentType = response.headers.get('content-type') || '';
+    let responseData;
+    if (contentType.includes('application/json')) {
+      responseData = await response.json().catch(() => ({}));
+    } else {
+      responseData = await response.text();
+    }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      data: responseData,
+    };
+  } catch (err) {
+    console.error('Native AI Fetch Failed:', err);
+    return {
+      ok: false,
+      status: 0,
+      statusText: err.message,
+      error: err.message,
+    };
+  }
+});
+
+
 
 app.whenReady().then(() => {
   createWindow();

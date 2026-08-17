@@ -9,9 +9,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   execTerminalCommand: (data) => ipcRenderer.invoke('terminal:execCommand', data),
   searchOpenVSX: (query) => ipcRenderer.invoke('openvsx:search', query),
   getExtensionDetails: (data) => ipcRenderer.invoke('openvsx:extension', data),
+  aiFetch: (data) => ipcRenderer.invoke('ai:fetch', data),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
 });
+
 
