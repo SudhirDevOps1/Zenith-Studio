@@ -108,25 +108,25 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
         {activeFile && (
           <button
             onClick={onOpenGoToLine}
-            className="flex items-center gap-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60 px-2 py-0.5 rounded-md transition cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60 px-2 py-0.5 rounded-md transition cursor-pointer"
             title="Go to Line (Ctrl+G)"
           >
             <span className="flex items-center gap-1 text-slate-300">
               <FileCode2 className="w-3 h-3 text-cyan-400" /> Ln {lineCount}
             </span>
             <span>Col 1</span>
-            <span className="text-slate-500">({charCount} chars)</span>
+            <span className="text-slate-500 hidden md:inline">({charCount} chars)</span>
           </button>
         )}
       </div>
 
       {/* Right items */}
-      <div className="flex items-center gap-2 text-slate-400 relative">
+      <div className="flex items-center gap-2 text-slate-400 relative overflow-x-auto no-scrollbar">
         {activeFile && (
           <div className="flex items-center gap-1 cursor-pointer hover:bg-slate-800/80 px-2 py-0.5 rounded-md transition" onClick={handleSave}>
             {activeFile.isModified ? (
               <span className="flex items-center gap-1 text-amber-300 font-semibold">
-                <RefreshCw className="w-3 h-3 animate-spin" /> Unsaved (Ctrl+S)
+                <RefreshCw className="w-3 h-3 animate-spin" /> Unsaved
               </span>
             ) : (
               <span className="flex items-center gap-1 text-emerald-400">
@@ -137,13 +137,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
         )}
 
         {/* Emmet Status Chip */}
-        <div className="flex items-center gap-1 bg-purple-950/40 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded-md text-[10px] font-semibold" title="Universal Emmet engine active">
+        <div className="hidden lg:flex items-center gap-1 bg-purple-950/40 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded-md text-[10px] font-semibold" title="Universal Emmet engine active">
           <Zap className="w-2.5 h-2.5 text-purple-400" />
           <span>Emmet</span>
         </div>
 
         {/* Indent & Wrap Selector */}
-        <div className="relative" ref={indentMenuRef}>
+        <div className="relative hidden sm:block" ref={indentMenuRef}>
           <button
             onClick={() => setShowIndentMenu(!showIndentMenu)}
             className="cursor-pointer hover:bg-slate-800/80 hover:text-white px-1.5 py-0.5 rounded-md transition flex items-center gap-1 text-slate-300"
@@ -151,6 +151,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           >
             <span>Spaces: {settings.tabSize}</span>
           </button>
+
 
           {showIndentMenu && (
             <div className="absolute right-0 bottom-full mb-1 w-44 bg-[#141524]/95 backdrop-blur-xl border border-slate-700 shadow-2xl rounded-xl py-1 z-50 text-slate-200 text-xs font-sans">

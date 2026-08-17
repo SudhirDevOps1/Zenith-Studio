@@ -438,8 +438,9 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     const files = INITIAL_SAMPLE_FILES;
     await saveFilesToStorage(files);
     set({ files, openTabs: [], activeFileId: null });
-    get().setActiveFile(files[1].id);
+    get().setActiveFile(files[0]?.id || null);
   },
+
 
   importFilesFromOS: async (fileList, targetParentId = null) => {
     const { createFile, importZipFile } = get();

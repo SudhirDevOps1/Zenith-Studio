@@ -121,14 +121,20 @@ export const TerminalTabsHeader: React.FC<TerminalTabsHeaderProps> = ({
         })}
 
         {/* Add New Session Dropdown */}
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 flex items-center bg-slate-800/80 border border-slate-700/80 rounded-md overflow-hidden">
           <button
-            onClick={() => setShowNewMenu(!showNewMenu)}
-            className="flex items-center gap-0.5 p-1 rounded-md text-slate-400 hover:text-cyan-300 hover:bg-slate-800 transition"
-            title="New Terminal Instance"
+            onClick={() => handleCreateType('powershell')}
+            className="p-1 px-1.5 hover:bg-slate-700 text-slate-300 hover:text-cyan-300 transition flex items-center justify-center"
+            title="New Terminal (PowerShell)"
           >
             <Plus className="w-3.5 h-3.5" />
-            <ChevronDown className="w-2.5 h-2.5" />
+          </button>
+          <button
+            onClick={() => setShowNewMenu(!showNewMenu)}
+            className="p-1 px-1 hover:bg-slate-700 text-slate-400 hover:text-cyan-300 transition border-l border-slate-700 flex items-center justify-center"
+            title="Select Terminal Profile..."
+          >
+            <ChevronDown className="w-3 h-3" />
           </button>
 
           {showNewMenu && (
@@ -137,6 +143,7 @@ export const TerminalTabsHeader: React.FC<TerminalTabsHeaderProps> = ({
               className="fixed inset-0 z-40"
             />
           )}
+
 
           {showNewMenu && (
             <div className="absolute left-0 top-full mt-1 z-50 w-44 bg-[#141524] border border-slate-700 shadow-2xl rounded-xl py-1 text-xs text-slate-200 backdrop-blur-xl">

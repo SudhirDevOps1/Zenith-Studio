@@ -10,6 +10,8 @@ import { registerCustomThemes } from "./monacoThemes";
 import { registerEmmetProviders } from "./emmetProvider";
 import { registerLanguageSnippets } from "./suggestionsProvider";
 import { configureLanguageServer, syncWorkspaceFilesToLanguageServer } from "./languageServer";
+import { registerConflictCodeLens, updateConflictDecorations } from "./conflictCodeLens";
+import { useDebugStore } from "../../stores/useDebugStore";
 import { Loader2 } from "lucide-react";
 
 loader.config({ monaco: monacoInstance });
@@ -38,9 +40,13 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
 }) => {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
+  const breakpointDecorationsRef = useRef<string[]>([]);
+  const conflictDecorationsRef = useRef<string[]>([]);
+
   const { settings, increaseZoom, decreaseZoom, resetZoom } = useSettingsStore();
   const { saveCurrentFile, files } = useFileStore();
   const { updateFileDiagnostics } = useDiagnosticsStore();
+  const { breakpoints, toggleBreakpoint, activeLineNumber, activeFileId: debugActiveFileId } = useDebugStore();
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const language = getLanguageFromExtension(extension);
@@ -77,6 +83,24 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     // Sync workspace files for instant cross-file type resolution & auto-complete
     syncWorkspaceFilesToLanguageServer(monaco, files, fileId);
 
+    // Register Git 3-Way Merge Conflict CodeLens actions
+    registerConflictCodeLens(monaco, (newContent) => {
+      editor.setValue(newContent);
+      onChange(newContent);
+    });
+
+    // Handle Gutter Click for Toggling Breakpoints
+    editor.onMouseDown((e: any) => {
+      if (
+        e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN ||
+        e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS
+      ) {
+        const line = e.target.position?.lineNumber;
+        if (line && activeFile) {
+          toggleBreakpoint(fileId, activeFile.path || activeFile.name, line);
+        }
+      }
+    });
 
     // Ctrl+S: Save (with optional Format on Save)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
@@ -117,6 +141,58 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     }
     editor.focus();
   };
+
+  // Sync Breakpoint & Debugger Decorations
+  useEffect(() => {
+    if (!editorRef.current || !monacoRef.current) return;
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+
+    const fileBreakpoints = breakpoints.filter((b) => b.fileId === fileId);
+    const newDecorations: any[] = [];
+
+    // Render Red Breakpoints in Gutter
+    fileBreakpoints.forEach((bp) => {
+      newDecorations.push({
+        range: new monaco.Range(bp.lineNumber, 1, bp.lineNumber, 1),
+        options: {
+          isWholeLine: false,
+          glyphMarginClassName: bp.enabled
+            ? 'codestudio-bp-active'
+            : 'codestudio-bp-disabled',
+          glyphMarginHoverMessage: { value: `Breakpoint (Line ${bp.lineNumber})` },
+        },
+      });
+    });
+
+    // Render Yellow Highlight on Paused Debugger Line
+    if (debugActiveFileId === fileId && activeLineNumber) {
+      newDecorations.push({
+        range: new monaco.Range(activeLineNumber, 1, activeLineNumber, 1),
+        options: {
+          isWholeLine: true,
+          className: 'bg-amber-500/20 border-l-4 border-amber-400',
+          glyphMarginClassName: 'codestudio-debug-arrow',
+        },
+      });
+    }
+
+    breakpointDecorationsRef.current = editor.deltaDecorations(
+      breakpointDecorationsRef.current,
+      newDecorations
+    );
+  }, [breakpoints, activeLineNumber, debugActiveFileId, fileId]);
+
+  // Sync Merge Conflict Decorations
+  useEffect(() => {
+    if (!editorRef.current || !monacoRef.current) return;
+    conflictDecorationsRef.current = updateConflictDecorations(
+      editorRef.current,
+      monacoRef.current,
+      conflictDecorationsRef.current
+    );
+  }, [content]);
+
 
 
   const handleChange: OnChange = (value) => {
@@ -183,7 +259,9 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
           wordWrap: settings.wordWrap,
           minimap: { enabled: settings.minimap },
           lineNumbers: settings.lineNumbers,
+          glyphMargin: true,
           autoClosingBrackets: settings.autoClosingBrackets,
+
           autoClosingQuotes: "always",
           autoClosingDelete: "always",
           autoClosingOvertype: "always",

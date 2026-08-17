@@ -36,11 +36,18 @@ import { QuickOpenModal } from './components/ui/QuickOpenModal';
 import { AppDialog } from './components/ui/AppDialog';
 import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
 import { UpdateModal } from './components/ui/UpdateModal';
+import { DebugPanel } from './components/debugger/DebugPanel';
+import { DebugToolbar } from './components/debugger/DebugToolbar';
+import { AiComposerModal } from './components/composer/AiComposerModal';
+import { useComposerStore } from './stores/useComposerStore';
+import { useDebugStore } from './stores/useDebugStore';
 import { useUpdateStore } from './stores/useUpdateStore';
 import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
 
 import { applyAccentToDOM } from './utils/accentThemes';
-import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image } from 'lucide-react';
+import { Code2, X, PanelRightClose, PanelLeftClose } from 'lucide-react';
+
+
 
 
 
@@ -85,8 +92,8 @@ export default function App() {
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
-  const [snapshotSelectedCode, setSnapshotSelectedCode] = useState<string | null>(null);
   const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
+
 
   const isDraggingSidebar = useRef(false);
   const isDraggingSplit = useRef(false);
@@ -140,6 +147,21 @@ export default function App() {
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'o' || e.key === 'O')) {
         e.preventDefault();
         openSystemFile();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        e.preventDefault();
+        setSidebarOpen(true);
+        setActiveSidebarTab('debug');
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        useComposerStore.getState().setIsOpen(true);
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        const dbg = useDebugStore.getState();
+        if (dbg.sessionState === 'inactive' && activeFile) {
+          dbg.startDebugging(activeFile.id, activeFile.path || activeFile.name, activeFile.content || '');
+        } else if (dbg.sessionState === 'paused') {
+          dbg.continueExecution();
+        }
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
         e.preventDefault();
         setSidebarOpen(true);
@@ -156,6 +178,7 @@ export default function App() {
         e.preventDefault();
         setSidebarOpen(true);
         setActiveSidebarTab('search');
+
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         saveCurrentFile();
@@ -282,27 +305,36 @@ export default function App() {
 
         {/* Left Resizable Sidebar Panel */}
         {!isZenMode && sidebarOpen && (
-          <div
-            style={{ width: `${sidebarWidth}px` }}
-            className="h-full shrink-0 relative animate-slide-in-left"
-          >
-            {activeSidebarTab === 'explorer' && <FileTree />}
-            {activeSidebarTab === 'search' && <GlobalSearch />}
-            {activeSidebarTab === 'git' && <GitControlPanel />}
-            {activeSidebarTab === 'snippets' && <SnippetsPanel />}
-            {activeSidebarTab === 'extensions' && <ExtensionsPanel />}
-            {activeSidebarTab === 'ai' && <AiAssistantPanel />}
-            {activeSidebarTab === 'info' && <WorkspaceInfo />}
-
+          <>
+            {/* Mobile Backdrop */}
             <div
-              onMouseDown={() => {
-                isDraggingSidebar.current = true;
-                document.body.style.cursor = 'col-resize';
-              }}
-              className="absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-blue-500/80 cursor-col-resize z-20 transition-all"
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 z-20 bg-black/50 backdrop-blur-xs sm:hidden"
             />
-          </div>
+            <div
+              style={{ width: `${Math.min(sidebarWidth, typeof window !== 'undefined' ? window.innerWidth - 60 : sidebarWidth)}px` }}
+              className="h-full shrink-0 relative animate-slide-in-left z-25 bg-[#12131f]"
+            >
+              {activeSidebarTab === 'explorer' && <FileTree />}
+              {activeSidebarTab === 'search' && <GlobalSearch />}
+              {activeSidebarTab === 'git' && <GitControlPanel />}
+              {activeSidebarTab === 'snippets' && <SnippetsPanel />}
+              {activeSidebarTab === 'extensions' && <ExtensionsPanel />}
+              {activeSidebarTab === 'ai' && <AiAssistantPanel />}
+              {activeSidebarTab === 'debug' && <DebugPanel />}
+              {activeSidebarTab === 'info' && <WorkspaceInfo />}
+
+              <div
+                onMouseDown={() => {
+                  isDraggingSidebar.current = true;
+                  document.body.style.cursor = 'col-resize';
+                }}
+                className="absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-blue-500/80 cursor-col-resize z-20 transition-all hidden sm:block"
+              />
+            </div>
+          </>
         )}
+
 
         {/* Center Editor & Preview Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#1e1e2e] relative">
@@ -437,39 +469,7 @@ export default function App() {
             </button>
           )}
 
-          {/* Terminal Floating Button */}
-          {!isZenMode && openTabs.length > 0 && (
-            <div className="absolute bottom-8 right-4 z-30 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  let selText: string | null = null;
-                  if (editorRef.current) {
-                    const sel = editorRef.current.getSelection();
-                    if (sel && !sel.isEmpty()) {
-                      selText = editorRef.current.getModel()?.getValueInRange(sel) || null;
-                    }
-                  }
-                  setSnapshotSelectedCode(selText);
-                  setShowSnapshot(true);
-                }}
-                className="p-2 rounded-lg shadow-xl border bg-[#1e1e2e] border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 transition-all duration-200"
-                title="Create Code Snapshot PNG"
-              >
-                <Image className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setShowTerminal(!showTerminal)}
-                className={`p-2 rounded-lg shadow-xl border transition-all duration-200 ${
-                  showTerminal
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-[#1e1e2e] border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
-                }`}
-                title="Toggle Terminal (Ctrl+`)"
-              >
-                <Terminal className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+
 
           {/* Zen Mode Exit Button */}
           {isZenMode && (
@@ -502,12 +502,16 @@ export default function App() {
         isOpen={showSnapshot}
         code={activeFile?.content || ''}
         fileName={activeFile?.name || 'snapshot'}
-        selectedCode={snapshotSelectedCode}
+        selectedCode={null}
         onClose={() => setShowSnapshot(false)}
       />
+
       <UpdateModal />
+      <DebugToolbar />
+      <AiComposerModal />
       
       {/* Global App Dialog */}
+
       <AppDialog
         isOpen={isDialogOpen}
         type={dialogType}

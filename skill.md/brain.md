@@ -5,11 +5,10 @@
 ## 📋 Current Project Status
 * **Project:** CodeStudio (Production-Grade VS Code / VSCodium Alternative)
 * **Version:** `1.0.3` (Production Released & Tagged)
-* **Active Enhancement:** Advanced Customizable Integrated Terminal (Multi-Tabs, Split View, Themes, Quick Task Runners) — COMPLETED
-
+* **Active Enhancement:** Multi-File AI Composer, Interactive Debugger UI (DAP), 3-Way Git Conflict Resolver — COMPLETED
 
 ## 🎯 Project Overview
-* **Goal:** A modern, lightweight, high-performance web and desktop code editor alternative to VS Code/VSCodium.
+* **Goal:** A modern, lightweight, high-performance web and desktop code editor alternative to VS Code/VSCodium with Cursor-grade multi-file AI composition.
 * **Tech Stack:**
   - **Frontend:** React 19, TypeScript, Vite 7, Tailwind CSS, Monaco Editor (`@monaco-editor/react`), Lucide React icons
   - **State Management & Storage:** Zustand, IndexedDB (`idb-keyval`)
@@ -31,14 +30,19 @@
 * `[2026-08-17]` - Advanced Terminal: Multi-tab session architecture with Zustand state persistence, dual split-pane execution, 8 color themes, and custom Quick Task Runner chips.
 * `[2026-08-17]` - Full Language Server: Configured Monaco TypeScript compiler options with React ambient types, JSON schemas, and dynamic workspace extraLib sync for cross-file auto-completion.
 * `[2026-08-17]` - Open VSX Native IPC: Exposing zero-CORS direct API queries in Electron desktop mode with resilient multi-proxy fallback for web mode.
-
+* `[2026-08-17]` - Multi-File Agentic AI Composer: `AiComposerModal.tsx` & `useComposerStore.ts` for workspace-wide multi-file parsing, side-by-side diff previews, and 1-click **Accept All Files** patching (`Ctrl+Shift+I` / `Ctrl+I`).
+* `[2026-08-17]` - Interactive Step-by-Step Debugger: Monaco Gutter Breakpoints (`glyphMargin`), floating draggable toolbar, and dedicated Run & Debug panel with Call Stack, Variables Scope, and Watch expressions.
+* `[2026-08-17]` - 3-Way Git Merge Conflict Resolver: `conflictParser.ts` and `conflictCodeLens.ts` for interactive Monaco CodeLens buttons (`Accept Current Change`, `Accept Incoming Change`, `Accept Both`).
 
 ## 📝 Pending / Verified Status
 * [x] TypeScript Strict Mode passes with 0 errors (`npx tsc --noEmit`).
 * [x] Singlefile production build passes (`npm run build` -> `dist/index.html` 9.63 MB).
+* [x] Multi-File AI Composer Mode (`AiComposerModal.tsx`).
+* [x] Interactive Step-by-Step Debugger UI & Breakpoints (`DebugToolbar.tsx`, `DebugPanel.tsx`).
+* [x] 3-Way Visual Git Merge Conflict Resolver (`conflictParser.ts`, `conflictCodeLens.ts`).
 * [x] Advanced Integrated Terminal with Multi-Tabs, Split View, Themes, and Quick Runners.
 * [x] All version references synchronized to `1.0.3`.
-* [x] Git Tag `v1.0.3` created locally.
+
 
 
 

@@ -26,8 +26,8 @@ export const TabsBar: React.FC = () => {
   return (
     <div className="flex flex-col bg-[#0d0e15] border-b border-slate-800/80 text-slate-300 select-none font-sans">
       {/* Scrollable Tabs row */}
-      <div className="flex items-center justify-between border-b border-slate-800/60 bg-[#0f1019] overflow-x-auto">
-        <div className="flex items-center overflow-x-auto flex-1 no-scrollbar pt-1 px-1 gap-1">
+      <div className="flex items-center justify-between border-b border-slate-800/60 bg-[#0f1019] min-w-0">
+        <div className="flex items-center overflow-x-auto flex-1 no-scrollbar pt-1 px-1 gap-1 min-w-0">
           {openTabs.map((tab) => {
             const isActive = tab.fileId === activeFileId;
             return (
@@ -36,14 +36,18 @@ export const TabsBar: React.FC = () => {
                 onClick={() => setActiveFile(tab.fileId)}
                 onContextMenu={(e) => handleTabContextMenu(e, tab.fileId)}
                 style={isActive ? { borderTopColor: currentAccent.primary } : {}}
-                className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-t-lg border-t-2 cursor-pointer text-xs transition-all min-w-[130px] max-w-[210px] shrink-0 font-mono ${
+                className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg border-t-2 cursor-pointer text-xs transition-all min-w-[120px] max-w-[200px] shrink-0 font-mono select-none ${
                   isActive
                     ? 'bg-[#141522] text-white font-medium shadow-md'
                     : 'bg-transparent text-slate-400 hover:bg-[#141522]/50 hover:text-slate-200 border-t-transparent'
                 }`}
               >
-                <FileIcon name={tab.title} className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate text-xs">{tab.title}</span>
+                <div className="shrink-0 flex items-center justify-center">
+                  <FileIcon name={tab.title} className="w-3.5 h-3.5" />
+                </div>
+                <span className="truncate text-xs flex-1 min-w-0" title={tab.title}>
+                  {tab.title}
+                </span>
                 {tab.isModified && (
                   <span className="w-2 h-2 rounded-full bg-blue-400 group-hover:hidden shrink-0" />
                 )}
@@ -53,6 +57,7 @@ export const TabsBar: React.FC = () => {
                     closeTab(tab.fileId);
                   }}
                   className="p-0.5 hover:bg-slate-700/80 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-auto text-slate-400 hover:text-white shrink-0"
+                  title="Close (Ctrl+W)"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -60,6 +65,7 @@ export const TabsBar: React.FC = () => {
             );
           })}
         </div>
+
 
         {/* Preview & Run Code Toggle Controls */}
         {activeFile && (

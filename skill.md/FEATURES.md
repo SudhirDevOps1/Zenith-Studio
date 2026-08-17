@@ -1,10 +1,14 @@
 # 🚀 FEATURES (CodeStudio Evolution & Matrix)
 
 ## 1. What was built recently? (v1.0.3 Release)
+* **Multi-File Agentic AI ("Composer Mode") (`useComposerStore.ts` & `AiComposerModal.tsx`):** Cursor-grade multi-file code planner and auto-diff patcher (`Ctrl+Shift+I` / `Ctrl+I`) with workspace context scanning, file selection, and 1-click **Accept All Files** patching.
+* **Interactive Step-by-Step Debugger UI (`DebugToolbar.tsx` & `DebugPanel.tsx`):** Monaco Gutter Red Breakpoints (`glyphMargin`), floating draggable step execution toolbar (`Continue`, `Step Over`, `Step Into`, `Step Out`, `Stop`), Call Stack trace, Variables tree, and Watch expressions panel.
+* **3-Way Visual Git Merge Conflict Resolver (`conflictParser.ts` & `conflictCodeLens.ts`):** Inline Monaco CodeLens actions (`🟢 Accept Current Change`, `🟣 Accept Incoming Change`, `Accept Both`) with emerald/cyan background decorations and 1-click conflict resolution.
 * **Full Language Server & Cross-File Intellisense (`languageServer.ts`):** Full TypeScript/JavaScript Language Service compiler options with ambient React type definitions, JSON schema validation, and dynamic cross-file extraLib synchronization across all workspace files.
 * **Native Full System Shell Execution:** Full PATH & environment inheritance in Electron (`terminal:execCommand`) for zero-friction execution of MinGW GCC, Python 3.12, Node, Git, and Cargo.
 * **100% Reliable Open VSX Marketplace Search:** Native Electron IPC search + multi-proxy web fallback for instant, CORS-free extension and theme searches.
 * **Advanced Customizable Integrated Terminal:** Multi-session tabs (`PowerShell`, `CMD`, `Git Bash`, `Node.js`, `Python`), dual split-pane execution, 8 color themes (Matrix, Cyberpunk, Dracula, OLED Black), custom font selector, prompt glyphs (`❯`, `➜`, `$`), `Ctrl + F` buffer search, log export, and 1-click Quick Task Runner chips.
+
 
 * **Universal AI Multi-Provider & Model Discovery (`AiSetupModal.tsx`):** Complete integration for Google Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, and Custom OpenAI-compatible endpoints with `/v1/models` remote auto-discovery, manual model override priority, and millisecond latency test.
 * **Native System Python 3.12 & MinGW GCC/G++ Execution:** Direct execution of local Python 3.12 and MinGW GCC/G++ compilers with Windows PATH environment support and 1-click `▶ Run` button in `TabsBar.tsx`.

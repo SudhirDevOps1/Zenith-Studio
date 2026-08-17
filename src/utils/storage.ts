@@ -10,13 +10,18 @@ export const loadFilesFromStorage = async (): Promise<FileItem[]> => {
   try {
     const savedFiles = await get<FileItem[]>(FILES_KEY);
     if (savedFiles && Array.isArray(savedFiles) && savedFiles.length > 0) {
-      return savedFiles;
+      // Filter out legacy demo docs folder if present from earlier runs
+      const cleaned = savedFiles.filter(
+        (f) => f.id !== 'folder-docs' && f.parentId !== 'folder-docs' && !f.path?.startsWith('docs/')
+      );
+      return cleaned.length > 0 ? cleaned : INITIAL_SAMPLE_FILES;
     }
   } catch (err) {
     console.error('Failed to load files from IndexedDB:', err);
   }
   return INITIAL_SAMPLE_FILES;
 };
+
 
 export const saveFilesToStorage = async (files: FileItem[]): Promise<void> => {
   try {

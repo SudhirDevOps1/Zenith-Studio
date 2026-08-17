@@ -79,18 +79,8 @@ export const isElectron = (): boolean => {
   return typeof window !== 'undefined' && Boolean((window as any).electronAPI);
 };
 
-// Default sample project files for CodeStudio
+// Default clean starter project files for CodeStudio
 export const INITIAL_SAMPLE_FILES: FileItem[] = [
-  {
-    id: 'folder-docs',
-    name: 'docs',
-    path: 'docs',
-    type: 'folder',
-    parentId: null,
-    isExpanded: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
   {
     id: 'file-welcome-md',
     name: 'README.md',
@@ -100,87 +90,97 @@ export const INITIAL_SAMPLE_FILES: FileItem[] = [
     extension: 'md',
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    content: `# 🚀 Welcome to CodeStudio!
+    content: `# 🚀 Welcome to CodeStudio (v1.0.3)
 
-**CodeStudio** is a high-performance, lightweight cross-platform code and text editor designed for both Web browsers and Desktop (Electron).
-
----
-
-## 🔥 Key Features
-
-- ⚡ **Monaco Code Editor Engine** - The core editor powering VS Code with 100+ language syntax highlighting.
-- 📊 **Live Markdown & Mermaid Diagrams** - Side-by-side sync-scrolling preview with rich flowchart, sequence & class diagrams.
-- 🌐 **HTML Live Web Sandbox** - Instant iframe preview with live reload for HTML, CSS, & JS.
-- 🧪 **JavaScript / TypeScript Console** - Run scripts in-browser with live output & logging!
-- 📂 **Virtual & Native File System** - Supports IndexedDB storage for Web & direct native OS filesystem integration in Desktop.
-- 🎨 **Multi-Theme Support** - VS Dark, Dracula, Nord, Monokai, GitHub Dark, and Light themes.
-- ⌨️ **Command Palette (Ctrl+Shift+P)** - Rapid keyboard access to actions, commands, and search.
+**CodeStudio** is a high-performance, lightweight cross-platform code and text editor designed for both Web browsers and Desktop.
 
 ---
 
-## 🎨 Mermaid Flowchart Example
+## 🔥 Key Capabilities
 
-\`\`\`mermaid
-graph TD
-    A[🚀 User opens CodeStudio] --> B{Choose Workflow}
-    B -->|Code Editing| C[Monaco Editor + IntelliSense]
-    B -->|Markdown & Docs| D[Live Markdown + Mermaid Render]
-    B -->|Web Dev| E[Live HTML Sandbox Preview]
-    B -->|Scripting| F[JS/TS Interactive Sandbox]
-    C --> G[Auto-save & Persistence]
-    D --> G
-    E --> G
-    F --> G
-    G --> H[Export PDF or Download Zip]
-\`\`\`
+- ⚡ **Monaco Code Editor** — Full syntax highlighting with 100+ languages, IntelliSense, and multi-cursor editing.
+- 🤖 **Multi-File AI Composer (\`Ctrl+Shift+I\`)** — Cursor-grade multi-file AI Agent that plans, generates, and patches changes across your workspace.
+- 🐛 **Interactive DAP Debugger (\`F5\`)** — Monaco gutter red breakpoints, Step Over, Step Into, Call Stack, Variables Scope, and Watch panel.
+- 🔀 **3-Way Git Merge Conflict Resolver** — Visual 1-click **Accept Current**, **Accept Incoming**, and **Accept Both** CodeLens actions.
+- 💻 **Advanced Multi-Session Terminal (\`Ctrl+\`\`)** — PowerShell, CMD, Git Bash, Node.js, Python REPL, split panes, and 8 themes.
+- 🌐 **Full Language Server** — Cross-file TypeScript diagnostics, ambient React types, and auto-completion.
+- 🧩 **Open VSX Marketplace (\`Ctrl+Shift+X\`)** — 100% reliable CORS-free extension & theme searches.
 
 ---
 
-## 💻 Code Sample (TypeScript)
+## ⌨️ Essential Keyboard Shortcuts
 
-\`\`\`typescript
-interface UserProfile {
-  id: string;
-  name: string;
-  role: 'developer' | 'architect';
-  editor: string;
-}
+| Shortcut | Action |
+| :--- | :--- |
+| **Ctrl + P** | Quick Open File Switcher |
+| **Ctrl + Shift + P** | Command Palette |
+| **Ctrl + Shift + I** | AI Multi-File Composer |
+| **Ctrl + Shift + D** | Run & Debug Panel |
+| **Ctrl + \`** | Toggle Integrated Terminal |
+| **Shift + Alt + F** | Format Document |
+| **Ctrl + S** | Save File |
+| **Ctrl + Shift + F** | Global Search & Replace |
 
-const developer: UserProfile = {
-  id: 'usr_01',
-  name: 'Alex Developer',
-  role: 'architect',
-  editor: 'CodeStudio',
-};
+---
 
-console.log(\`Running \${developer.editor} for \${developer.name}!\`);
-\`\`\`
-
-Enjoy building with **CodeStudio**!
+Ready to build. Open or create files in the Explorer to get started!
 `,
   },
   {
-    id: 'file-mermaid-doc',
-    name: 'architecture.mermaid',
-    path: 'docs/architecture.mermaid',
+    id: 'file-main-ts',
+    name: 'index.ts',
+    path: 'src/index.ts',
     type: 'file',
-    parentId: 'folder-docs',
-    extension: 'mermaid',
+    parentId: null,
+    extension: 'ts',
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    content: `sequenceDiagram
-    autonumber
-    actor User
-    participant App as CodeStudio React App
-    participant Monaco as Monaco Editor Engine
-    participant Store as Zustand File Store
-    participant VFS as IndexedDB / FileSystem
+    content: `/**
+ * CodeStudio Starter Entrypoint
+ */
 
-    User->>App: Types code / edits text
-    App->>Monaco: OnContentChange Event
-    Monaco->>Store: Dispatch updateFileContent
-    Store->>VFS: Persist changes asynchronously
-    Store-->>App: Re-render Markdown / HTML / Mermaid preview
+interface WorkspaceConfig {
+  name: string;
+  version: string;
+  mode: 'web' | 'desktop';
+}
+
+export const workspace: WorkspaceConfig = {
+  name: 'CodeStudio Workspace',
+  version: '1.0.3',
+  mode: 'desktop',
+};
+
+export function initialize(): void {
+  console.log(\`Starting \${workspace.name} v\${workspace.version}...\`);
+}
+
+initialize();
+`,
+  },
+  {
+    id: 'file-package-json',
+    name: 'package.json',
+    path: 'package.json',
+    type: 'file',
+    parentId: null,
+    extension: 'json',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    content: `{
+  "name": "my-codestudio-project",
+  "version": "1.0.3",
+  "description": "Project created in CodeStudio",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "npm run build && node dist/index.js",
+    "build": "tsc",
+    "test": "echo \\"Running tests...\\" && exit 0"
+  },
+  "keywords": ["codestudio", "typescript"],
+  "author": "",
+  "license": "MIT"
+}
 `,
   },
   {
@@ -196,10 +196,11 @@ Enjoy building with **CodeStudio**!
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Live Web Sandbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeStudio App</title>
   <style>
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0f172a;
       color: #e2e8f0;
       display: flex;
@@ -211,50 +212,21 @@ Enjoy building with **CodeStudio**!
     }
     .card {
       background: #1e293b;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       border: 1px solid #334155;
       text-align: center;
-      max-width: 400px;
+      max-width: 450px;
     }
-    button {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 0.6rem 1.4rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: all 0.2s ease;
-    }
-    button:hover {
-      background: #2563eb;
-      transform: translateY(-2px);
-    }
-    #counter {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: #38bdf8;
-      margin: 1rem 0;
-    }
+    h1 { margin-top: 0; color: #38bdf8; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>⚡ CodeStudio Live Preview</h2>
-    <p>Edit this HTML file to see instant hot updates!</p>
-    <div id="counter">0</div>
-    <button onclick="increment()">Click Me!</button>
+    <h1>🚀 CodeStudio App</h1>
+    <p>Your web preview is live and responsive!</p>
   </div>
-
-  <script>
-    let count = 0;
-    function increment() {
-      count++;
-      document.getElementById('counter').innerText = count;
-    }
-  </script>
 </body>
 </html>
 `,
@@ -269,7 +241,7 @@ Enjoy building with **CodeStudio**!
     createdAt: Date.now(),
     updatedAt: Date.now(),
     content: `// CodeStudio JavaScript Interactive Sandbox
-// Press "Run Script" in the right preview panel to execute!
+// Press "Run" to execute in browser or native Node!
 
 function calculateFibonacci(n) {
   if (n <= 1) return n;
@@ -282,37 +254,10 @@ function calculateFibonacci(n) {
   return b;
 }
 
-console.log("🚀 Starting Fibonacci sequence benchmark...");
-const numbers = [5, 10, 15, 20, 25, 30];
-
-numbers.forEach(num => {
-  const result = calculateFibonacci(num);
-  console.log(\`Fibonacci(\${num}) = \${result}\`);
+console.log("🚀 Fibonacci benchmark:");
+[5, 10, 15, 20, 25].forEach(num => {
+  console.log(\`Fibonacci(\${num}) = \${calculateFibonacci(num)}\`);
 });
-
-console.log("✅ Code execution completed successfully!");
-`,
-  },
-  {
-    id: 'file-data-json',
-    name: 'package.json',
-    path: 'package.json',
-    type: 'file',
-    parentId: null,
-    extension: 'json',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    content: `{
-  "name": "codestudio-workspace",
-  "version": "1.0.0",
-  "description": "Next-gen code and text editor project workspace",
-  "author": "CodeStudio Developer",
-  "license": "MIT",
-  "dependencies": {
-    "react": "^19.0.0",
-    "monaco-editor": "^0.45.0"
-  }
-}
 `,
   }
 ];

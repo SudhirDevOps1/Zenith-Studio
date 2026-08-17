@@ -20,7 +20,10 @@ import {
   Keyboard,
   Blocks,
   Bot,
+  Bug,
 } from 'lucide-react';
+import { useComposerStore } from '../../stores/useComposerStore';
+
 
 
 export const ActivityBar: React.FC = () => {
@@ -159,6 +162,23 @@ export const ActivityBar: React.FC = () => {
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
         </button>
 
+        {/* Run & Debug */}
+        <button
+          onClick={() => setActiveSidebarTab('debug')}
+          style={activeSidebarTab === 'debug' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
+            activeSidebarTab === 'debug'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+          }`}
+          title="Run & Debug (Ctrl+Shift+D)"
+        >
+          {activeSidebarTab === 'debug' && (
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
+          )}
+          <Bug style={{ width: "18px", height: "18px" }} />
+        </button>
+
         {/* Extensions Marketplace */}
         <button
           onClick={() => setActiveSidebarTab('extensions')}
@@ -178,6 +198,16 @@ export const ActivityBar: React.FC = () => {
             <span style={{ backgroundColor: currentAccent.primary }} className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#0c0d14]" />
           )}
         </button>
+
+        {/* AI Multi-File Composer */}
+        <button
+          onClick={() => useComposerStore.getState().setIsOpen(true)}
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:text-cyan-300 hover:bg-cyan-950/40 transition-all text-cyan-400 border border-cyan-500/30 shadow-sm"
+          title="AI Composer (Multi-File Agent) — Ctrl+Shift+I"
+        >
+          <Sparkles style={{ width: "18px", height: "18px" }} />
+        </button>
+
 
 
         {/* Command Palette */}
