@@ -3,9 +3,9 @@ import { get as idbGet, set as idbSet } from 'idb-keyval';
 import { ExtensionItem, ExtensionCategory } from '../types/extensions';
 import { DEFAULT_EXTENSIONS } from '../data/defaultExtensions';
 
-const IDB_KEY_EXTENSIONS = 'codestudio_installed_extensions_v1';
+const IDB_KEY_EXTENSIONS = 'codestudio_user_extensions_v1';
 
-interface ExtensionState {
+interface ExtensionStoreState {
   extensions: ExtensionItem[];
   activeTab: 'marketplace' | 'installed' | 'recommended';
   selectedCategory: ExtensionCategory;
@@ -13,8 +13,8 @@ interface ExtensionState {
   selectedExtension: ExtensionItem | null;
   isLoadingOnline: boolean;
   onlineExtensions: ExtensionItem[];
+  onlineSearchError: string | null;
 
-  // Actions
   initializeExtensions: () => Promise<void>;
   installExtension: (id: string) => Promise<void>;
   uninstallExtension: (id: string) => Promise<void>;
@@ -26,7 +26,9 @@ interface ExtensionState {
   setSearchQuery: (q: string) => void;
 }
 
-export const useExtensionStore = create<ExtensionState>((set, get) => ({
+let activeSearchAbortController: AbortController | null = null;
+
+export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
   extensions: DEFAULT_EXTENSIONS,
   activeTab: 'marketplace',
   selectedCategory: 'All',
@@ -34,12 +36,12 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   selectedExtension: null,
   isLoadingOnline: false,
   onlineExtensions: [],
+  onlineSearchError: null,
 
   initializeExtensions: async () => {
     try {
       const saved = await idbGet<ExtensionItem[]>(IDB_KEY_EXTENSIONS);
       if (saved && Array.isArray(saved) && saved.length > 0) {
-        // Merge saved states with default catalog
         const map = new Map(saved.map((e) => [e.id, e]));
         const merged = DEFAULT_EXTENSIONS.map((ext) => {
           const s = map.get(ext.id);
@@ -49,7 +51,6 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
           return ext;
         });
 
-        // Add any external Open VSX extensions saved in storage
         saved.forEach((s) => {
           if (!merged.some((m) => m.id === s.id)) {
             merged.push(s);
@@ -109,54 +110,67 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   },
 
   searchOpenVSX: async (query: string) => {
-    if (!query.trim()) {
-      set({ onlineExtensions: [], isLoadingOnline: false });
+    const trimmed = query.trim();
+    if (!trimmed) {
+      set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
       return;
     }
 
-    set({ isLoadingOnline: true });
+    if (activeSearchAbortController) {
+      activeSearchAbortController.abort();
+    }
+    activeSearchAbortController = new AbortController();
+
+    set({ isLoadingOnline: true, onlineSearchError: null });
+
     try {
-      const res = await fetch(`https://open-vsx.org/api/-/search?query=${encodeURIComponent(query)}&size=15`);
+      const res = await fetch(
+        `https://open-vsx.org/api/-/search?query=${encodeURIComponent(trimmed)}&size=30`,
+        { signal: activeSearchAbortController.signal }
+      );
+
       if (!res.ok) throw new Error(`Open VSX HTTP ${res.status}`);
       const data = await res.json();
+
       const detectCategory = (extName: string, tags: string[] = [], desc: string = ''): ExtensionCategory => {
         const text = `${extName} ${tags.join(' ')} ${desc}`.toLowerCase();
         if (text.includes('theme') || text.includes('color-theme') || text.includes('icon-theme')) return 'Themes';
         if (text.includes('format') || text.includes('prettier') || text.includes('beautif')) return 'Formatters';
         if (text.includes('lint') || text.includes('eslint') || text.includes('hint')) return 'Linters';
         if (text.includes('snippet') || text.includes('template')) return 'Snippets';
-        if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser')) return 'AI & Productivity';
+        if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser') || text.includes('server')) return 'AI & Productivity';
         return 'Programming Languages';
       };
 
       const items: ExtensionItem[] = (data.extensions || []).map((item: any) => {
         const cat = detectCategory(item.name || '', item.tags || [], item.description || '');
+        const downloads = item.downloadCount || 0;
         return {
           id: `${item.namespace}.${item.name}`,
           name: item.name,
           displayName: item.displayName || item.name,
           publisher: item.namespace,
           version: item.version || '1.0.0',
-          description: item.description || 'Open VSX Community Extension for VS Code/CodeStudio.',
+          description: item.description || `Open VSX Community Extension for CodeStudio & VS Code.`,
           category: cat,
           icon: item.files?.icon,
-          downloads: item.downloadCount > 1000000 ? `${(item.downloadCount / 1000000).toFixed(1)}M` : item.downloadCount > 1000 ? `${(item.downloadCount / 1000).toFixed(0)}k` : `${item.downloadCount || 0}`,
-          downloadsCount: item.downloadCount || 0,
+          downloads: downloads > 1000000 ? `${(downloads / 1000000).toFixed(1)}M` : downloads > 1000 ? `${(downloads / 1000).toFixed(0)}k` : `${downloads}`,
+          downloadsCount: downloads,
           rating: item.averageRating ? Number(item.averageRating.toFixed(1)) : 4.8,
-          reviewsCount: item.reviewCount || 10,
+          reviewsCount: item.reviewCount || 12,
           verified: item.verified || false,
           installed: false,
           enabled: false,
-          tags: item.tags || ['open-vsx', 'community'],
+          tags: Array.isArray(item.tags) ? item.tags : [item.name, 'community'],
           source: 'open-vsx',
           readme: `# ${item.displayName || item.name}\n\n${item.description || ''}\n\n- **Publisher**: ${item.namespace}\n- **Version**: ${item.version}\n- **Source**: [Open VSX Registry](https://open-vsx.org/extension/${item.namespace}/${item.name})`,
         };
       });
 
-      set({ onlineExtensions: items, isLoadingOnline: false });
-    } catch {
-      // Graceful offline fallback: filter local extensions
-      set({ onlineExtensions: [], isLoadingOnline: false });
+      set({ onlineExtensions: items, isLoadingOnline: false, onlineSearchError: null });
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
+      set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: 'Could not connect to Open VSX registry.' });
     }
   },
 

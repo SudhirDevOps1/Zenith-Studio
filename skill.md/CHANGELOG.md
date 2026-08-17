@@ -2,6 +2,17 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Robust Marketplace & Open VSX Live Search Engine
+* **User Request:** "Curated Catalog + Open VSX Live Registry not ache se kam kr raha hain search krne pr aa hi nahi raha hain"
+* **Root Cause & Enhancements:**
+  - `ExtensionsPanel` was restricting searches to the currently selected tab (e.g. Popular/Installed) instead of pooling all catalog & live Open VSX results when user typed a query.
+  - Added request abort controller in `useExtensionStore` to prevent older search queries from overwriting newer query results.
+  - Added unified search pool combining all curated extensions and live Open VSX registry items.
+  - Added Quick Search Pills (`Python`, `Live Server`, `One Dark`, `React`, `Prettier`, `Tailwind`, `C++`, `Rust`, `GitLens`) for one-click discovery.
+  - Added clear button (`X`), search counter, and live Open VSX status indicator.
+* **Files Modified:** `src/stores/useExtensionStore.ts`, `src/components/sidebar/ExtensionsPanel.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Automated GitHub Actions CI/CD Workflow & Tag Release
 * **User Request:** ".github workflow banao taki auto app bn jaye tag bana kr"
 * **Features Added:**
