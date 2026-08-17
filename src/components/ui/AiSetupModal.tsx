@@ -56,7 +56,9 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [isDetecting, setIsDetecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs?: number } | null>(null);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -270,34 +272,47 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
             </div>
           )}
 
-          {/* 3. MODEL NAME with Auto-Detect */}
+          {/* 3. MODEL NAME with Auto-Detect & Manual Mode */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300">
                 Model Name
               </label>
-              <button
-                type="button"
-                onClick={() => handleDetectModels(true)}
-                disabled={isDetecting}
-                className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition font-medium cursor-pointer"
-                title="Fetch live active models from your API key"
-              >
-                <RefreshCw className={`w-3 h-3 ${isDetecting ? 'animate-spin' : ''}`} />
-                <span>Auto-Detect Models</span>
-                {availableModels.length > 0 && (
-                  <span className="px-1.5 py-0.2 bg-cyan-950 text-cyan-300 rounded-full text-[9px] border border-cyan-800/60">
-                    {availableModels.length}
-                  </span>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsManualMode(!isManualMode)}
+                  className="text-[10px] text-slate-400 hover:text-cyan-300 transition cursor-pointer font-medium"
+                  title="Toggle manual text input vs discovered dropdown"
+                >
+                  {isManualMode ? '📋 Select from List' : '✍️ Type Manually'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDetectModels(true)}
+                  disabled={isDetecting}
+                  className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition font-medium cursor-pointer"
+                  title="Fetch live active models from your API key"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isDetecting ? 'animate-spin' : ''}`} />
+                  <span>Auto-Detect</span>
+                  {availableModels.length > 0 && (
+                    <span className="px-1.5 py-0.2 bg-cyan-950 text-cyan-300 rounded-full text-[9px] border border-cyan-800/60">
+                      {availableModels.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {availableModels.length > 0 ? (
+            {!isManualMode && availableModels.length > 0 ? (
               <div className="relative">
                 <select
                   value={model}
-                  onChange={(e) => setModel(e.target.value)}
+                  onChange={(e) => {
+                    setModel(e.target.value);
+                    if (provider === 'custom') setCustomModelName(e.target.value);
+                  }}
                   className="w-full bg-[#141522] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none appearance-none cursor-pointer focus:border-cyan-500 transition"
                 >
                   {availableModels.map((m) => (
@@ -309,15 +324,21 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
             ) : (
-              <input
-                type="text"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder="Enter model identifier (e.g. gemini-1.5-flash, gpt-4o)..."
-                className="w-full bg-[#141522] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 outline-none focus:border-cyan-500 transition"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={model}
+                  onChange={(e) => {
+                    setModel(e.target.value);
+                    if (provider === 'custom') setCustomModelName(e.target.value);
+                  }}
+                  placeholder="Enter model identifier (e.g. gpt-4o, claude-3-5-sonnet, gemini-2.0-flash)..."
+                  className="w-full bg-[#141522] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 outline-none focus:border-cyan-500 transition"
+                />
+              </div>
             )}
           </div>
+
 
           {/* 4. CUSTOM PROVIDER SETTINGS BOX (Matches screenshot exactly) */}
           {provider === 'custom' && (

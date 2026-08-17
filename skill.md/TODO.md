@@ -2,7 +2,13 @@
 
 > Keep this updated. Mark completed items with `[x]` and pending with `[ ]`.
 
-## Completed Core Deliverables (v1.0.0 Production)
+## Completed Core Deliverables (v1.0.3 Production)
+- [x] Universal AI Multi-Provider Assistant (Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, Custom).
+- [x] Remote Model Discovery (`/v1/models` call with manual preset priority & text combobox).
+- [x] Native System Python 3.12 & MinGW GCC/G++ Execution with Windows PATH context.
+- [x] Universal Multi-Language Formatter (`Shift+Alt+F` & Format-on-Save).
+- [x] Live Problems & Diagnostics drawer linked to Monaco marker changes.
+- [x] Full-Screen Clean Monaco Viewport for YAML, JSON, and source code files.
 - [x] Monaco Editor Integration (100+ languages, minimap, formatting, find/replace, local offline bundle).
 - [x] Quick Open File Switcher (`Ctrl+P`) with fuzzy filtering & instant file hopping.
 - [x] Go to Line Number (`Ctrl+G` or `:line`) with automated cursor position & reveal in center.
@@ -16,12 +22,13 @@
 - [x] Integrated Terminal with live workspace commands (`ls`, `cat`, `touch`, `rm`, `open`, `eval`).
 - [x] Multi-Language Execution (JS/TS with type stripping, Python Pyodide, native C/C++ GCC).
 - [x] Markdown Live Preview with interactive standalone Mermaid diagram rendering.
-- [x] Spreadsheet Viewer (Excel `.xlsx`, `.xls`, `.xlsm`, CSV, TSV, JSON) with binary-safe export.
+- [x] Spreadsheet Viewer (Excel `.xlsx`, `.xls`, `.xlsm`, CSV, TSV) with binary-safe export.
 - [x] Media & PDF Viewer (Images, Audio, Video, PDF render).
-- [x] Git & Source Control panel (Diff viewer, Commit logs, Staged/Unstaged changes).
+- [x] Git & Source Control panel (Diff viewer, Commit logs, Staged/Unstaged changes, real git CLI).
 - [x] Production Singlefile Web Bundle (`npm run build`).
 - [x] Desktop Setup Installer & Portable build (`npm run electron:build`).
 - [x] Live Deployment on Cloudflare Pages (`https://codestudio-web-app.pages.dev/`).
+
 
 ## Future Enhancements
 - [ ] Collaborative Real-Time Editing with WebRTC / WebSockets.

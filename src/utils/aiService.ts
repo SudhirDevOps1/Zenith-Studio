@@ -167,31 +167,84 @@ export async function detectProviderModels(settings: Partial<EditorSettings>): P
       }
 
       case 'custom': {
-        const endpoint = settings.aiCustomEndpoint;
-        if (!endpoint) return DEFAULT_PROVIDER_MODELS.custom.map((id) => ({ id, name: id }));
-        // Try fetching /models on baseUrl
-        const baseUrl = endpoint.replace(/\/chat\/completions\/?$/, '');
-        const res = await fetch(`${baseUrl}/models`, {
-          headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const list = data.data || data.models || [];
-          if (Array.isArray(list) && list.length > 0) {
-            return list.map((m: any) => ({ id: m.id || m.name, name: m.id || m.name }));
-          }
+        const endpoint = settings.aiCustomEndpoint || 'https://api.example.com/v1/chat/completions';
+        // Base URL normalization: remove /chat/completions or trailing slashes
+        let baseUrl = endpoint.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, '');
+        if (!baseUrl.endsWith('/v1') && endpoint.includes('/v1')) {
+          baseUrl = baseUrl.split('/v1')[0] + '/v1';
         }
-        return DEFAULT_PROVIDER_MODELS.custom.map((id) => ({ id, name: id }));
+
+        const modelsUrl = baseUrl.endsWith('/models') ? baseUrl : `${baseUrl}/models`;
+        const discoveredModels: ModelInfo[] = [];
+
+        try {
+          const res = await fetch(modelsUrl, {
+            headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const list = data.data || data.models || (Array.isArray(data) ? data : []);
+            if (Array.isArray(list)) {
+              list.forEach((m: any) => {
+                const id = typeof m === 'string' ? m : m.id || m.name || m.model;
+                if (id && typeof id === 'string') {
+                  discoveredModels.push({
+                    id,
+                    name: m.name || id,
+                    description: m.description || `Discovered from ${baseUrl}`,
+                  });
+                }
+              });
+            }
+          }
+        } catch (fetchErr) {
+          console.warn(`Could not fetch models from ${modelsUrl}:`, fetchErr);
+        }
+
+        // Manual / default models come FIRST and are NEVER overwritten
+        const manualModelIds = [
+          settings.aiCustomModelName?.trim(),
+          settings.aiModel?.trim(),
+          ...DEFAULT_PROVIDER_MODELS.custom,
+        ].filter(Boolean) as string[];
+
+        const combinedList: ModelInfo[] = [];
+        const seenIds = new Set<string>();
+
+        // 1. Register manual models first
+        manualModelIds.forEach((id) => {
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            combinedList.push({
+              id,
+              name: `${id} (Manual / Preset)`,
+              description: 'Configured manual model identifier',
+            });
+          }
+        });
+
+        // 2. Append remote discovered models without overwriting
+        discoveredModels.forEach((m) => {
+          if (!seenIds.has(m.id)) {
+            seenIds.add(m.id);
+            combinedList.push(m);
+          }
+        });
+
+        return combinedList.length > 0 ? combinedList : DEFAULT_PROVIDER_MODELS.custom.map((id) => ({ id, name: id }));
       }
 
-      default:
-        return (DEFAULT_PROVIDER_MODELS[provider] || DEFAULT_PROVIDER_MODELS.gemini).map((id) => ({ id, name: id }));
+      default: {
+        const defaultList = (DEFAULT_PROVIDER_MODELS[provider] || DEFAULT_PROVIDER_MODELS.gemini).map((id) => ({ id, name: id }));
+        return defaultList;
+      }
     }
   } catch (err: any) {
     console.warn(`Failed to auto-detect models for ${provider}:`, err);
     return (DEFAULT_PROVIDER_MODELS[provider] || DEFAULT_PROVIDER_MODELS.gemini).map((id) => ({ id, name: id }));
   }
 }
+
 
 /**
  * Test Connection with provider API

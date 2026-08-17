@@ -28,9 +28,29 @@
 
 ---
 
-## 🌟 Key Highlights & Feature Matrix
+### 🤖 1. Universal AI Multi-Provider Assistant & Model Auto-Discovery
+CodeStudio connects with your favorite LLM provider out of the box:
+- **Supported Providers**: Google Gemini (Flash 2.0, Pro 1.5), OpenAI (GPT-4o, o3-mini), Anthropic Claude (3.5 Sonnet, 3.5 Haiku), Groq (Llama 3.3 70B, DeepSeek R1), OpenRouter, DeepSeek, Ollama (Local), and Custom OpenAI-Compatible Endpoints.
+- **Dynamic Model Auto-Discovery**: Automatically queries `${baseUrl}/v1/models` to discover all models available on your API key.
+- **Manual Priority Override**: Manually defined models and presets appear first without remote overwrite, with instant toggle between dropdown list and manual text input.
+- **⚡ Live Ping Test**: In-modal connection ping with millisecond (`ms`) latency reporting.
 
-### ⚡ 1. Quick Open File Switcher (`Ctrl + P`) & Go to Line (`Ctrl + G`)
+### ⚡ 2. Native Multi-Language Execution & System Compilers
+- **Native Python 3.12**: Executes your local Windows system Python directly (`python.exe` / `py.exe`) with unbuffered `-u` output.
+- **Native MinGW GCC / G++**: Compiles and runs C (`gcc -O2 -std=c11`) and C++ (`g++ -O2 -std=c17`) with full Windows PATH environment support.
+- **Quick Run Action**: Top tabs bar features a 1-click **`▶ Run`** button for runnable code files (`.py`, `.c`, `.cpp`, `.js`, `.ts`).
+- **WebAssembly Fallback**: Automatic fallback to Pyodide in browser environments.
+
+### 🪄 3. Universal Code Formatter (`Shift + Alt + F`)
+- Automatic formatting engine for JS/TS/JSX/TSX, HTML/SVG, CSS/SCSS, JSON, Markdown, and Python.
+- Configurable **Format on Save** and instant shortcut trigger (`Shift + Alt + F`).
+
+### ⚠️ 4. Problems & Diagnostics Panel
+- Real-time Monaco marker synchronization with clickable error and warning counts in the Status Bar.
+- Instant jump-to-line navigation from the Problems drawer.
+
+### ⚡ 5. Quick Open File Switcher (`Ctrl + P`) & Go to Line (`Ctrl + G`)
+
 - **Instant Fuzzy File Search (`Ctrl + P`)**: Open the fuzzy file picker from anywhere to jump across workspace files in sub-milliseconds without touching your mouse.
 - **Go to Line Number (`Ctrl + G` or `:line`)**: Jump directly to any line number (e.g. `:45`) with automatic viewport centering and cursor positioning.
 - **Keyboard Navigation**: Smooth `<kbd>↑</kbd> <kbd>↓</kbd>` arrow navigation with `<kbd>Enter</kbd>` to select and open.

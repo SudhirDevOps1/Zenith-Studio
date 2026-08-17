@@ -2,7 +2,27 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - v1.0.3 Universal AI Multi-Provider, Remote Model Auto-Discovery, Viewport & Native Runner Overhaul
+* **User Directive:** "https://api.example.com/v1/models call karega aur saare discovered models register kar lega. Manually defined models pehle aayenge... localy git add comit new tag kro"
+* **Fixes & Enhancements:**
+  - **Universal AI Setup & Remote Model Discovery (`AiSetupModal.tsx` & `aiService.ts`)**:
+    - Queries `${endpoint}/models` or `${baseUrl}/v1/models` on any OpenAI-compatible custom provider endpoint or provider (Gemini, OpenAI, Groq, OpenRouter, DeepSeek, Ollama).
+    - Ensures manually defined models and presets appear **first**, while discovered remote models are appended without overwriting manual configurations.
+    - Added instant manual text input toggle vs discovered dropdown picker.
+    - Added **⚡ Test Connection** with live millisecond roundtrip ping test.
+  - **Full-Screen Clean Monaco Viewport & JSON Editing (`App.tsx` & `SpreadsheetPreview.tsx`)**:
+    - Eliminated the unwanted empty right-side preview placeholder on YAML (`build.yml`), JSON, and code files.
+    - Fixed `.json` files to open directly in 100% full-width Monaco Editor.
+    - Formatted JSON objects and arrays in spreadsheet preview to prevent `[object Object]` displays.
+  - **Native System Execution for Python 3.12 and MinGW GCC/G++ (`electron/main.js` & `AdvancedCodeRunner.tsx`)**:
+    - Added native Windows system Python (`python.exe` / `py.exe`) execution support with unbuffered `-u` flag.
+    - Enabled Windows shell PATH MinGW `gcc` (`C:\MinGW\bin\gcc.exe`) and `g++` compilation with `-O2 -std=c17` / `-std=c11`.
+    - Added 1-click **`▶ Run`** button in `TabsBar.tsx` for all runnable files.
+* **Files Modified:** `src/utils/aiService.ts`, `src/components/ui/AiSetupModal.tsx`, `src/App.tsx`, `src/components/preview/SpreadsheetPreview.tsx`, `src/components/preview/AdvancedCodeRunner.tsx`, `src/components/tabs/TabsBar.tsx`, `electron/main.js`, `docs/SKILL.md`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Comprehensive UI/UX Modernization & Visual Polish Overhaul
+
 * **User Directive:** "eska ui ux aur achha banao"
 * **Fixes & Enhancements:**
   - Modernized **Header & Menu Bar (`MenuBar.tsx`)** with frosted glass (`backdrop-blur-md bg-[#0e0f18]/95`), centered dynamic workspace project badge (`workspace: my-project`), and sleek dropdown menus with `<kbd>` shortcut badges.
