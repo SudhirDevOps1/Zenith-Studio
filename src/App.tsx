@@ -38,8 +38,12 @@ import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
 import { UpdateModal } from './components/ui/UpdateModal';
 import { useUpdateStore } from './stores/useUpdateStore';
 import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
+
 import { applyAccentToDOM } from './utils/accentThemes';
-import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image, FileText } from 'lucide-react';
+import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image } from 'lucide-react';
+
+
+
 
 
 export default function App() {
@@ -236,27 +240,29 @@ export default function App() {
   const isMarkdown = ext === 'md' || ext === 'markdown' || ext === 'mermaid' || ext === 'mmd';
   const isHtml = ext === 'html' || ext === 'htm';
   const isJsTs = ext === 'js' || ext === 'ts' || ext === 'jsx' || ext === 'tsx';
-  const isRunnable = isJsTs || ext === 'py' || ext === 'c' || ext === 'cpp' || ext === 'cc' || ext === 'cxx';
+  const isRunnable = isJsTs || ext === 'py' || ext === 'c' || ext === 'cpp' || ext === 'cc' || ext === 'cxx' || ext === 'rs' || ext === 'go';
   const isImage = ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp' || ext === 'ico';
   const isAudio = ext === 'mp3' || ext === 'wav' || ext === 'ogg' || ext === 'flac';
   const isVideo = ext === 'mp4' || ext === 'webm' || ext === 'mov' || ext === 'avi';
   const isPdf = ext === 'pdf';
   const isSvg = ext === 'svg';
-  const isSpreadsheet = ext === 'csv' || ext === 'tsv' || ext === 'json' || ext === 'xlsx' || ext === 'xls' || ext === 'xlsm';
+  const isSpreadsheet = ext === 'csv' || ext === 'tsv' || ext === 'xlsx' || ext === 'xls' || ext === 'xlsm';
   const isWebview = activePreviewMode === 'webview' || activePreviewMode === 'browser';
-  const isTextCode = !isImage && !isAudio && !isVideo && !isPdf && !isSpreadsheet && !isWebview;
+  const isMediaOnly = isImage || isAudio || isVideo || isPdf;
 
-  const canPreview = isMarkdown || isHtml || isRunnable || isImage || isAudio || isVideo || isPdf || isSvg || isSpreadsheet || isWebview;
-  const showPreview = (activePreviewMode !== 'off' && canPreview) || isWebview;
+  // Split preview is active for markdown/html/svg or when explicitly enabled
+  const isSplitContent = (isMarkdown || isHtml || isSvg) && activePreviewMode !== 'off';
+  const showPreview =
+    isWebview ||
+    isSplitContent ||
+    ((isRunnable || isSpreadsheet) && (activePreviewMode === 'split-edit' || activePreviewMode === 'preview-only'));
 
   // Get image source for image preview
   const getImageSrc = () => {
     if (!activeFile?.content) return '';
-    // If content is already a data URL, use it directly
     if (activeFile.content.startsWith('data:')) {
       return activeFile.content;
     }
-    // Otherwise, try to construct a data URL (for imported images)
     return '';
   };
 
@@ -288,7 +294,6 @@ export default function App() {
             {activeSidebarTab === 'ai' && <AiAssistantPanel />}
             {activeSidebarTab === 'info' && <WorkspaceInfo />}
 
-
             <div
               onMouseDown={() => {
                 isDraggingSidebar.current = true;
@@ -311,81 +316,81 @@ export default function App() {
             <div id="editor-preview-container" className="flex-1 flex flex-col h-full overflow-hidden relative">
               {/* Main Editor + Preview Row */}
               <div className="flex-1 flex h-full overflow-hidden relative">
-                {/* Monaco Code Editor Pane - Show for text/code files */}
-                {(isTextCode || activePreviewMode === 'split-edit') && (
-                  <div
-                    style={{ width: showPreview ? `${editorSplitPct}%` : '100%' }}
-                    className="h-full overflow-hidden relative animate-fade-in-up"
-                  >
-                    <MonacoEditorWrapper
-                      fileId={activeFile.id}
-                      content={content}
-                      extension={activeFile.extension || ''}
-                      onChange={(val) => updateFileContent(activeFile.id, val)}
-                      onScrollPercentage={setScrollPercentage}
-                      editorRef={editorRef}
-                      monacoRef={monacoRef}
-                    />
-                  </div>
-                )}
-
-                {/* Split Drag Divider */}
-                {showPreview && activePreviewMode !== 'preview-only' && (
-                  <div
-                    onMouseDown={() => {
-                      isDraggingSplit.current = true;
-                      document.body.style.cursor = 'col-resize';
-                    }}
-                    className="w-1.5 hover:w-2 bg-slate-800 hover:bg-blue-500 cursor-col-resize z-10 shrink-0 transition-all shadow-md"
-                  />
-                )}
-
-                {/* Live Preview Pane */}
-                {showPreview && (
-                  <div
-                    style={{ width: activePreviewMode === 'preview-only' ? '100%' : `${100 - editorSplitPct}%` }}
-                    className="h-full overflow-hidden shrink-0 animate-slide-in-right"
-                  >
-                    {isMarkdown && (
-                      <MarkdownPreview
-                        content={content}
-                        scrollPercentage={scrollPercentage}
-                        extension={ext}
-                      />
-                    )}
-                    {isHtml && <HtmlPreview htmlContent={content} />}
-                    {isRunnable && <AdvancedCodeRunner code={content} extension={ext} fileName={activeFile.name} />}
+                {/* Media-Only View (Images, Video, Audio, PDF) */}
+                {isMediaOnly ? (
+                  <div className="flex-1 h-full overflow-hidden bg-[#11111b] flex items-center justify-center p-4">
                     {isImage && <ImagePreview src={getImageSrc()} fileName={activeFile.name} />}
                     {isAudio && <MediaPreview src={content} fileName={activeFile.name} kind="audio" />}
                     {isVideo && <MediaPreview src={content} fileName={activeFile.name} kind="video" />}
                     {isPdf && <PdfPreview url={content} fileName={activeFile.name} />}
-                    {isSvg && (
-                      <SvgPreview
-                        content={content}
-                        onContentChange={(newContent) => updateFileContent(activeFile.id, newContent)}
-                        fileName={activeFile.name}
-                      />
-                    )}
-                    {isSpreadsheet && (
-                      <SpreadsheetPreview
-                        content={content}
-                        fileName={activeFile.name}
-                        type={ext === 'json' ? 'json' : ext === 'tsv' ? 'tsv' : ext === 'xlsx' ? 'xlsx' : ext === 'xls' ? 'xls' : ext === 'xlsm' ? 'xlsm' : 'csv'}
-                      />
-                    )}
-                    {isWebview && <SimpleBrowserWebview onClose={() => setActivePreviewMode('auto')} />}
                   </div>
-                )}
+                ) : (
+                  <>
+                    {/* Monaco Code Editor Pane */}
+                    {activePreviewMode !== 'preview-only' && (
+                      <div
+                        style={{ width: showPreview ? `${editorSplitPct}%` : '100%' }}
+                        className="h-full overflow-hidden relative animate-fade-in-up flex-1"
+                      >
+                        <MonacoEditorWrapper
+                          fileId={activeFile.id}
+                          content={content}
+                          extension={activeFile.extension || ''}
+                          onChange={(val) => updateFileContent(activeFile.id, val)}
+                          onScrollPercentage={setScrollPercentage}
+                          editorRef={editorRef}
+                          monacoRef={monacoRef}
+                        />
+                      </div>
+                    )}
 
-                {/* No Preview Available */}
-                {!canPreview && (
-                  <div className="flex-1 flex flex-col items-center justify-center bg-[#11111b] text-slate-500">
-                    <FileText className="w-12 h-12 mb-4 opacity-50" />
-                    <p className="text-sm">No preview available for this file type</p>
-                    <p className="text-xs mt-2 opacity-70">Edit in the code editor on the left</p>
-                  </div>
+                    {/* Split Drag Divider */}
+                    {showPreview && activePreviewMode !== 'preview-only' && (
+                      <div
+                        onMouseDown={() => {
+                          isDraggingSplit.current = true;
+                          document.body.style.cursor = 'col-resize';
+                        }}
+                        className="w-1.5 hover:w-2 bg-slate-800 hover:bg-blue-500 cursor-col-resize z-10 shrink-0 transition-all shadow-md"
+                      />
+                    )}
+
+                    {/* Live Preview Pane */}
+                    {showPreview && (
+                      <div
+                        style={{ width: activePreviewMode === 'preview-only' ? '100%' : `${100 - editorSplitPct}%` }}
+                        className="h-full overflow-hidden shrink-0 animate-slide-in-right"
+                      >
+                        {isMarkdown && (
+                          <MarkdownPreview
+                            content={content}
+                            scrollPercentage={scrollPercentage}
+                            extension={ext}
+                          />
+                        )}
+                        {isHtml && <HtmlPreview htmlContent={content} />}
+                        {isRunnable && <AdvancedCodeRunner code={content} extension={ext} fileName={activeFile.name} />}
+                        {isSvg && (
+                          <SvgPreview
+                            content={content}
+                            onContentChange={(newContent) => updateFileContent(activeFile.id, newContent)}
+                            fileName={activeFile.name}
+                          />
+                        )}
+                        {isSpreadsheet && (
+                          <SpreadsheetPreview
+                            content={content}
+                            fileName={activeFile.name}
+                            type={ext === 'tsv' ? 'tsv' : ext === 'xlsx' ? 'xlsx' : ext === 'xls' ? 'xls' : ext === 'xlsm' ? 'xlsm' : 'csv'}
+                          />
+                        )}
+                        {isWebview && <SimpleBrowserWebview onClose={() => setActivePreviewMode('auto')} />}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
+
 
               {/* Integrated Terminal */}
               {showTerminal && <IntegratedTerminal onClose={() => setShowTerminal(false)} />}

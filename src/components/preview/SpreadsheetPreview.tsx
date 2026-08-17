@@ -32,15 +32,32 @@ export const SpreadsheetPreview: React.FC<SpreadsheetPreviewProps> = ({
       try {
         const json = JSON.parse(content);
         if (Array.isArray(json)) {
-          const headers = Object.keys(json[0] || {});
-          const rows = json.map((obj) => headers.map((h) => String(obj[h] ?? '')));
+          const allKeys = Array.from(
+            new Set(json.flatMap((obj) => (typeof obj === 'object' && obj !== null ? Object.keys(obj) : ['Value'])))
+          );
+          const headers = allKeys.length > 0 ? allKeys : ['Value'];
+          const rows = json.map((item) =>
+            typeof item === 'object' && item !== null
+              ? headers.map((h) => {
+                  const val = item[h];
+                  return typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val ?? '');
+                })
+              : [String(item ?? '')]
+          );
           return { headers, rows };
         }
-        return { headers: ['Key', 'Value'], rows: Object.entries(json).map(([k, v]) => [k, String(v)]) };
+        return {
+          headers: ['Key', 'Value'],
+          rows: Object.entries(json).map(([k, v]) => [
+            k,
+            typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? ''),
+          ]),
+        };
       } catch {
         return { headers: ['Error'], rows: [['Invalid JSON']] };
       }
     }
+
 
     const delimiter = type === 'tsv' ? '\t' : ',';
     const lines = content.split('\n').filter((line) => line.trim());

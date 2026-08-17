@@ -230,47 +230,158 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
   const ext = String(extension || '').toLowerCase();
   const isCpp = ['cpp', 'cc', 'cxx'].includes(ext);
   const isC = ext === 'c';
+  const isPy = ['py', 'python', 'pyw'].includes(ext);
+  const isJs = ['js', 'mjs', 'cjs'].includes(ext);
+  const isRust = ['rs', 'rust'].includes(ext);
+  const isGo = ['go'].includes(ext);
 
-  if (!isCpp && !isC) {
-    return { code: 1, stdout: '', stderr: '', error: 'Native compiler currently supports C and C++ only.' };
+  if (!isCpp && !isC && !isPy && !isJs && !isRust && !isGo) {
+    return { code: 1, stdout: '', stderr: '', error: `Native execution does not support .${ext} files directly.` };
   }
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'codestudio-'));
   const sourcePath = path.join(tempDir, fileName || `main.${ext}`);
-  const outputPath = path.join(tempDir, process.platform === 'win32' ? 'program.exe' : 'program');
-  const compiler = isCpp ? 'g++' : 'gcc';
 
   try {
     await fs.writeFile(sourcePath, code, 'utf-8');
 
-    const compilerArgs = isCpp ? [sourcePath, '-O2', '-std=c++17', '-o', outputPath] : [sourcePath, '-O2', '-std=c11', '-o', outputPath];
-    const compileResult = await new Promise((resolve) => {
-      execFile(compiler, compilerArgs, { timeout: 15000 }, (error, stdout, stderr) => {
-        resolve({ error, stdout, stderr });
-      });
-    });
+    // 1. Python Execution
+    if (isPy) {
+      const pythonCommands = process.platform === 'win32'
+        ? ['python', 'py', 'python3']
+        : ['python3', 'python'];
 
-    if (compileResult.error) {
+      let runError = null;
+      for (const pyCmd of pythonCommands) {
+        try {
+          const runResult = await new Promise((resolve) => {
+            execFile(pyCmd, ['-u', sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+              resolve({ error, stdout, stderr });
+            });
+          });
+
+          // If execution ran or gave python output, return result
+          if (!runResult.error || runResult.stdout || runResult.stderr) {
+            return {
+              code: runResult.error ? (runResult.error.code || 1) : 0,
+              stdout: runResult.stdout || '',
+              stderr: runResult.stderr || '',
+              error: runResult.error ? runResult.error.message : '',
+            };
+          }
+        } catch (e) {
+          runError = e;
+        }
+      }
+
       return {
-        code: compileResult.error.code || 1,
-        stdout: compileResult.stdout || '',
-        stderr: compileResult.stderr || '',
-        error: `Compile failed. Make sure ${compiler} is installed and available in PATH.`,
+        code: 1,
+        stdout: '',
+        stderr: '',
+        error: 'Python not found in system PATH. Make sure Python is installed and added to PATH.',
       };
     }
 
-    const runResult = await new Promise((resolve) => {
-      execFile(outputPath, [], { timeout: 10000 }, (error, stdout, stderr) => {
-        resolve({ error, stdout, stderr });
+    // 2. Node.js JavaScript Execution
+    if (isJs) {
+      const runResult = await new Promise((resolve) => {
+        execFile('node', [sourcePath], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
       });
-    });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
 
-    return {
-      code: runResult.error ? runResult.error.code || 1 : 0,
-      stdout: runResult.stdout || '',
-      stderr: runResult.stderr || '',
-      error: runResult.error ? runResult.error.message : '',
-    };
+    // 3. Go Execution
+    if (isGo) {
+      const runResult = await new Promise((resolve) => {
+        execFile('go', ['run', sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 4. C and C++ GCC/G++ Execution
+    if (isC || isCpp) {
+      const outputPath = path.join(tempDir, process.platform === 'win32' ? 'program.exe' : 'program');
+      const compiler = isCpp ? 'g++' : 'gcc';
+      const compilerArgs = isCpp
+        ? [sourcePath, '-O2', '-std=c++17', '-o', outputPath]
+        : [sourcePath, '-O2', '-std=c11', '-o', outputPath];
+
+      const compileResult = await new Promise((resolve) => {
+        execFile(compiler, compilerArgs, { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      if (compileResult.error) {
+        return {
+          code: compileResult.error.code || 1,
+          stdout: compileResult.stdout || '',
+          stderr: compileResult.stderr || '',
+          error: `Compile error with ${compiler}:\n${compileResult.stderr || compileResult.error.message}`,
+        };
+      }
+
+      const runResult = await new Promise((resolve) => {
+        execFile(outputPath, [], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 5. Rust Execution
+    if (isRust) {
+      const outputPath = path.join(tempDir, process.platform === 'win32' ? 'program.exe' : 'program');
+      const compileResult = await new Promise((resolve) => {
+        execFile('rustc', [sourcePath, '-O', '-o', outputPath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      if (compileResult.error) {
+        return {
+          code: compileResult.error.code || 1,
+          stdout: compileResult.stdout || '',
+          stderr: compileResult.stderr || '',
+          error: `Rust compile error:\n${compileResult.stderr || compileResult.error.message}`,
+        };
+      }
+
+      const runResult = await new Promise((resolve) => {
+        execFile(outputPath, [], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    return { code: 1, stdout: '', stderr: '', error: 'Unsupported execution mode.' };
   } catch (err) {
     return { code: 1, stdout: '', stderr: '', error: err.message || String(err) };
   } finally {
@@ -279,6 +390,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     } catch (_) {}
   }
 });
+
 
 // Open external URL in system browser
 ipcMain.handle('shell:openExternal', async (_, url) => {

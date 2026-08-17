@@ -3,7 +3,7 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { FileIcon } from '../filetree/FileIcon';
 import { ACCENT_PALETTE } from '../../utils/accentThemes';
-import { X, ChevronRight, Split, Layers, Columns, Globe, Folder } from 'lucide-react';
+import { X, ChevronRight, Split, Layers, Columns, Globe, Folder, Play } from 'lucide-react';
 
 export const TabsBar: React.FC = () => {
   const { openTabs, activeFileId, setActiveFile, closeTab, closeOtherTabs, closeAllTabs, files, activePreviewMode, setActivePreviewMode } = useFileStore();
@@ -12,6 +12,8 @@ export const TabsBar: React.FC = () => {
 
   const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
   const activeFile = files.find(f => f.id === activeFileId);
+  const ext = activeFile?.extension?.toLowerCase() || '';
+  const isRunnable = ['js', 'ts', 'jsx', 'tsx', 'py', 'c', 'cpp', 'cc', 'cxx', 'rs', 'go'].includes(ext);
 
   // Split path into breadcrumb tokens
   const breadcrumbItems = activeFile ? activeFile.path.split('/') : [];
@@ -41,22 +43,16 @@ export const TabsBar: React.FC = () => {
                 }`}
               >
                 <FileIcon name={tab.title} className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate flex-1 text-[11px]">{tab.title}</span>
-
-                {/* Modified dot vs close button */}
-                {tab.isModified ? (
-                  <span className="w-2 h-2 rounded-full bg-amber-400 ring-2 ring-amber-400/30 shrink-0 group-hover:hidden animate-pulse" />
-                ) : null}
-
+                <span className="truncate text-xs">{tab.title}</span>
+                {tab.isModified && (
+                  <span className="w-2 h-2 rounded-full bg-blue-400 group-hover:hidden shrink-0" />
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     closeTab(tab.fileId);
                   }}
-                  className={`p-0.5 rounded-md hover:bg-slate-700/80 hover:text-white text-slate-400 transition-all ${
-                    tab.isModified ? 'hidden group-hover:block' : 'opacity-0 group-hover:opacity-100'
-                  }`}
-                  title="Close tab"
+                  className="p-0.5 hover:bg-slate-700/80 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-auto text-slate-400 hover:text-white shrink-0"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -65,9 +61,24 @@ export const TabsBar: React.FC = () => {
           })}
         </div>
 
-        {/* Preview Split View Toggle Controls */}
+        {/* Preview & Run Code Toggle Controls */}
         {activeFile && (
           <div className="flex items-center gap-1 px-2.5 py-1 border-l border-slate-800/80 bg-[#0f1019] text-slate-400 shrink-0">
+            {isRunnable && (
+              <button
+                onClick={() => setActivePreviewMode(activePreviewMode === 'split-edit' ? 'off' : 'split-edit')}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                  activePreviewMode === 'split-edit'
+                    ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50'
+                    : 'bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400'
+                }`}
+                title={`Run ${activeFile.name} (GCC / Python / JS)`}
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span className="hidden sm:inline">Run</span>
+              </button>
+            )}
+
             <button
               onClick={() => setActivePreviewMode(activePreviewMode === 'off' ? 'auto' : 'off')}
               className={`p-1.5 rounded-lg transition-all ${activePreviewMode !== 'off' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-slate-800 hover:text-slate-200'}`}

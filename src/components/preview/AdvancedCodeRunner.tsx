@@ -138,22 +138,44 @@ result = (_stdout.getvalue(), _stderr.getvalue())
     }
   };
 
+  const runPython = async () => {
+    // 1. If in Electron desktop, run native system Python directly
+    if (isElectronRuntime() && window.electronAPI?.runNativeCode) {
+      try {
+        addLog('info', 'Executing with native System Python...');
+        const result = await window.electronAPI.runNativeCode({ code, extension: 'py', fileName });
+        if (result.stdout) addLog('out', result.stdout);
+        if (result.stderr) addLog('err', result.stderr);
+        if (result.error) addLog('err', result.error);
+        addLog('info', `Process exited (code: ${result.code ?? 0})`);
+        return;
+      } catch (err: any) {
+        addLog('info', `Native execution failed (${err.message}). Trying Pyodide...`);
+      }
+    }
+
+    // 2. Web browser Pyodide WebAssembly fallback
+    await runPythonWithPyodide();
+  };
+
   const runNativeCompiler = async () => {
     if (!settings.enableNativeCompiler) {
       addLog('err', 'Native compiler is disabled in Settings.');
       return;
     }
-    if (!isElectronRuntime()) {
-      addLog('err', 'Native GCC/G++ compile-run works only inside Electron desktop app.');
+    if (!isElectronRuntime() || !window.electronAPI?.runNativeCode) {
+      addLog('err', 'Native GCC/G++ compile & run requires the CodeStudio Desktop app. In web mode, use the Integrated Terminal or Cloudflare sandbox.');
       return;
     }
 
     try {
+      const isCpp = ['cpp', 'cc', 'cxx'].includes(extension.toLowerCase());
+      addLog('info', `Compiling & running with ${isCpp ? 'G++' : 'GCC'}...`);
       const result = await window.electronAPI.runNativeCode({ code, extension, fileName });
       if (result.stdout) addLog('out', result.stdout);
       if (result.stderr) addLog('err', result.stderr);
       if (result.error) addLog('err', result.error);
-      addLog('info', `Exit code: ${result.code ?? 'unknown'}`);
+      addLog('info', `Program exited (code: ${result.code ?? 0})`);
     } catch (err: any) {
       addLog('err', err.message || String(err));
     }
@@ -165,8 +187,8 @@ result = (_stdout.getvalue(), _stderr.getvalue())
     const ext = extension.toLowerCase();
     try {
       if (['js', 'jsx', 'mjs', 'cjs', 'ts', 'tsx', 'mts', 'cts'].includes(ext)) await runJavaScript();
-      else if (['py'].includes(ext)) await runPythonWithPyodide();
-      else if (['c', 'cpp', 'cc', 'cxx'].includes(ext)) await runNativeCompiler();
+      else if (['py', 'python'].includes(ext)) await runPython();
+      else if (['c', 'cpp', 'cc', 'cxx', 'rs', 'go'].includes(ext)) await runNativeCompiler();
       else await runCloudflareSandbox();
     } finally {
       setRunning(false);
@@ -181,16 +203,21 @@ result = (_stdout.getvalue(), _stderr.getvalue())
           <span className="text-xs font-semibold">Advanced Code Runner</span>
         </div>
         <div className="flex items-center gap-2">
-          {['c', 'cpp', 'cc', 'cxx'].includes(extension) && (
+          {['c', 'cpp', 'cc', 'cxx'].includes(extension.toLowerCase()) && (
             <span className="text-[10px] text-orange-300 flex items-center gap-1"><Cpu className="w-3 h-3" /> GCC/G++</span>
+          )}
+          {['py'].includes(extension.toLowerCase()) && (
+            <span className="text-[10px] text-yellow-300 flex items-center gap-1 font-mono">
+              {isElectronRuntime() ? '🐍 Native Python' : '🐍 Pyodide'}
+            </span>
           )}
           {settings.enableCloudflareSandbox && (
             <span className="text-[10px] text-cyan-300 flex items-center gap-1"><Cloud className="w-3 h-3" /> Cloudflare</span>
           )}
-          <button onClick={runCode} disabled={running} className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded text-xs font-semibold">
+          <button onClick={runCode} disabled={running} className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded text-xs font-semibold cursor-pointer">
             <Play className="w-3 h-3 fill-current" /> {running ? 'Running...' : 'Run'}
           </button>
-          <button onClick={() => setLogs([])} className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white">
+          <button onClick={() => setLogs([])} className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white cursor-pointer">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -205,12 +232,12 @@ result = (_stdout.getvalue(), _stderr.getvalue())
           ) : ['py'].includes(extension.toLowerCase()) ? (
             <span className="text-yellow-400 font-medium flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-              Python Pyodide WebAssembly Engine Active
+              {isElectronRuntime() ? 'System Python 3.x Engine Active' : 'Python Pyodide WebAssembly Engine Active'}
             </span>
           ) : ['c', 'cpp', 'cc', 'cxx'].includes(extension.toLowerCase()) ? (
             <span className="text-orange-400 font-medium flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5" />
-              {isElectronRuntime() ? 'GCC/G++ Native Desktop Compiler Ready' : 'C/C++ Compiler'}
+              {isElectronRuntime() ? 'GCC / G++ Native Compiler Active' : 'C/C++ Compiler'}
             </span>
           ) : (
             <span className="text-slate-400">Multi-Language Sandbox</span>
@@ -231,4 +258,4 @@ result = (_stdout.getvalue(), _stderr.getvalue())
       </div>
     </div>
   );
-};
+};

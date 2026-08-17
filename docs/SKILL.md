@@ -45,3 +45,21 @@ CodeStudio provides a unified LLM interface supporting multiple providers:
 - **Reset Zoom**: `Ctrl + 0`, `Ctrl + Numpad0`
 - **Mouse Wheel Zoom**: `Ctrl + Mouse Wheel`
 - **Visual Features**: Bracket Pair Colorization, Sticky Scroll, Font Ligatures, Indent Guides.
+
+---
+
+## ⚡ 5. Native Code Execution Engine (`electron/main.js` & `AdvancedCodeRunner.tsx`)
+- **C & C++ (GCC/G++)**: Automatically locates system `gcc` or `g++` via Windows PATH (e.g., `C:\MinGW\bin\gcc.exe`) and compiles with `-O2 -std=c17` / `-std=c11`.
+- **Python 3.x**: Automatically detects and executes installed system Python (`python.exe`, `py.exe`, `python3.exe`) directly on the local machine with unbuffered `-u` flag.
+- **Web Browser Fallback**: Pyodide WebAssembly engine executes Python in offline/browser environments when not in Electron.
+- **Node.js & Go & Rust**: Supported natively inside Electron desktop.
+- **Quick Run Action**: Top `TabsBar` includes a direct 1-click `Run` button (`Play` icon) for runnable files (`.py`, `.c`, `.cpp`, `.js`, `.ts`).
+
+---
+
+## 📄 6. Clean File Viewport & Preview Separation
+- **Code Files** (`.yml`, `.yaml`, `.json`, `.py`, `.ts`, `.cpp`, etc.): Always take 100% of the Monaco Editor workspace without unwanted placeholder sidebars.
+- **Structured Data Previews** (`.csv`, `.tsv`, `.xlsx`): Dedicated spreadsheet viewer.
+- **Markup Previews** (`.md`, `.html`, `.svg`): Dynamic split preview side-by-side with Monaco.
+- **Media Previews** (`.png`, `.jpg`, `.mp4`, `.mp3`, `.pdf`): Full viewport interactive media player.
+
