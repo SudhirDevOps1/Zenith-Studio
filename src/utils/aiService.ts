@@ -473,49 +473,30 @@ export async function generateAiContent(
 }
 
 /**
- * Test Connection with provider API by generating a real lightweight response
+ * Test Connection with provider API.
+ * Uses model listing (GET request) rather than a generation call to avoid CORS
+ * issues in web mode and to provide a fast, reliable connection check.
  */
 export async function testAiConnection(settings: Partial<EditorSettings>): Promise<TestConnectionResult> {
   const provider = settings.aiProvider || 'gemini';
   const startTime = performance.now();
 
   try {
-    const fullSettings: EditorSettings = {
-      theme: 'vs-dark',
-      fontSize: 14,
-      fontFamily: 'JetBrains Mono',
-      tabSize: 2,
-      wordWrap: 'on',
-      minimap: true,
-      lineNumbers: 'on',
-      cursorStyle: 'line',
-      formatOnSave: false,
-      accentColor: 'blue',
-      editorZoom: 0,
-      showBreadcrumbs: true,
-      aiProvider: provider,
-      aiApiKey: settings.aiApiKey || settings.geminiApiKey || '',
-      geminiApiKey: settings.geminiApiKey || settings.aiApiKey || '',
-      aiModel: settings.aiModel,
-      aiCustomProviderName: settings.aiCustomProviderName,
-      aiCustomEndpoint: settings.aiCustomEndpoint,
-      aiCustomModelName: settings.aiCustomModelName,
-      aiTemperature: settings.aiTemperature ?? 0.2,
-      ...settings,
-    } as EditorSettings;
-
-    // Send actual test ping
-    await generateAiContent(
-      'Respond with the single word: "CONNECTED"',
-      'You are a lightweight test responder. Output one word only.',
-      fullSettings
-    );
-
+    const models = await detectProviderModels(settings);
     const latencyMs = Math.round(performance.now() - startTime);
+
+    if (models.length > 0) {
+      return {
+        success: true,
+        message: `Successfully connected to ${provider.toUpperCase()}! Found ${models.length} available model${models.length !== 1 ? 's' : ''}. Latency: ${latencyMs}ms.`,
+        latencyMs,
+        modelsFound: models.length,
+      };
+    }
 
     return {
       success: true,
-      message: `Successfully connected to ${provider.toUpperCase()}! Latency: ${latencyMs}ms. Ready for chat and coding!`,
+      message: `Connected to ${provider.toUpperCase()} (${latencyMs} ms). Ready for coding!`,
       latencyMs,
     };
   } catch (err: any) {

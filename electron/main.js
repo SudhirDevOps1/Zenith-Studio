@@ -537,44 +537,85 @@ ipcMain.handle('openvsx:extension', async (_, { namespace, name }) => {
 });
 
 // AI Universal Native Fetch IPC (Zero CORS, 100% Reliable for all LLM providers)
+// Uses native Node.js https/http modules — NOT the renderer's fetch — so CORS never applies
 ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
-  try {
-    const fetchOptions = {
-      method,
-      headers: {
+  const https = require('https');
+  const http = require('http');
+
+  return new Promise((resolve) => {
+    try {
+      const parsedUrl = new URL(url);
+      const isHttps = parsedUrl.protocol === 'https:';
+      const transport = isHttps ? https : http;
+
+      const bodyStr = body == null
+        ? ''
+        : typeof body === 'string'
+          ? body
+          : JSON.stringify(body);
+
+      const reqHeaders = {
+        'Content-Type': 'application/json',
         'User-Agent': 'Zenith-Studio-IDE/1.0.3',
         ...headers,
-      },
-    };
-    if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-      fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
-    }
+      };
+      if (bodyStr) {
+        reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr).toString();
+      }
 
-    const response = await fetch(url, fetchOptions);
-    const contentType = response.headers.get('content-type') || '';
-    let responseData;
-    if (contentType.includes('application/json')) {
-      responseData = await response.json().catch(() => ({}));
-    } else {
-      responseData = await response.text();
-    }
+      const options = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port || (isHttps ? 443 : 80),
+        path: parsedUrl.pathname + parsedUrl.search,
+        method: method.toUpperCase(),
+        headers: reqHeaders,
+        rejectUnauthorized: false,
+      };
 
-    return {
-      ok: response.ok,
-      status: response.status,
-      statusText: response.statusText,
-      data: responseData,
-    };
-  } catch (err) {
-    console.error('Native AI Fetch Failed:', err);
-    return {
-      ok: false,
-      status: 0,
-      statusText: err.message,
-      error: err.message,
-    };
-  }
+      const req = transport.request(options, (res) => {
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          const rawBody = Buffer.concat(chunks).toString('utf-8');
+          let data;
+          try {
+            data = JSON.parse(rawBody);
+          } catch {
+            data = rawBody;
+          }
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            statusText: res.statusMessage || '',
+            data,
+          });
+        });
+        res.on('error', (err) => {
+          resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
+        });
+      });
+
+      req.on('error', (err) => {
+        console.error('Native AI Fetch Error:', err);
+        resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
+      });
+
+      req.setTimeout(30000, () => {
+        req.destroy();
+        resolve({ ok: false, status: 0, statusText: 'Request timeout (30s)', data: null, error: 'Request timeout (30s)' });
+      });
+
+      if (bodyStr) req.write(bodyStr);
+      req.end();
+
+    } catch (err) {
+      console.error('Native AI Fetch setup error:', err);
+      resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
+    }
+  });
 });
+
+
 
 
 

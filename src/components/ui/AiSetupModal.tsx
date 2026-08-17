@@ -83,19 +83,24 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
     try {
       const detected = await detectProviderModels({
         aiProvider: provider,
-        aiApiKey: apiKey,
-        geminiApiKey: apiKey,
-        aiCustomEndpoint: customEndpoint,
+        aiApiKey: apiKey.trim(),
+        geminiApiKey: apiKey.trim(),
+        aiCustomEndpoint: customEndpoint.trim(),
+        aiCustomModelName: customModelName.trim(),
+        aiModel: model.trim(),
       });
       setAvailableModels(detected);
+      // Only auto-select first model if current model not in list
       if (detected.length > 0 && !detected.some((m) => m.id === model)) {
-        setModel(detected[0].id);
+        const firstId = detected[0].id;
+        setModel(firstId);
+        if (provider === 'custom') setCustomModelName(firstId);
       }
       if (showToastMessage) {
         addToast({
           type: 'success',
           title: 'Models Auto-Detected',
-          message: `Found ${detected.length} models available for ${provider.toUpperCase()}.`,
+          message: `Found ${detected.length} model${detected.length !== 1 ? 's' : ''} available for ${provider.toUpperCase()}.`,
         });
       }
     } catch (err: any) {
@@ -110,6 +115,7 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
       setIsDetecting(false);
     }
   };
+
 
   const handleTestConnection = async () => {
     setIsTesting(true);
