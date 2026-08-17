@@ -284,8 +284,9 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
         break;
 
       case 'version':
-        addEntry('output', 'CodeStudio v1.0.1 (React 19 + Monaco + Vite 7 + Electron Shell)');
+        addEntry('output', 'CodeStudio v1.0.3 (React 19 + Monaco + Vite 7 + Electron Shell)');
         break;
+
 
       default:
         if (['npm', 'npx', 'yarn', 'pnpm', 'node', 'git', 'python', 'cargo', 'pip'].includes(command)) {

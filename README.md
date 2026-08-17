@@ -23,7 +23,8 @@
 - 🌐 **Live Web Application**: [https://codestudio-web-app.pages.dev/](https://codestudio-web-app.pages.dev/)
 - 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/CodeStudio.git](https://github.com/SudhirDevOps1/CodeStudio.git)
 - 🚀 **GitHub Releases & `.exe` Downloads**: [https://github.com/SudhirDevOps1/CodeStudio/releases](https://github.com/SudhirDevOps1/CodeStudio/releases)
-- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `CodeStudio Setup 1.0.0.exe` NSIS Installer and portable executable in `dist-electron/`)
+- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `CodeStudio Setup 1.0.3.exe` NSIS Installer and portable executable in `dist-electron/`)
+
 - ⚡ **Zero Setup Required**: Open directly in any modern browser or run as a standalone desktop executable on Windows.
 
 ---
@@ -229,8 +230,9 @@ npm run electron:dev
 ### 7. Build Windows Executable Installer (`.exe`)
 ```bash
 npm run electron:build
-# Generates CodeStudio Setup 1.0.0.exe (NSIS Installer) and CodeStudio 1.0.0.exe (Portable) in dist-electron/
+# Generates CodeStudio Setup 1.0.3.exe (NSIS Installer) and CodeStudio 1.0.3.exe (Portable) in dist-electron/
 ```
+
 
 ---
 

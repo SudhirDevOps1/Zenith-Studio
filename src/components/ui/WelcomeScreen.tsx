@@ -154,8 +154,9 @@ export const WelcomeScreen: React.FC = () => {
             <span className="text-emerald-400 font-semibold">Tailwind CSS</span>. Works in browser and as a desktop app.
           </p>
           <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-slate-500">
-            <span className="px-2.5 py-0.5 bg-blue-950/60 text-blue-300 rounded-full border border-blue-500/40 font-bold">v1.0.2</span>
+            <span className="px-2.5 py-0.5 bg-blue-950/60 text-blue-300 rounded-full border border-blue-500/40 font-bold">v1.0.3</span>
             <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
+
               <Globe className="w-2.5 h-2.5 text-blue-400" /> Web & Desktop
             </span>
             <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">

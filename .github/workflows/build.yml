@@ -113,8 +113,9 @@ jobs:
       - name: 🚀 Publish GitHub Release with Attached .exe & .zip
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.2' }}
-          name: "CodeStudio ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.2' }} — Universal Web & Desktop IDE"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.3' }}
+          name: "CodeStudio ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.3' }} — Universal Web & Desktop IDE"
+
           files: |
             release-assets/*.exe
             release-assets/CodeStudio-Web-Build.zip

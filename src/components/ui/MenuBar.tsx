@@ -82,8 +82,9 @@ export const MenuBar: React.FC = () => {
           <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent tracking-tight">
             CodeStudio
           </span>
-          <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.2</span>
+          <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.3</span>
         </div>
+
 
         {/* File Menu */}
         <div className="relative">
