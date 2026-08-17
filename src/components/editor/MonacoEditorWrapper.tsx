@@ -1,16 +1,18 @@
-import React, { useRef, useEffect } from 'react';
-import Editor, { OnMount, OnChange, loader } from '@monaco-editor/react';
-import * as monacoInstance from 'monaco-editor';
-import { useSettingsStore } from '../../stores/useSettingsStore';
-import { useFileStore } from '../../stores/useFileStore';
-import { getLanguageFromExtension } from '../../utils/fileUtils';
-import { registerCustomThemes } from './monacoThemes';
-import { registerEmmetProviders } from './emmetProvider';
-import { registerLanguageSnippets } from './suggestionsProvider';
-import { Loader2 } from 'lucide-react';
+import React, { useRef, useEffect } from "react";
+import Editor, { OnMount, OnChange, loader } from "@monaco-editor/react";
+import * as monacoInstance from "monaco-editor";
+import { useSettingsStore } from "../../stores/useSettingsStore";
+import { useFileStore } from "../../stores/useFileStore";
+import { getLanguageFromExtension } from "../../utils/fileUtils";
+import { registerCustomThemes } from "./monacoThemes";
+import { registerEmmetProviders } from "./emmetProvider";
+import { registerLanguageSnippets } from "./suggestionsProvider";
+import { Loader2 } from "lucide-react";
 
-// Configure local monaco bundle (offline & Electron safe, 0 CDN dependency)
 loader.config({ monaco: monacoInstance });
+
+const ZOOM_STEP = 1;
+const BASE_FONT_SIZE = 14;
 
 interface MonacoEditorWrapperProps {
   fileId: string;
@@ -33,11 +35,16 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
 }) => {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
-  const { settings } = useSettingsStore();
+  const { settings, increaseZoom, decreaseZoom, resetZoom } = useSettingsStore();
   const { saveCurrentFile } = useFileStore();
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const language = getLanguageFromExtension(extension);
+
+  const baseFontSize = settings.fontSize ?? BASE_FONT_SIZE;
+  const zoomLevel = settings.editorZoom ?? 0;
+  const effectiveFontSize = Math.max(8, Math.min(72, baseFontSize + zoomLevel * ZOOM_STEP));
+  const zoomPercent = Math.round((effectiveFontSize / baseFontSize) * 100);
 
   const handleEditorWillMount = (monaco: any) => {
     registerCustomThemes(monaco);
@@ -51,54 +58,58 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     if (parentEditorRef) parentEditorRef.current = editor;
     if (parentMonacoRef) parentMonacoRef.current = monaco;
 
-    // Custom keybinding for Ctrl+S / Cmd+S
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      saveCurrentFile();
-    });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => { saveCurrentFile(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Equal, () => { increaseZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Equal, () => { increaseZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.NumpadAdd, () => { increaseZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Minus, () => { decreaseZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.NumpadSubtract, () => { decreaseZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Digit0, () => { resetZoom(); });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Numpad0, () => { resetZoom(); });
 
-    // Listen to scroll for Markdown sync
     if (onScrollPercentage) {
       editor.onDidScrollChange(() => {
         const scrollTop = editor.getScrollTop();
         const scrollHeight = editor.getScrollHeight() - editor.getLayoutInfo().height;
-        if (scrollHeight > 0) {
-          const pct = scrollTop / scrollHeight;
-          onScrollPercentage(pct);
-        }
+        if (scrollHeight > 0) onScrollPercentage(scrollTop / scrollHeight);
       });
     }
-
     editor.focus();
   };
 
   const handleChange: OnChange = (value) => {
-    const val = value ?? '';
+    const val = value ?? "";
     onChange(val);
-
-    if (settings.autoSave === 'afterDelay') {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-      autoSaveTimerRef.current = setTimeout(() => {
-        saveCurrentFile();
-      }, settings.autoSaveDelay);
+    if (settings.autoSave === "afterDelay") {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = setTimeout(() => { saveCurrentFile(); }, settings.autoSaveDelay);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, [fileId]);
+  useEffect(() => { return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); }; }, [fileId]);
 
-  // Reactive theme update
+  useEffect(() => { if (monacoRef.current && settings.theme) monacoRef.current.editor.setTheme(settings.theme); }, [settings.theme]);
+  useEffect(() => { if (editorRef.current) editorRef.current.updateOptions({ fontSize: effectiveFontSize }); }, [effectiveFontSize]);
   useEffect(() => {
-    if (monacoRef.current && settings.theme) {
-      monacoRef.current.editor.setTheme(settings.theme);
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        wordWrap: settings.wordWrap,
+        minimap: { enabled: settings.minimap },
+        lineNumbers: settings.lineNumbers,
+        cursorStyle: settings.cursorStyle,
+        tabSize: settings.tabSize,
+        fontFamily: settings.fontFamily,
+        bracketPairColorization: { enabled: settings.bracketPairColorization ?? true },
+        guides: { indentation: settings.indentGuides ?? true },
+        stickyScroll: { enabled: settings.stickyScroll ?? true },
+        fontLigatures: settings.fontLigatures ?? true,
+        mouseWheelZoom: settings.mouseWheelZoom ?? true,
+      });
     }
-  }, [settings.theme]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.wordWrap, settings.minimap, settings.lineNumbers, settings.cursorStyle, settings.tabSize, settings.fontFamily, settings.bracketPairColorization, settings.indentGuides, settings.stickyScroll, settings.fontLigatures, settings.mouseWheelZoom]);
+
+  useEffect(() => { document.documentElement.setAttribute("data-zoom", String(zoomPercent)); }, [zoomPercent]);
 
   return (
     <div className="w-full h-full overflow-hidden relative bg-[#14141f]">
@@ -108,7 +119,7 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
         defaultLanguage={language}
         language={language}
         value={content}
-        theme={settings.theme || 'vs-dark'}
+        theme={settings.theme || "vs-dark"}
         beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
         onChange={handleChange}
@@ -119,51 +130,44 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
           </div>
         }
         options={{
-          fontSize: settings.fontSize,
+          fontSize: effectiveFontSize,
           fontFamily: settings.fontFamily,
           tabSize: settings.tabSize,
           wordWrap: settings.wordWrap,
           minimap: { enabled: settings.minimap },
           lineNumbers: settings.lineNumbers,
           autoClosingBrackets: settings.autoClosingBrackets,
-          autoClosingQuotes: 'always',
-          autoClosingDelete: 'always',
-          autoClosingOvertype: 'always',
-          autoSurround: 'languageDefined',
+          autoClosingQuotes: "always",
+          autoClosingDelete: "always",
+          autoClosingOvertype: "always",
+          autoSurround: "languageDefined",
           cursorStyle: settings.cursorStyle,
           automaticLayout: true,
           scrollBeyondLastLine: false,
           padding: { top: 12, bottom: 12 },
           smoothScrolling: true,
-          cursorBlinking: 'smooth',
-          cursorSmoothCaretAnimation: 'on',
-          renderWhitespace: 'selection',
+          cursorBlinking: "smooth",
+          cursorSmoothCaretAnimation: "on",
+          renderWhitespace: "selection",
           formatOnPaste: true,
           formatOnType: true,
-          quickSuggestions: {
-            other: true,
-            comments: false,
-            strings: true,
-          },
+          mouseWheelZoom: settings.mouseWheelZoom ?? true,
+          bracketPairColorization: { enabled: settings.bracketPairColorization ?? true },
+          guides: { indentation: settings.indentGuides ?? true },
+          stickyScroll: { enabled: settings.stickyScroll ?? true },
+          fontLigatures: settings.fontLigatures ?? true,
+          quickSuggestions: { other: true, comments: false, strings: true },
           suggestOnTriggerCharacters: true,
-          acceptSuggestionOnEnter: 'on',
-          tabCompletion: 'on',
-          wordBasedSuggestions: 'allDocuments',
-          snippetSuggestions: 'top',
+          acceptSuggestionOnEnter: "on",
+          tabCompletion: "on",
+          wordBasedSuggestions: "allDocuments",
+          snippetSuggestions: "top",
           parameterHints: { enabled: true },
           suggest: {
-            showSnippets: true,
-            showWords: true,
-            showClasses: true,
-            showFunctions: true,
-            showConstructors: true,
-            showVariables: true,
-            showInterfaces: true,
-            showModules: true,
-            showProperties: true,
-            showKeywords: true,
-            showIcons: true,
-            preview: true,
+            showSnippets: true, showWords: true, showClasses: true,
+            showFunctions: true, showConstructors: true, showVariables: true,
+            showInterfaces: true, showModules: true, showProperties: true,
+            showKeywords: true, showIcons: true, preview: true,
           },
         }}
       />

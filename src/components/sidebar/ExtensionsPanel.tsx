@@ -9,11 +9,14 @@ import {
   X,
   Sparkles,
   Globe,
+  CheckCircle2,
+  Zap,
 } from 'lucide-react';
 import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { ExtensionCategory, ExtensionItem } from '../../types/extensions';
 import { ExtensionDetailModal } from '../extensions/ExtensionDetailModal';
+import { hasRealEffect } from '../../utils/extensionEffects';
 
 const CATEGORIES: ExtensionCategory[] = [
   'All',
@@ -379,12 +382,23 @@ export const ExtensionsPanel: React.FC = () => {
                     <span className="flex items-center gap-0.5 text-amber-400">
                       <Star className="w-2.5 h-2.5 fill-amber-400" /> {ext.rating}
                     </span>
+                    {ext.installed && ext.enabled && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-950/60 text-emerald-400 rounded-full border border-emerald-800/50 font-semibold">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Active
+                      </span>
+                    )}
+                    {hasRealEffect(ext) && (
+                      <span className="flex items-center gap-0.5 px-1 py-0.5 bg-blue-950/50 text-blue-300 rounded text-[9px] font-mono border border-blue-800/40">
+                        <Zap className="w-2 h-2" /> Real Effect
+                      </span>
+                    )}
                     {ext.source === 'open-vsx' && (
                       <span className="px-1 py-0.2 bg-blue-500/20 text-blue-300 rounded text-[9px] font-mono">
                         Open VSX
                       </span>
                     )}
                   </div>
+
                 </div>
               </div>
 

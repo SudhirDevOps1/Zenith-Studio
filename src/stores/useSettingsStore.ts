@@ -21,9 +21,16 @@ interface SettingsState {
   toggleZenMode: () => void;
   setActiveSidebarTab: (tab: SidebarTab) => void;
   resetSettings: () => void;
+  // Zoom actions
+  increaseZoom: () => void;
+  decreaseZoom: () => void;
+  resetZoom: () => void;
 }
 
-const initialSettings = loadSettingsFromStorage();
+const initialSettings: EditorSettings = {
+  ...DEFAULT_SETTINGS,
+  ...loadSettingsFromStorage(),
+};
 applyAccentToDOM(initialSettings.accentColor);
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -53,4 +60,26 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     saveSettingsToStorage(DEFAULT_SETTINGS);
     applyAccentToDOM(DEFAULT_SETTINGS.accentColor);
   },
+
+  // Zoom: each step = 1 (1pt font size), max +20 / min -5
+  increaseZoom: () => {
+    const current = get().settings.editorZoom ?? 0;
+    if (current >= 20) return;
+    const updated = { ...get().settings, editorZoom: current + 1 };
+    set({ settings: updated });
+    saveSettingsToStorage(updated);
+  },
+  decreaseZoom: () => {
+    const current = get().settings.editorZoom ?? 0;
+    if (current <= -5) return;
+    const updated = { ...get().settings, editorZoom: current - 1 };
+    set({ settings: updated });
+    saveSettingsToStorage(updated);
+  },
+  resetZoom: () => {
+    const updated = { ...get().settings, editorZoom: 0 };
+    set({ settings: updated });
+    saveSettingsToStorage(updated);
+  },
 }));
+

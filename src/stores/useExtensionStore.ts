@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { get as idbGet, set as idbSet } from 'idb-keyval';
 import { ExtensionItem, ExtensionCategory } from '../types/extensions';
 import { DEFAULT_EXTENSIONS } from '../data/defaultExtensions';
+import { applyExtensionEffect, revertExtensionEffect } from '../utils/extensionEffects';
 
 const IDB_KEY_EXTENSIONS = 'codestudio_user_extensions_v1';
 
@@ -80,6 +81,9 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
     }
 
     set({ extensions: updated });
+    // Apply real extension effect (theme switch, editor options, etc.)
+    applyExtensionEffect({ ...target, installed: true, enabled: true });
+
     try {
       await idbSet(IDB_KEY_EXTENSIONS, updated);
     } catch (err) {
@@ -89,8 +93,11 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
 
   uninstallExtension: async (id: string) => {
     const { extensions } = get();
+    const target = extensions.find((e) => e.id === id);
     const updated = extensions.map((e) => (e.id === id ? { ...e, installed: false, enabled: false } : e));
     set({ extensions: updated });
+    // Revert extension effect
+    if (target) revertExtensionEffect(target);
     try {
       await idbSet(IDB_KEY_EXTENSIONS, updated);
     } catch (err) {

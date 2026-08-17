@@ -15,6 +15,8 @@ import {
   Sparkles,
   GitBranch,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 
 interface StatusBarProps {
@@ -23,12 +25,13 @@ interface StatusBarProps {
 
 export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
   const { files, activeFileId, saveCurrentFile } = useFileStore();
-  const { settings, toggleZenMode, setCommandPaletteOpen, updateSettings, setSettingsOpen } = useSettingsStore();
+  const { settings, toggleZenMode, setCommandPaletteOpen, updateSettings, setSettingsOpen, increaseZoom, decreaseZoom, resetZoom } = useSettingsStore();
   const { addToast } = useToastStore();
   const { hasUpdate, latestVersion, openUpdateModal } = useUpdateStore();
 
   const [showIndentMenu, setShowIndentMenu] = useState(false);
   const indentMenuRef = useRef<HTMLDivElement>(null);
+
 
   const activeFile = files.find((f) => f.id === activeFileId);
   const language = activeFile ? getLanguageFromExtension(activeFile.extension || '') : 'Plain Text';
@@ -170,6 +173,39 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           {language}
         </button>
 
+        {/* Zoom Controls */}
+        {(() => {
+          const zoomLevel = settings.editorZoom ?? 0;
+          const baseFontSize = settings.fontSize ?? 14;
+          const effectiveFontSize = Math.max(8, Math.min(72, baseFontSize + zoomLevel));
+          const zoomPercent = Math.round((effectiveFontSize / baseFontSize) * 100);
+          return (
+            <div className="flex items-center gap-0.5 bg-slate-900/80 border border-slate-800 rounded-md px-1 py-0.5 text-[10px]">
+              <button
+                onClick={decreaseZoom}
+                className="px-1 py-0.5 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"
+                title="Zoom Out (Ctrl+-)"
+              >
+                <ZoomOut className="w-3 h-3" />
+              </button>
+              <button
+                onClick={resetZoom}
+                className="px-1.5 py-0.5 hover:bg-slate-700 rounded font-mono text-slate-200 hover:text-white transition min-w-[36px] text-center"
+                title="Reset Zoom (Ctrl+0)"
+              >
+                {zoomPercent}%
+              </button>
+              <button
+                onClick={increaseZoom}
+                className="px-1 py-0.5 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"
+                title="Zoom In (Ctrl+=)"
+              >
+                <ZoomIn className="w-3 h-3" />
+              </button>
+            </div>
+          );
+        })()}
+
         {/* Update Notification Badge */}
         {hasUpdate && (
           <button
@@ -209,3 +245,4 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
     </div>
   );
 };
+

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Download, Star, Shield, Power, Trash2, Tag, Sparkles } from 'lucide-react';
+import { X, Download, Star, Shield, Power, Trash2, Tag, Sparkles, Zap, CheckCircle2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useToastStore } from '../../stores/useToastStore';
+import { applyExtensionEffect, getExtensionEffectLabel, hasRealEffect } from '../../utils/extensionEffects';
 
 export const ExtensionDetailModal: React.FC = () => {
   const { selectedExtension, setSelectedExtension, installExtension, uninstallExtension, toggleExtension } = useExtensionStore();
@@ -102,8 +103,42 @@ export const ExtensionDetailModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Real Effect Badge */}
+            {hasRealEffect(ext) && (
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-950/50 border border-emerald-800/60 rounded-full text-[10px] text-emerald-300 font-medium">
+                <Zap className="w-2.5 h-2.5" />
+                <span>Real Effect</span>
+              </div>
+            )}
+
             {ext.installed ? (
               <>
+                {/* Apply Theme button for theme extensions */}
+                {ext.category === 'Themes' && ext.enabled && (
+                  <button
+                    onClick={() => {
+                      applyExtensionEffect(ext);
+                      addToast({
+                        type: 'success',
+                        title: 'Theme Applied',
+                        message: `${ext.displayName} theme is now active in the editor.`,
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-purple-700 hover:bg-purple-600 border border-purple-600 text-white rounded text-xs font-semibold transition shadow-md shadow-purple-700/30"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Apply Theme</span>
+                  </button>
+                )}
+
+                {/* Active indicator */}
+                {ext.enabled && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-950/60 border border-emerald-800/50 rounded text-[10px] text-emerald-400 font-medium">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Active</span>
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     toggleExtension(ext.id);
@@ -131,6 +166,7 @@ export const ExtensionDetailModal: React.FC = () => {
                       title: 'Extension Uninstalled',
                       message: `${ext.displayName} was removed.`,
                     });
+                    setSelectedExtension(null);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1 bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-300 rounded text-xs font-medium transition"
                 >
@@ -145,7 +181,7 @@ export const ExtensionDetailModal: React.FC = () => {
                   addToast({
                     type: 'success',
                     title: 'Extension Installed',
-                    message: `${ext.displayName} is installed and active.`,
+                    message: `${ext.displayName} is installed and active.${hasRealEffect(ext) ? ' Effect applied!' : ''}`,
                   });
                 }}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold shadow-md shadow-blue-600/30 transition"
@@ -156,6 +192,14 @@ export const ExtensionDetailModal: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Effect Description Banner */}
+        {ext.installed && ext.enabled && (
+          <div className="px-5 py-2 bg-emerald-950/30 border-b border-emerald-900/40 flex items-center gap-2 text-[11px] text-emerald-300">
+            <Zap className="w-3 h-3 text-emerald-400 shrink-0" />
+            <span><strong>Active Effect:</strong> {getExtensionEffectLabel(ext)}</span>
+          </div>
+        )}
 
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs text-slate-300 leading-relaxed">

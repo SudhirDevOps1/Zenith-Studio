@@ -35,6 +35,14 @@ export interface EditorSettings {
   enablePyodideRunner: boolean;
   enableCloudflareSandbox: boolean;
   cloudflareSandboxEndpoint: string;
+  // Zoom: 0 = 100%, each step = +/-10%. Range: -5 to +20
+  editorZoom: number;
+  // Editor visual enhancements
+  bracketPairColorization: boolean;
+  stickyScroll: boolean;
+  fontLigatures: boolean;
+  indentGuides: boolean;
+  mouseWheelZoom: boolean;
 }
 
 export const DEFAULT_SETTINGS: EditorSettings = {
@@ -61,4 +69,11 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   enablePyodideRunner: true,
   enableCloudflareSandbox: false,
   cloudflareSandboxEndpoint: '',
+  editorZoom: 0,
+  bracketPairColorization: true,
+  stickyScroll: true,
+  fontLigatures: true,
+  indentGuides: true,
+  mouseWheelZoom: true,
 };
+
