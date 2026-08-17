@@ -32,9 +32,20 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { files, rootFolderPath, createFile, deleteFileItem, openFileInTab } = useFileStore();
-  
-  const savedFolder = typeof window !== 'undefined' ? localStorage.getItem('codestudio_root_folder_path') || '' : '';
+  const {
+    files,
+    rootFolderPath,
+    setRootFolderPath,
+    createFile,
+    deleteFileItem,
+    openFileInTab,
+    openSystemFolder,
+  } = useFileStore();
+
+  const savedFolder =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('codestudio_root_folder_path') || ''
+      : '';
   const initialPath = rootFolderPath || savedFolder || '';
   const [cwd, setCwd] = useState<string>(initialPath);
   const isDesktop = isElectron();
@@ -55,7 +66,7 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
       } else {
         addEntry(
           'info',
-          '💡 Tip: Open your project folder (File > Open Folder) or use "cd <path>" to navigate.'
+          '💡 Tip: Open your project folder (File > Open Folder) or click the folder badge above to navigate.'
         );
       }
       addEntry('info', 'Ready: npm, git, node, python, dir, cd, cargo, echo, etc.');
@@ -110,9 +121,7 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
 
         if (result.cwd) {
           setCwd(result.cwd);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('codestudio_root_folder_path', result.cwd);
-          }
+          setRootFolderPath(result.cwd);
         }
 
         if (result.stdout) {
@@ -376,14 +385,16 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
             </span>
           )}
 
-          {cwd && (
-            <span className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-900/80 border border-slate-800 rounded text-[10px] text-amber-300/90 font-mono">
-              <FolderOpen className="w-3 h-3 text-amber-400" />
-              <span className="font-semibold" title={cwd}>
-                {activeFolderName}
-              </span>
-            </span>
-          )}
+          {/* Clickable Folder Badge */}
+          <button
+            onClick={() => isDesktop && openSystemFolder()}
+            className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 rounded text-[10px] text-amber-300 font-mono transition group cursor-pointer"
+            title={`Active Directory: ${cwd || 'Default (Home)'}\nClick to Open / Change Project Folder`}
+          >
+            <FolderOpen className="w-3 h-3 text-amber-400 group-hover:scale-110 transition" />
+            <span className="font-semibold truncate max-w-[160px]">{activeFolderName}</span>
+            {isDesktop && <span className="text-[9px] text-slate-500 group-hover:text-slate-300">▾</span>}
+          </button>
 
           {isRunning && (
             <span className="flex items-center gap-1 text-cyan-400 text-[10px]">

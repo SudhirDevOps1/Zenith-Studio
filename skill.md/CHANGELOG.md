@@ -2,6 +2,25 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - 100% Real Git CLI Source Control Integration & Production Hardening
+* **User Directive:** "fake sab kuchh hatayo production grade banao"
+* **Fixes & Enhancements:**
+  - Removed mock/simulated commit history from `GitControlPanel.tsx`.
+  - Implemented real Git CLI execution: runs live `git status --porcelain`, `git rev-parse --abbrev-ref HEAD`, and `git log` directly against the workspace repo.
+  - Added real 1-click **Stage All** (`git add -A`), single-file Stage/Unstage (`git add` / `git restore --staged`), and **Commit** (`git commit -m`).
+  - Added real **Push** (`git push`) and **Pull** (`git pull`) buttons to sync with remote GitHub repositories.
+* **Files Modified:** `src/components/sidebar/GitControlPanel.tsx`, `skill.md/CHANGELOG.md`.
+
+---
+## [2026-08-17] - Interactive 1-Click Project Folder Switcher & Full Workspace Sync
+* **User Feedback:** Active workspace project directory synchronization in terminal.
+* **Fixes & Enhancements:**
+  - Added interactive clickable folder badge `[📁 Folder Name ▾]` directly in the Terminal header for 1-click native directory selection.
+  - Automatically synchronizes `cwd` across the entire application state when changing folders or running `cd <path>`.
+  - Upgraded prompt to display the current active project folder name dynamically (`PS CodeStudio>`).
+* **Files Modified:** `src/components/ui/IntegratedTerminal.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Auto Project Folder Sync & ANSI Color Cleaner in Terminal
 * **User Feedback:** Active opened folder should be automatically detected and displayed in terminal, and clean terminal outputs without raw ANSI codes.
 * **Fixes & Enhancements:**
