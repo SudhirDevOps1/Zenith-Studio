@@ -71,6 +71,7 @@ export default function App() {
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
+  const [snapshotSelectedCode, setSnapshotSelectedCode] = useState<string | null>(null);
   const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
 
   const isDraggingSidebar = useRef(false);
@@ -396,7 +397,17 @@ export default function App() {
           {!isZenMode && openTabs.length > 0 && (
             <div className="absolute bottom-8 right-4 z-30 flex flex-col gap-2">
               <button
-                onClick={() => setShowSnapshot(true)}
+                onClick={() => {
+                  let selText: string | null = null;
+                  if (editorRef.current) {
+                    const sel = editorRef.current.getSelection();
+                    if (sel && !sel.isEmpty()) {
+                      selText = editorRef.current.getModel()?.getValueInRange(sel) || null;
+                    }
+                  }
+                  setSnapshotSelectedCode(selText);
+                  setShowSnapshot(true);
+                }}
                 className="p-2 rounded-lg shadow-xl border bg-[#1e1e2e] border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 transition-all duration-200"
                 title="Create Code Snapshot PNG"
               >
@@ -447,6 +458,7 @@ export default function App() {
         isOpen={showSnapshot}
         code={activeFile?.content || ''}
         fileName={activeFile?.name || 'snapshot'}
+        selectedCode={snapshotSelectedCode}
         onClose={() => setShowSnapshot(false)}
       />
       

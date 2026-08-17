@@ -2,6 +2,18 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Code Snapshot Studio: Custom Selection, Line Ranges & 1x-5x Quality Multipliers
+* **User Request:** "dekho code snap pr etna babada ka na ho samjhe manuly choose kr sake select krke kitne ka image banvana hain ..etc and 1x 2x ..etc all types ke quality ho bina kuchh hataye add and professional banao samjhe"
+* **Features Added & Upgraded:**
+  - **Monaco Active Selection Auto-Detection**: Selecting code in the editor and opening Snapshot automatically captures ONLY the selected snippet.
+  - **Manual Line Range & Custom Code Editor Tab**: Choose `All`, `Range (From Line X to Y)`, or `Custom / Selection` with live in-modal code editor.
+  - **Resolution Multipliers (1x, 2x, 3x, 4x, 5x)**: High-resolution export selector supporting standard, Retina HD, Ultra HD, 4K, and 5K print quality.
+  - **Auto-Fit & Width Modes**: `Auto-Fit`, `Compact (480px)`, `Medium (680px)`, and `Wide (920px)` eliminating empty horizontal margins.
+  - **Shadow Intensity Controls**: `Deep`, `Soft`, `None`.
+  - **Font Size & Padding Controls**: `13px/15px/17px`, `16px/32px/48px/64px`.
+* **Files Modified:** `src/components/ui/CodeSnapshotModal.tsx`, `src/App.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Native Desktop PowerShell / Shell Execution in Integrated Terminal
 * **User Request:** "terminal not work"
 * **Features Added & Fixed:**
