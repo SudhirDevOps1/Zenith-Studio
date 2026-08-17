@@ -52,15 +52,19 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
   activePreviewMode: 'auto',
   searchFilter: '',
   isInitialized: false,
-  rootFolderPath: typeof window !== 'undefined' ? localStorage.getItem('codestudio_root_folder_path') || null : null,
+  rootFolderPath: typeof window !== 'undefined' ? (localStorage.getItem('zenith_studio_root_folder_path') || localStorage.getItem('codestudio_root_folder_path') || null) : null,
 
   setRootFolderPath: (path) => {
     if (typeof window !== 'undefined') {
-      if (path) localStorage.setItem('codestudio_root_folder_path', path);
-      else localStorage.removeItem('codestudio_root_folder_path');
+      if (path) localStorage.setItem('zenith_studio_root_folder_path', path);
+      else {
+        localStorage.removeItem('zenith_studio_root_folder_path');
+        localStorage.removeItem('codestudio_root_folder_path');
+      }
     }
     set({ rootFolderPath: path });
   },
+
 
   initializeStore: async () => {
     const files = await loadFilesFromStorage();

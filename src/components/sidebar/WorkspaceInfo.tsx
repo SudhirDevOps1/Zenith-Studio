@@ -39,8 +39,9 @@ export const WorkspaceInfo: React.FC = () => {
             <span>Developer: SudhirDevOps1</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Official CodeStudio repository configured for GitHub profile SudhirDevOps1.
+            Official Zenith Studio repository configured for GitHub profile SudhirDevOps1.
           </p>
+
           <div className="flex items-center gap-2 flex-wrap">
             <a
               href="https://codestudio-web-app.pages.dev/"
@@ -122,7 +123,8 @@ export const WorkspaceInfo: React.FC = () => {
         {/* Security & System Info */}
         <div className="p-3 bg-slate-900/40 border border-slate-800/80 rounded-lg flex items-start gap-2 text-[11px] text-slate-400">
           <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <span>CodeStudio runs completely client-side in browser memory with zero server-side storage telemetry.</span>
+          <span>Zenith Studio runs completely client-side in browser memory with zero server-side storage telemetry.</span>
+
         </div>
       </div>
     </div>

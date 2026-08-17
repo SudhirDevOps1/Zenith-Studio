@@ -54,8 +54,9 @@ export const UpdateModal: React.FC = () => {
                 Update Available
               </span>
               <h2 className="text-lg font-bold text-white mt-1">
-                {releaseTitle || `CodeStudio v${latestVersion}`}
+                {releaseTitle || `Zenith Studio v${latestVersion}`}
               </h2>
+
             </div>
           </div>
 
@@ -94,7 +95,8 @@ export const UpdateModal: React.FC = () => {
             <div className="text-xs space-y-0.5">
               <span className="font-bold text-emerald-300">100% Zero Data Loss Guaranteed</span>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Updating CodeStudio will not delete or reset your workspace files, custom settings,
+                Updating Zenith Studio will not delete or reset your workspace files, custom settings,
+
                 themes, or open tabs. Everything is safely preserved in your persistent storage.
               </p>
             </div>

@@ -59,7 +59,8 @@ export const AiComposerModal: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                CodeStudio AI Composer
+                Zenith Studio AI Composer
+
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
                   Multi-File Agent
                 </span>

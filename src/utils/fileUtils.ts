@@ -79,7 +79,7 @@ export const isElectron = (): boolean => {
   return typeof window !== 'undefined' && Boolean((window as any).electronAPI);
 };
 
-// Default clean starter project files for CodeStudio
+// Default clean starter project files for Zenith Studio
 export const INITIAL_SAMPLE_FILES: FileItem[] = [
   {
     id: 'file-welcome-md',
@@ -90,9 +90,9 @@ export const INITIAL_SAMPLE_FILES: FileItem[] = [
     extension: 'md',
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    content: `# 🚀 Welcome to CodeStudio (v1.0.3)
+    content: `# 🚀 Welcome to Zenith Studio (v1.0.3)
 
-**CodeStudio** is a high-performance, lightweight cross-platform code and text editor designed for both Web browsers and Desktop.
+**Zenith Studio** is a high-performance, lightweight cross-platform AI code and text editor designed for both Web browsers and Desktop.
 
 ---
 
@@ -136,7 +136,7 @@ Ready to build. Open or create files in the Explorer to get started!
     createdAt: Date.now(),
     updatedAt: Date.now(),
     content: `/**
- * CodeStudio Starter Entrypoint
+ * Zenith Studio Starter Entrypoint
  */
 
 interface WorkspaceConfig {
@@ -146,7 +146,7 @@ interface WorkspaceConfig {
 }
 
 export const workspace: WorkspaceConfig = {
-  name: 'CodeStudio Workspace',
+  name: 'Zenith Studio Workspace',
   version: '1.0.3',
   mode: 'desktop',
 };
@@ -168,16 +168,16 @@ initialize();
     createdAt: Date.now(),
     updatedAt: Date.now(),
     content: `{
-  "name": "my-codestudio-project",
+  "name": "my-zenith-project",
   "version": "1.0.3",
-  "description": "Project created in CodeStudio",
+  "description": "Project created in Zenith Studio",
   "main": "src/index.ts",
   "scripts": {
     "dev": "npm run build && node dist/index.js",
     "build": "tsc",
     "test": "echo \\"Running tests...\\" && exit 0"
   },
-  "keywords": ["codestudio", "typescript"],
+  "keywords": ["zenith-studio", "typescript"],
   "author": "",
   "license": "MIT"
 }
@@ -197,7 +197,7 @@ initialize();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeStudio App</title>
+  <title>Zenith Studio App</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -224,7 +224,7 @@ initialize();
 </head>
 <body>
   <div class="card">
-    <h1>🚀 CodeStudio App</h1>
+    <h1>🚀 Zenith Studio App</h1>
     <p>Your web preview is live and responsive!</p>
   </div>
 </body>
@@ -240,7 +240,7 @@ initialize();
     extension: 'js',
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    content: `// CodeStudio JavaScript Interactive Sandbox
+    content: `// Zenith Studio JavaScript Interactive Sandbox
 // Press "Run" to execute in browser or native Node!
 
 function calculateFibonacci(n) {
@@ -258,6 +258,7 @@ console.log("🚀 Fibonacci benchmark:");
 [5, 10, 15, 20, 25].forEach(num => {
   console.log(\`Fibonacci(\${num}) = \${calculateFibonacci(num)}\`);
 });
+
 `,
   }
 ];

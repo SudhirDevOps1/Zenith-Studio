@@ -15,7 +15,8 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    title: 'CodeStudio',
+    title: 'Zenith Studio',
+
     backgroundColor: '#14141f',
     frame: false, // Custom styled window titlebar
     titleBarStyle: 'hidden',
@@ -241,7 +242,8 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     return { code: 1, stdout: '', stderr: '', error: `Native execution does not support .${ext} files directly.` };
   }
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'codestudio-'));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'zenith-studio-'));
+
   const sourcePath = path.join(tempDir, fileName || `main.${ext}`);
 
   try {
@@ -474,7 +476,8 @@ function fetchJsonDirect(url) {
         url,
         {
           headers: {
-            'User-Agent': 'CodeStudio-IDE/1.0.3 (Universal Developer Environment)',
+            'User-Agent': 'Zenith-Studio-IDE/1.0.3 (Universal AI Developer Environment)',
+
             Accept: 'application/json',
           },
         },

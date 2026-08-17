@@ -145,9 +145,10 @@ export const WelcomeScreen: React.FC = () => {
           </div>
           <h1 className="text-3xl font-bold text-white">
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-              CodeStudio
+              Zenith Studio
             </span>
           </h1>
+
           <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
             Next-gen universal code editor powered by <span className="text-blue-400 font-semibold">Monaco</span>,{' '}
             <span className="text-purple-400 font-semibold">React</span>, and{' '}

@@ -247,7 +247,8 @@ export default function App() {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/30 animate-bounce">
           <Code2 className="w-8 h-8 text-white" />
         </div>
-        <p className="text-sm font-mono text-slate-400 animate-pulse">Initializing CodeStudio Workspace...</p>
+        <p className="text-sm font-mono text-slate-400 animate-pulse">Initializing Zenith Studio Workspace...</p>
+
         <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse" style={{ width: '60%' }} />
         </div>

@@ -48,7 +48,7 @@ export const AiAssistantPanel: React.FC = () => {
     {
       id: 'welcome_msg',
       sender: 'ai',
-      text: `👋 Hi! I'm **CodeStudio AI Assistant**.\n\nConnected to **${(settings.aiProvider || 'gemini').toUpperCase()}** (${settings.aiModel || 'gemini-1.5-flash'}).\n\nI can explain your code, fix bugs, optimize architecture, generate unit tests, or build new features. Choose an action below or ask any question!`,
+      text: `👋 Hi! I'm **Zenith Studio AI Assistant**.\n\nConnected to **${(settings.aiProvider || 'gemini').toUpperCase()}** (${settings.aiModel || 'gemini-1.5-flash'}).\n\nI can explain your code, fix bugs, optimize architecture, generate unit tests, or build new features. Choose an action below or ask any question!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -84,7 +84,8 @@ export const AiAssistantPanel: React.FC = () => {
     setLoading(true);
 
     try {
-      const systemInstruction = `You are CodeStudio AI, an elite software architect and pair programmer. Provide clear, production-ready, clean, and concise responses. Always format code blocks using standard markdown triple backticks with language identifiers (e.g. \`\`\`tsx ... \`\`\`).`;
+      const systemInstruction = `You are Zenith Studio AI, an elite software architect and pair programmer. Provide clear, production-ready, clean, and concise responses. Always format code blocks using standard markdown triple backticks with language identifiers (e.g. \`\`\`tsx ... \`\`\`).`;
+
 
       let fullPrompt = prompt;
       if (codeContext && activeFile) {
@@ -188,8 +189,9 @@ export const AiAssistantPanel: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200">
-              CodeStudio AI
+              Zenith Studio AI
             </span>
+
           </div>
         </div>
 
@@ -276,7 +278,8 @@ export const AiAssistantPanel: React.FC = () => {
             }`}
           >
             <div className="flex items-center gap-1 text-[10px] text-slate-500 px-1">
-              <span>{msg.sender === 'user' ? 'You' : 'CodeStudio AI'}</span>
+              <span>{msg.sender === 'user' ? 'You' : 'Zenith Studio AI'}</span>
+
               <span>•</span>
               <span>{msg.timestamp}</span>
             </div>

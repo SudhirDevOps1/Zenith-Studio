@@ -1,11 +1,8 @@
 {
-  "name": "codestudio",
+  "name": "zenith-studio",
   "private": true,
   "version": "1.0.3",
-  "description": "CodeStudio — Modern, lightweight, high-performance VS Code alternative with Extensions Marketplace, Monaco Editor, Integrated Terminal, Webview Browser, and multi-language support.",
-
-
-
+  "description": "Zenith Studio — Modern, lightweight, high-performance AI-Native VS Code alternative with Multi-File Composer, Step-by-Step Debugger, 3-Way Git Merge Conflict Resolver, Extensions Marketplace, and Native Compilers.",
   "author": "SudhirDevOps",
   "main": "electron/main.js",
   "scripts": {
@@ -17,8 +14,8 @@
     "electron:build": "vite build && electron-builder"
   },
   "build": {
-    "appId": "com.sudhirdevops.codestudio",
-    "productName": "CodeStudio",
+    "appId": "com.sudhirdevops.zenithstudio",
+    "productName": "Zenith Studio",
     "asar": true,
     "directories": {
       "output": "dist-electron"
@@ -33,7 +30,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "CodeStudio",
+      "shortcutName": "Zenith Studio",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "portable": {
@@ -43,6 +40,7 @@
       "target": [
         {
           "target": "nsis",
+
           "arch": ["x64"]
         },
         {

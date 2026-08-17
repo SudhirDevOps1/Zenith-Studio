@@ -164,7 +164,8 @@ result = (_stdout.getvalue(), _stderr.getvalue())
       return;
     }
     if (!isElectronRuntime() || !window.electronAPI?.runNativeCode) {
-      addLog('err', 'Native GCC/G++ compile & run requires the CodeStudio Desktop app. In web mode, use the Integrated Terminal or Cloudflare sandbox.');
+      addLog('err', 'Native GCC/G++ compile & run requires the Zenith Studio Desktop app. In web mode, use the Integrated Terminal or Cloudflare sandbox.');
+
       return;
     }
 

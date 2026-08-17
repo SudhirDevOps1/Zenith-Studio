@@ -169,7 +169,8 @@ export const ExtensionsPanel: React.FC = () => {
       addToast({
         type: 'success',
         title: 'Extension Installed',
-        message: `${ext.displayName} is now active in CodeStudio.`,
+        message: `${ext.displayName} is now active in Zenith Studio.`,
+
       });
     } finally {
       setInstallingId(null);

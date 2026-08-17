@@ -73,8 +73,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           title="Command Palette (Ctrl+Shift+P)"
         >
           <Terminal className="w-3 h-3 text-blue-400" />
-          <span className="font-semibold">CodeStudio</span>
+          <span className="font-semibold">Zenith Studio</span>
         </button>
+
 
         {/* Git Branch Chip */}
         <div className="flex items-center gap-1 text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded transition">
@@ -242,7 +243,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           <button
             onClick={openUpdateModal}
             className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] animate-pulse hover:scale-105 transition shadow-md shadow-amber-500/20 cursor-pointer"
-            title={`CodeStudio v${latestVersion} is available! Click to update.`}
+            title={`Zenith Studio v${latestVersion} is available! Click to update.`}
+
           >
             <Sparkles className="w-3 h-3" />
             <span>v{latestVersion} Ready</span>

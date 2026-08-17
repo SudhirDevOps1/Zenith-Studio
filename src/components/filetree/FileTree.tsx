@@ -160,7 +160,8 @@ export const FileTree: React.FC = () => {
 
   const createTemplateFile = (type: 'react' | 'html' | 'mermaid' | 'ts') => {
     const templates = {
-      react: { name: 'Component.tsx', content: `import React from 'react';\n\nexport const MyComponent: React.FC = () => {\n  return <div>Hello CodeStudio!</div>;\n};\n` },
+      react: { name: 'Component.tsx', content: `import React from 'react';\n\nexport const MyComponent: React.FC = () => {\n  return <div>Hello Zenith Studio!</div>;\n};\n` },
+
       html: { name: 'index.html', content: `<!DOCTYPE html>\n<html>\n<head>\n  <title>New Page</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>\n` },
       mermaid: { name: 'diagram.mermaid', content: `graph TD\n    A[Start] --> B[Process]\n    B --> C[Done]\n` },
       ts: { name: 'utils.ts', content: `export const multiply = (a: number, b: number): number => a * b;\n` },

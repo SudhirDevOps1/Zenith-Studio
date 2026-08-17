@@ -46,15 +46,16 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
     const session = sessions.find((s) => s.id === activeSessionId) || sessions[0];
     if (session && session.entries.length === 0) {
       if (isDesktop) {
-        addEntry(session.id, 'info', '💻 CodeStudio Advanced Multi-Session Terminal (PowerShell)');
+        addEntry(session.id, 'info', '💻 Zenith Studio Advanced Multi-Session Terminal (PowerShell)');
         if (rootFolderPath) {
           addEntry(session.id, 'info', `📂 Active Project Folder: ${rootFolderPath}`);
         }
         addEntry(session.id, 'info', 'Ready: npm, git, node, python, gcc, dir, cd, cargo, echo, etc.');
       } else {
-        addEntry(session.id, 'info', '🚀 CodeStudio Integrated Terminal Ready (Web Sandbox)');
+        addEntry(session.id, 'info', '🚀 Zenith Studio Integrated Terminal Ready (Web Sandbox)');
         addEntry(session.id, 'info', 'Type "help" for available commands (ls, cat, touch, rm, open, stats, eval).');
       }
+
       addEntry(session.id, 'output', '');
     }
   }, [activeSessionId, isDesktop]);

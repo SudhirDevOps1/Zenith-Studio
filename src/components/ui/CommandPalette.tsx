@@ -54,8 +54,9 @@ export const CommandPalette: React.FC = () => {
   const commands: CommandItem[] = [
     {
       id: 'ai-assistant',
-      title: 'AI: Open CodeStudio AI Assistant Chat',
+      title: 'AI: Open Zenith Studio AI Assistant Chat',
       category: 'AI & Copilot',
+
       icon: <Bot className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+Shift+A',
       action: () => {
@@ -233,7 +234,7 @@ export const CommandPalette: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'codestudio-workspace.zip';
+        a.download = 'zenith-studio-workspace.zip';
         a.click();
       },
     },
@@ -295,12 +296,13 @@ export const CommandPalette: React.FC = () => {
       category: 'System',
       icon: <RotateCcw className="w-4 h-4 text-amber-400" />,
       action: async () => {
-        const ok = await openDialog({ type: 'confirm', title: 'Reset Workspace', message: 'Reset virtual files to the default CodeStudio sample project?', confirmText: 'Reset', cancelText: 'Cancel' });
+        const ok = await openDialog({ type: 'confirm', title: 'Reset Workspace', message: 'Reset virtual files to the default Zenith Studio sample project?', confirmText: 'Reset', cancelText: 'Cancel' });
         if (ok !== null) {
           resetToDefaultFiles();
         }
       },
     },
+
   ];
 
   const filteredCommands = commands.filter(c =>

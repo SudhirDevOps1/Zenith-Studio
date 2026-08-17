@@ -72,8 +72,9 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
         .map((f) => `### FILE: ${f.path || f.name}\n\`\`\`${f.extension || 'txt'}\n${f.content || ''}\n\`\`\``)
         .join('\n\n');
 
-      const systemPrompt = `You are CodeStudio AI Composer (Multi-File Agent). 
+      const systemPrompt = `You are Zenith Studio AI Composer (Multi-File Agent). 
 Your task is to plan and execute code modifications across the provided files based on the user's request.
+
 
 CRITICAL OUTPUT FORMAT:
 For every file that needs changes or creation, output a block strictly formatted as:

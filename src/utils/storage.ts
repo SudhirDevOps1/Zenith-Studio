@@ -3,12 +3,17 @@ import { FileItem } from '../types/fileSystem';
 import { EditorSettings, DEFAULT_SETTINGS } from '../types/settings';
 import { INITIAL_SAMPLE_FILES } from './fileUtils';
 
-const FILES_KEY = 'codestudio_files_v1';
-const SETTINGS_KEY = 'codestudio_settings_v1';
+const FILES_KEY = 'zenith_studio_files_v1';
+const SETTINGS_KEY = 'zenith_studio_settings_v1';
+const LEGACY_FILES_KEY = 'codestudio_files_v1';
+const LEGACY_SETTINGS_KEY = 'codestudio_settings_v1';
 
 export const loadFilesFromStorage = async (): Promise<FileItem[]> => {
   try {
-    const savedFiles = await get<FileItem[]>(FILES_KEY);
+    let savedFiles = await get<FileItem[]>(FILES_KEY);
+    if (!savedFiles || !Array.isArray(savedFiles) || savedFiles.length === 0) {
+      savedFiles = await get<FileItem[]>(LEGACY_FILES_KEY);
+    }
     if (savedFiles && Array.isArray(savedFiles) && savedFiles.length > 0) {
       // Filter out legacy demo docs folder if present from earlier runs
       const cleaned = savedFiles.filter(
@@ -23,6 +28,7 @@ export const loadFilesFromStorage = async (): Promise<FileItem[]> => {
 };
 
 
+
 export const saveFilesToStorage = async (files: FileItem[]): Promise<void> => {
   try {
     await set(FILES_KEY, files);
@@ -33,7 +39,7 @@ export const saveFilesToStorage = async (files: FileItem[]): Promise<void> => {
 
 export const loadSettingsFromStorage = (): EditorSettings => {
   try {
-    const saved = localStorage.getItem(SETTINGS_KEY);
+    const saved = localStorage.getItem(SETTINGS_KEY) || localStorage.getItem(LEGACY_SETTINGS_KEY);
     if (saved) {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
     }
@@ -42,6 +48,7 @@ export const loadSettingsFromStorage = (): EditorSettings => {
   }
   return DEFAULT_SETTINGS;
 };
+
 
 export const saveSettingsToStorage = (settings: EditorSettings): void => {
   try {

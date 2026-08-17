@@ -39,7 +39,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, scrol
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Markdown Export - CodeStudio</title>
+          <title>Markdown Export - Zenith Studio</title>
+
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
             pre { background: #f4f4f5; padding: 15px; border-radius: 6px; overflow-x: auto; }

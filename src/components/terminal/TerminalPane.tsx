@@ -140,8 +140,9 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
         addEntry(
           session.id,
           'info',
-          `Available Web Commands:\n  ls [path]         - List files and directories\n  cat <filename>    - Print file content\n  touch <filename>  - Create a new blank file\n  rm <filename>     - Delete a file\n  open <filename>   - Open file in Monaco Editor\n  clear / cls       - Clear terminal output\n  pwd               - Print working directory\n  stats             - Display workspace statistics\n  eval <code>       - Execute JavaScript code\n  echo <text>       - Print text\n  date              - Show current date & time\n  version           - Show CodeStudio version\n\n💡 Tip: Run in CodeStudio Desktop (.exe) for live PowerShell / Bash execution!`
+          `Available Web Commands:\n  ls [path]         - List files and directories\n  cat <filename>    - Print file content\n  touch <filename>  - Create a new blank file\n  rm <filename>     - Delete a file\n  open <filename>   - Open file in Monaco Editor\n  clear / cls       - Clear terminal output\n  pwd               - Print working directory\n  stats             - Display workspace statistics\n  eval <code>       - Execute JavaScript code\n  echo <text>       - Print text\n  date              - Show current date & time\n  version           - Show Zenith Studio version\n\n💡 Tip: Run in Zenith Studio Desktop (.exe) for live PowerShell / Bash execution!`
         );
+
         break;
 
       case 'ls':
@@ -253,8 +254,9 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
         break;
 
       case 'version':
-        addEntry(session.id, 'output', 'CodeStudio v1.0.3 (React 19 + Monaco + Vite 7 + Electron Shell)');
+        addEntry(session.id, 'output', 'Zenith Studio v1.0.3 (React 19 + Monaco + Vite 7 + Electron Shell)');
         break;
+
 
       default:
         addEntry(

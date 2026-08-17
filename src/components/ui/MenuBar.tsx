@@ -43,14 +43,14 @@ export const MenuBar: React.FC = () => {
 
   const isDesktop = isElectron();
   const activeFile = files.find(f => f.id === activeFileId);
-  const folderName = rootFolderPath ? rootFolderPath.split(/[\\/]/).filter(Boolean).pop() : 'CodeStudio Workspace';
+  const folderName = rootFolderPath ? rootFolderPath.split(/[\\/]/).filter(Boolean).pop() : 'Zenith Studio Workspace';
 
   const handleExportZip = async () => {
     const blob = await createZipFromFiles(files);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'codestudio-workspace.zip';
+    a.download = 'zenith-studio-workspace.zip';
     a.click();
     setOpenMenu(null);
   };
@@ -80,10 +80,11 @@ export const MenuBar: React.FC = () => {
             <Code2 className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent tracking-tight">
-            CodeStudio
+            Zenith Studio
           </span>
           <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.3</span>
         </div>
+
 
 
 

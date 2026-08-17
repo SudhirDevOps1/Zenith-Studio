@@ -329,7 +329,7 @@ export const CodeSnapshotModal: React.FC<CodeSnapshotModalProps> = ({
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(
-        'Generated with CodeStudio by SudhirDevOps1',
+        'Generated with Zenith Studio by SudhirDevOps1',
         winX + winW / 2,
         winY + winH - 16 * scale
       );
@@ -361,8 +361,9 @@ export const CodeSnapshotModal: React.FC<CodeSnapshotModalProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const a = document.createElement('a');
-    const baseName = fileName.replace(/\.[^/.]+$/, '') || 'codestudio';
+    const baseName = fileName.replace(/\.[^/.]+$/, '') || 'zenith-studio';
     a.download = `${baseName}-snapshot-${quality}x.png`;
+
     a.href = canvas.toDataURL('image/png');
     a.click();
     addToast({

@@ -47,7 +47,7 @@ export const ActivityBar: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `codestudio-workspace-${Date.now()}.zip`;
+      a.download = `zenith-studio-workspace-${Date.now()}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -68,10 +68,11 @@ export const ActivityBar: React.FC = () => {
           onClick={() => setActiveSidebarTab('explorer')}
           style={{ background: `linear-gradient(135deg, ${currentAccent.primary}, #4f46e5)`, width: '34px', height: '34px' }}
           className="rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"
-          title="CodeStudio Home"
+          title="Zenith Studio Home"
         >
-          CS
+          ZS
         </div>
+
 
         {/* Explorer */}
         <button
@@ -153,7 +154,8 @@ export const ActivityBar: React.FC = () => {
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
-          title="CodeStudio AI Assistant (Gemini)"
+          title="Zenith Studio AI Assistant"
+
         >
           {activeSidebarTab === 'ai' && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />

@@ -264,7 +264,8 @@ export const SimpleBrowserWebview: React.FC<SimpleBrowserProps> = ({
             ref={iframeRef}
             src={currentUrl}
             onLoad={() => setIsLoading(false)}
-            title="CodeStudio Webview"
+            title="Zenith Studio Webview"
+
             className="w-full h-full border-0 bg-white"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
             allow="fullscreen; clipboard-read; clipboard-write;"

@@ -1,11 +1,11 @@
-# 🚀 CodeStudio — Production-Grade Universal Code & Text Editor
+# 🚀 Zenith Studio — Production-Grade Universal AI Code & Text Editor
 
 <p align="center">
-  <img src="public/icon.png" width="120" alt="CodeStudio Logo" style="border-radius: 20px;" />
+  <img src="public/icon.png" width="120" alt="Zenith Studio Logo" style="border-radius: 20px;" />
 </p>
 
 <p align="center">
-  <strong>The Ultra-Fast, Lightweight, and Extensible VS Code / VSCodium Alternative for Web & Desktop</strong>
+  <strong>The Ultra-Fast, Lightweight, and Extensible AI-Native VS Code / Cursor Alternative for Web & Desktop</strong>
 </p>
 
 <p align="center">
@@ -23,14 +23,15 @@
 - 🌐 **Live Web Application**: [https://codestudio-web-app.pages.dev/](https://codestudio-web-app.pages.dev/)
 - 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/CodeStudio.git](https://github.com/SudhirDevOps1/CodeStudio.git)
 - 🚀 **GitHub Releases & `.exe` Downloads**: [https://github.com/SudhirDevOps1/CodeStudio/releases](https://github.com/SudhirDevOps1/CodeStudio/releases)
-- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `CodeStudio Setup 1.0.3.exe` NSIS Installer and portable executable in `dist-electron/`)
+- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `Zenith Studio Setup 1.0.3.exe` NSIS Installer and portable executable in `dist-electron/`)
 
 - ⚡ **Zero Setup Required**: Open directly in any modern browser or run as a standalone desktop executable on Windows.
 
 ---
 
 ### 🤖 1. Universal AI Multi-Provider Assistant & Model Auto-Discovery
-CodeStudio connects with your favorite LLM provider out of the box:
+Zenith Studio connects with your favorite LLM provider out of the box:
+
 - **Supported Providers**: Google Gemini (Flash 2.0, Pro 1.5), OpenAI (GPT-4o, o3-mini), Anthropic Claude (3.5 Sonnet, 3.5 Haiku), Groq (Llama 3.3 70B, DeepSeek R1), OpenRouter, DeepSeek, Ollama (Local), and Custom OpenAI-Compatible Endpoints.
 - **Dynamic Model Auto-Discovery**: Automatically queries `${baseUrl}/v1/models` to discover all models available on your API key.
 - **Manual Priority Override**: Manually defined models and presets appear first without remote overwrite, with instant toggle between dropdown list and manual text input.
