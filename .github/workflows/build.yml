@@ -1,0 +1,129 @@
+name: Build & Release CodeStudio
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Publish a GitHub Release with .exe installers?'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # ==========================================
+  # JOB 1: Test & Build Web Application
+  # ==========================================
+  build-web:
+    name: 🌐 Build & Verify Web App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript Verification
+        run: npm run typecheck
+
+      - name: ⚡ Build Web Singlefile Bundle
+        run: npm run build
+
+      - name: 📤 Upload Web Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codestudio-web-build
+          path: dist/
+          retention-days: 14
+
+  # ==========================================
+  # JOB 2: Build Desktop App (Windows .exe)
+  # ==========================================
+  build-desktop-windows:
+    name: 🖥️ Build Windows Desktop App (.exe)
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔨 Build Vite & Electron Installer
+        run: npm run electron:build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📤 Upload Desktop App Artifacts (.exe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: codestudio-windows-desktop-installer
+          path: dist-electron/*.exe
+          retention-days: 30
+
+  # ==========================================
+  # JOB 3: Automated GitHub Release (on Tags or Manual Trigger)
+  # ==========================================
+  create-release:
+    name: 🚀 Create GitHub Release
+    needs: [build-web, build-desktop-windows]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release == true)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Windows Desktop Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: codestudio-windows-desktop-installer
+          path: release-assets/
+
+      - name: 📥 Download Web Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: codestudio-web-build
+          path: release-assets/web-dist/
+
+      - name: 🗜️ Archive Web Build as ZIP
+        run: |
+          cd release-assets/web-dist && zip -r ../CodeStudio-Web-Build.zip . && cd ../..
+
+      - name: 🚀 Publish GitHub Release with Attachments
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/*.exe
+            release-assets/CodeStudio-Web-Build.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

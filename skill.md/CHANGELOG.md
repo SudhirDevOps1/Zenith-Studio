@@ -2,6 +2,16 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Automated GitHub Actions CI/CD Workflow & Tag Release
+* **User Request:** ".github workflow banao taki auto app bn jaye tag bana kr"
+* **Features Added:**
+  - Created `.github/workflows/build.yml` configured for automated multi-platform builds:
+    - **Web Build Job**: Runs `npm run typecheck` + `npm run build` on `ubuntu-latest` and saves `dist/` artifacts.
+    - **Desktop Build Job**: Builds full Windows Desktop Electron app (`.exe` installer & portable) on `windows-latest` and stores `dist-electron/*.exe` artifacts.
+    - **Automated GitHub Release Job**: Automatically triggered on git tags (e.g. `v1.0.0`) or manual workflow dispatch (`workflow_dispatch`), generating releases with `.exe` installers and web `.zip` bundles attached!
+* **Files Modified:** `.github/workflows/build.yml`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - VS Code Parity Power Features (Quick Open Ctrl+P, Go to Line Ctrl+G, Global Workspace Replace, Interactive Status Bar)
 * **User Request:** "proceed" (Executing comprehensive plan to add Quick Open, Go to Line, Workspace Search & Replace, and Status Bar Controls)
 * **Features Added & Enhanced:**
