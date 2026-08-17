@@ -22,9 +22,12 @@ import {
   Bot,
   AlertCircle,
   Sparkles,
+  SlidersHorizontal,
 } from 'lucide-react';
+
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { formatCode } from '../../utils/codeFormatter';
+import { AiSetupModal } from './AiSetupModal';
 
 interface CommandItem {
   id: string;
@@ -44,13 +47,14 @@ export const CommandPalette: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [showAiSetup, setShowAiSetup] = useState(false);
 
   const activeFile = files.find((f) => f.id === activeFileId);
 
   const commands: CommandItem[] = [
     {
       id: 'ai-assistant',
-      title: 'AI: Open CodeStudio AI Assistant (Gemini)',
+      title: 'AI: Open CodeStudio AI Assistant Chat',
       category: 'AI & Copilot',
       icon: <Bot className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+Shift+A',
@@ -58,6 +62,16 @@ export const CommandPalette: React.FC = () => {
         setActiveSidebarTab('ai');
       },
     },
+    {
+      id: 'ai-setup',
+      title: 'AI: Setup Provider, API Keys & Auto-Detect Models...',
+      category: 'AI & Copilot',
+      icon: <SlidersHorizontal className="w-4 h-4 text-purple-400" />,
+      action: () => {
+        setShowAiSetup(true);
+      },
+    },
+
     {
       id: 'format-document',
       title: 'Format: Format Document (Prettier Engine)',
@@ -384,6 +398,9 @@ export const CommandPalette: React.FC = () => {
           )}
         </div>
       </div>
+
+      <AiSetupModal isOpen={showAiSetup} onClose={() => setShowAiSetup(false)} />
     </div>
   );
 };
+

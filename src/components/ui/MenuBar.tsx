@@ -29,6 +29,7 @@ import {
   ZoomOut,
   Search,
 } from 'lucide-react';
+import { AiSetupModal } from './AiSetupModal';
 
 export const MenuBar: React.FC = () => {
   const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
@@ -37,6 +38,8 @@ export const MenuBar: React.FC = () => {
   const { openDialog } = useDialogStore();
   const { checkForUpdates, hasUpdate } = useUpdateStore();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [showAiSetup, setShowAiSetup] = useState(false);
+
 
   const isDesktop = isElectron();
   const activeFile = files.find(f => f.id === activeFileId);
@@ -409,6 +412,19 @@ export const MenuBar: React.FC = () => {
 
               <button
                 onClick={() => {
+                  setShowAiSetup(true);
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left cursor-pointer"
+              >
+                <span className="flex items-center gap-2 text-slate-200">
+                  <Bot className="w-3.5 h-3.5 text-cyan-400" /> AI Setup &amp; Model Config...
+                </span>
+                <kbd className="text-[10px] text-cyan-300 font-mono">Setup</kbd>
+              </button>
+
+              <button
+                onClick={() => {
                   checkForUpdates(true);
                   closeMenus();
                 }}
@@ -476,6 +492,11 @@ export const MenuBar: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* AI Setup Configuration Modal */}
+      <AiSetupModal isOpen={showAiSetup} onClose={() => setShowAiSetup(false)} />
     </div>
   );
 };
+
+

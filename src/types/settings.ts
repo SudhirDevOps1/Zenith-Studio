@@ -11,6 +11,16 @@ export type ThemeMode =
   | 'tokyo-night';
 export type AccentColor = 'blue' | 'purple' | 'emerald' | 'amber' | 'rose' | 'cyan';
 
+export type AiProvider =
+  | 'gemini'
+  | 'openai'
+  | 'anthropic'
+  | 'groq'
+  | 'openrouter'
+  | 'ollama'
+  | 'deepseek'
+  | 'custom';
+
 export interface EditorSettings {
   theme: ThemeMode;
   accentColor: AccentColor;
@@ -43,9 +53,15 @@ export interface EditorSettings {
   fontLigatures: boolean;
   indentGuides: boolean;
   mouseWheelZoom: boolean;
-  // AI Assistant Integration
+  // Multi-Provider AI Assistant Configuration
+  aiProvider: AiProvider;
   geminiApiKey: string;
-  aiModel: 'gemini-1.5-flash' | 'gemini-1.5-pro' | 'gemini-2.0-flash';
+  aiModel: string;
+  aiApiKey: string;
+  aiCustomProviderName: string;
+  aiCustomEndpoint: string;
+  aiCustomModelName: string;
+  aiTemperature: number;
 }
 
 export const DEFAULT_SETTINGS: EditorSettings = {
@@ -78,8 +94,15 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   fontLigatures: true,
   indentGuides: true,
   mouseWheelZoom: true,
+  aiProvider: 'gemini',
   geminiApiKey: '',
   aiModel: 'gemini-1.5-flash',
+  aiApiKey: '',
+  aiCustomProviderName: 'My Custom API',
+  aiCustomEndpoint: 'https://api.example.com/v1/chat/completions',
+  aiCustomModelName: 'gpt-4o',
+  aiTemperature: 0.3,
 };
+
 
 

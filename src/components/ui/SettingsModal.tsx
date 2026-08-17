@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { ThemeMode, AccentColor } from '../../types/settings';
 import { ACCENT_PALETTE } from '../../utils/accentThemes';
-import { X, Settings, RotateCcw, Palette, Sliders, Type, Layout, Terminal, Check } from 'lucide-react';
+import { X, Settings, RotateCcw, Palette, Sliders, Type, Layout, Terminal, Check, Bot, SlidersHorizontal } from 'lucide-react';
+import { AiSetupModal } from './AiSetupModal';
 
 export const SettingsModal: React.FC = () => {
   const { isSettingsOpen, setSettingsOpen, settings, updateSettings, resetSettings } = useSettingsStore();
+  const [showAiModal, setShowAiModal] = useState(false);
 
   if (!isSettingsOpen) return null;
+
 
   const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
 
@@ -298,6 +301,33 @@ export const SettingsModal: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* AI Intelligence & Provider Section */}
+          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                <Bot className="w-4 h-4 text-cyan-400" /> AI Setup &amp; LLM Provider
+              </span>
+              <span className="px-2 py-0.5 bg-cyan-950/60 text-cyan-300 border border-cyan-800/60 rounded-md font-mono text-[10px] uppercase font-bold">
+                {settings.aiProvider || 'gemini'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-slate-400">
+              <span>Active Model:</span>
+              <span className="font-mono text-white text-[11px]">{settings.aiModel || 'gemini-1.5-flash'}</span>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowAiModal(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition shadow-md cursor-pointer"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>Configure AI Provider &amp; Auto-Detect Models</span>
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
@@ -317,6 +347,9 @@ export const SettingsModal: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <AiSetupModal isOpen={showAiModal} onClose={() => setShowAiModal(false)} />
     </div>
   );
 };
+

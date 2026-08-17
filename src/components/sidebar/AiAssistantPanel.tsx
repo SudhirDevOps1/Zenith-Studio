@@ -10,16 +10,17 @@ import {
   Zap,
   FileText,
   FileCode,
-  Key,
-  ExternalLink,
   Loader2,
   ArrowDownToLine,
+  SlidersHorizontal,
 } from 'lucide-react';
+
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { ACCENT_PALETTE } from '../../utils/accentThemes';
-
+import { generateAiContent } from '../../utils/aiService';
+import { AiSetupModal } from '../ui/AiSetupModal';
 
 interface ChatMessage {
   id: string;
@@ -31,7 +32,7 @@ interface ChatMessage {
 
 export const AiAssistantPanel: React.FC = () => {
   const { files, activeFileId, updateFileContent } = useFileStore();
-  const { settings, updateSettings } = useSettingsStore();
+  const { settings } = useSettingsStore();
   const { addToast } = useToastStore();
 
   const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
@@ -41,14 +42,13 @@ export const AiAssistantPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [appliedId, setAppliedId] = useState<string | null>(null);
-  const [apiKeyInput, setApiKeyInput] = useState(settings.geminiApiKey || '');
-  const [showKeyConfig, setShowKeyConfig] = useState(!settings.geminiApiKey);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome_msg',
       sender: 'ai',
-      text: "👋 Hi! I'm **CodeStudio AI Assistant** powered by Google Gemini.\n\nI can explain your code, fix bugs, optimize performance, or write new features. Choose a quick action below or type any question!",
+      text: `👋 Hi! I'm **CodeStudio AI Assistant**.\n\nConnected to **${(settings.aiProvider || 'gemini').toUpperCase()}** (${settings.aiModel || 'gemini-1.5-flash'}).\n\nI can explain your code, fix bugs, optimize architecture, generate unit tests, or build new features. Choose an action below or ask any question!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -59,25 +59,14 @@ export const AiAssistantPanel: React.FC = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleSaveApiKey = () => {
-    const cleanKey = apiKeyInput.trim();
-    updateSettings({ geminiApiKey: cleanKey });
-    setShowKeyConfig(false);
-    addToast({
-      type: 'success',
-      title: 'API Key Saved',
-      message: 'Your Gemini API key is stored securely in local storage.',
-    });
-  };
-
-  const callGemini = async (prompt: string, codeContext?: string) => {
-    const key = settings.geminiApiKey || apiKeyInput.trim();
-    if (!key) {
-      setShowKeyConfig(true);
+  const callAi = async (prompt: string, codeContext?: string) => {
+    const activeKey = settings.aiApiKey || settings.geminiApiKey || '';
+    if (!activeKey && settings.aiProvider !== 'ollama') {
+      setIsSetupModalOpen(true);
       addToast({
         type: 'warning',
-        title: 'Gemini API Key Required',
-        message: 'Please enter your free Gemini API key from Google AI Studio.',
+        title: 'AI Setup Required',
+        message: 'Please configure your API key or provider endpoint in AI Setup.',
       });
       return;
     }
@@ -95,40 +84,14 @@ export const AiAssistantPanel: React.FC = () => {
     setLoading(true);
 
     try {
-      let systemInstruction = `You are CodeStudio AI, an expert software engineer and pair programmer. Provide clear, production-ready, clean, and concise responses. Format code blocks using standard markdown triple backticks with language identifiers (e.g. \`\`\`tsx ... \`\`\`).`;
+      const systemInstruction = `You are CodeStudio AI, an elite software architect and pair programmer. Provide clear, production-ready, clean, and concise responses. Always format code blocks using standard markdown triple backticks with language identifiers (e.g. \`\`\`tsx ... \`\`\`).`;
 
       let fullPrompt = prompt;
       if (codeContext && activeFile) {
         fullPrompt += `\n\n--- ACTIVE FILE: ${activeFile.name} (${activeFile.extension || 'code'}) ---\n\`\`\`${activeFile.extension || ''}\n${codeContext}\n\`\`\``;
       }
 
-      const model = settings.aiModel || 'gemini-1.5-flash';
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemInstruction}\n\n${fullPrompt}` }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 2048,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `API error (${response.status})`);
-      }
-
-      const data = await response.json();
-      const aiReplyText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
+      const aiReplyText = await generateAiContent(fullPrompt, systemInstruction, settings);
 
       // Extract primary code block if available
       const codeMatch = aiReplyText.match(/```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)```/);
@@ -149,7 +112,7 @@ export const AiAssistantPanel: React.FC = () => {
         {
           id: `ai_err_${Date.now()}`,
           sender: 'ai',
-          text: `⚠️ **Error generating response:** ${err.message}\n\n*Check your API key in settings or verify your network connection.*`,
+          text: `⚠️ **Error generating response:** ${err.message}\n\n*Click "AI Setup" in the top bar to verify your API Key or Provider endpoint.*`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -171,19 +134,19 @@ export const AiAssistantPanel: React.FC = () => {
     const code = activeFile.content || '';
     switch (actionType) {
       case 'explain':
-        callGemini(`Please explain how this code in ${activeFile.name} works step-by-step, including key logic and structure.`, code);
+        callAi(`Please explain how this code in ${activeFile.name} works step-by-step, including key logic and structure.`, code);
         break;
       case 'fix':
-        callGemini(`Analyze the code in ${activeFile.name} for bugs, syntax errors, and edge case issues. Provide the fixed, complete working code.`, code);
+        callAi(`Analyze the code in ${activeFile.name} for bugs, syntax errors, and edge case issues. Provide the fixed, complete working code.`, code);
         break;
       case 'optimize':
-        callGemini(`Refactor and optimize the code in ${activeFile.name} for cleaner architecture, modern best practices, and better performance.`, code);
+        callAi(`Refactor and optimize the code in ${activeFile.name} for cleaner architecture, modern best practices, and better performance.`, code);
         break;
       case 'tests':
-        callGemini(`Generate thorough unit tests for the code in ${activeFile.name}.`, code);
+        callAi(`Generate thorough unit tests for the code in ${activeFile.name}.`, code);
         break;
       case 'docs':
-        callGemini(`Add clear, comprehensive docstrings and comments throughout the code in ${activeFile.name}.`, code);
+        callAi(`Add clear, comprehensive docstrings and comments throughout the code in ${activeFile.name}.`, code);
         break;
     }
   };
@@ -220,24 +183,28 @@ export const AiAssistantPanel: React.FC = () => {
       {/* Header */}
       <div className="p-3 border-b border-slate-800 bg-[#1e1e2e] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-md bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm">
+          <div className="p-1 rounded-md bg-gradient-to-tr from-cyan-600 to-blue-600 text-white shadow-sm">
             <Bot className="w-4 h-4" />
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200">
-            CodeStudio AI Assistant
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200">
+              CodeStudio AI
+            </span>
+          </div>
         </div>
+
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setShowKeyConfig(!showKeyConfig)}
-            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
-            title="Configure Gemini API Key"
+            onClick={() => setIsSetupModalOpen(true)}
+            className="flex items-center gap-1 px-2 py-1 bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-800/60 text-cyan-300 hover:text-white rounded-lg text-[10px] font-semibold transition cursor-pointer"
+            title="Configure Provider, API Key & Auto-Detect Models"
           >
-            <Key className="w-3.5 h-3.5" />
+            <SlidersHorizontal className="w-3 h-3" />
+            <span>AI Setup</span>
           </button>
           <button
             onClick={() => setMessages([messages[0]])}
-            className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
+            className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
             title="Clear Chat History"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -245,50 +212,22 @@ export const AiAssistantPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* API Key Banner / Config */}
-      {showKeyConfig && (
-        <div className="p-3 bg-[#14141f] border-b border-slate-800 space-y-2 text-xs animate-fade-in-up">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5 text-amber-400" /> Google Gemini API Key
-            </span>
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[10px] text-cyan-400 hover:underline flex items-center gap-0.5"
-            >
-              Get Free Key <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
-          <div className="flex gap-1.5">
-            <input
-              type="password"
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              placeholder="Paste AI Studio API Key (AIzaSy...)"
-              className="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-500 font-mono"
-            />
-            <button
-              onClick={handleSaveApiKey}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Active File Context Chip */}
-      <div className="px-3 py-1.5 bg-[#14141f]/70 border-b border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-        <span className="flex items-center gap-1 truncate">
+      {/* Active Provider & File Context Bar */}
+      <div className="px-3 py-1.5 bg-[#14141f]/90 border-b border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
+        <span className="flex items-center gap-1 truncate max-w-[65%]">
           <FileCode className="w-3 h-3 text-cyan-400 shrink-0" />
           <span className="text-slate-500">Context:</span>
           <span className="font-mono text-slate-200 font-medium truncate">
             {activeFile ? activeFile.name : 'No file open'}
           </span>
         </span>
-        <span className="text-slate-500 font-mono text-[9px]">Gemini 1.5</span>
+        <button
+          onClick={() => setIsSetupModalOpen(true)}
+          className="font-mono text-[9px] px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded border border-slate-700 truncate max-w-[35%] transition"
+          title={`Provider: ${settings.aiProvider || 'gemini'} | Model: ${settings.aiModel || 'default'}`}
+        >
+          {settings.aiModel || 'gemini-1.5-flash'}
+        </button>
       </div>
 
       {/* Quick Action Buttons */}
@@ -383,7 +322,7 @@ export const AiAssistantPanel: React.FC = () => {
         {loading && (
           <div className="flex items-center gap-2 text-xs text-slate-400 p-2 bg-slate-900/50 rounded-lg border border-slate-800 animate-pulse">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
-            <span>Thinking with Gemini...</span>
+            <span>Generating with {settings.aiProvider || 'AI'}...</span>
           </div>
         )}
         <div ref={chatEndRef} />
@@ -394,7 +333,7 @@ export const AiAssistantPanel: React.FC = () => {
         onSubmit={(e) => {
           e.preventDefault();
           if (input.trim() && !loading) {
-            callGemini(input.trim(), activeFile?.content);
+            callAi(input.trim(), activeFile?.content);
           }
         }}
         className="p-2.5 border-t border-slate-800 bg-[#1e1e2e]"
@@ -403,9 +342,9 @@ export const AiAssistantPanel: React.FC = () => {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask AI about your code or task..."
+            placeholder={`Ask AI about ${activeFile ? activeFile.name : 'your code'}...`}
             disabled={loading}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 transition"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-500 transition"
           />
           <button
             type="submit"
@@ -418,6 +357,12 @@ export const AiAssistantPanel: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* AI Setup Configuration Modal */}
+      <AiSetupModal
+        isOpen={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
+      />
     </div>
   );
 };
