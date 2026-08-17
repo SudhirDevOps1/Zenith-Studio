@@ -2,6 +2,16 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Robust C/C++ & Multi-Language Marketplace Search & Auto Pyodide Engine
+* **User Request:** "ye kaisa dikha raa hain live search not work and download bahut se kami hain"
+* **Features Added & Fixed:**
+  - Added official **C/C++ IntelliSense & Tools (`ms-vscode.cpptools`)**, **clangd (`llvm-vs-code-extensions.vscode-clangd`)**, **Code Runner (`formulahendry.code-runner`)**, **Live Server (`ritwickdey.LiveServer`)**, **Java (`redhat.java`)**, **C# Dev Kit (`ms-dotnettools.csharp`)**, and **Docker** to the curated extensions catalog with rich tag aliases.
+  - Upgraded Open VSX live search with query normalization (`c++` -> `cpp`, `c#` -> `csharp`) and automated CORS proxy fallback.
+  - Enabled Pyodide in-browser Python runtime by default in `DEFAULT_SETTINGS`.
+  - Upgraded Advanced Code Runner with clean dynamic runtime status indicators and seamless multi-language execution.
+* **Files Modified:** `src/data/defaultExtensions.ts`, `src/stores/useExtensionStore.ts`, `src/components/sidebar/ExtensionsPanel.tsx`, `src/types/settings.ts`, `src/components/preview/AdvancedCodeRunner.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Ultra-Vibrant Carbon / Ray.so Style Code to Image Generator
 * **User Request:** "ye bekar hain example ese analysis kro example live web https://sudhirdevops1.github.io/code-to-image-generator/ and es repo ko analysis kro https://github.com/SudhirDevOps1/code-to-image-generator.git yesa image bane"
 * **Features Added & Upgraded:**

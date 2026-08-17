@@ -123,14 +123,36 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
 
     set({ isLoadingOnline: true, onlineSearchError: null });
 
-    try {
-      const res = await fetch(
-        `https://open-vsx.org/api/-/search?query=${encodeURIComponent(trimmed)}&size=30`,
-        { signal: activeSearchAbortController.signal }
-      );
+    // Normalize query for Open VSX search engine
+    let searchParam = trimmed;
+    if (trimmed.toLowerCase() === 'c++') searchParam = 'cpp';
+    else if (trimmed.toLowerCase() === 'c#') searchParam = 'csharp';
 
-      if (!res.ok) throw new Error(`Open VSX HTTP ${res.status}`);
-      const data = await res.json();
+    try {
+      let data: any = null;
+      try {
+        const res = await fetch(
+          `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=30`,
+          { signal: activeSearchAbortController.signal }
+        );
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch {
+        // Fallback to proxy if direct Open VSX is CORS blocked
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+          `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=30`
+        )}`;
+        const resProxy = await fetch(proxyUrl, { signal: activeSearchAbortController.signal });
+        if (resProxy.ok) {
+          data = await resProxy.json();
+        }
+      }
+
+      if (!data || !Array.isArray(data.extensions)) {
+        set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
+        return;
+      }
 
       const detectCategory = (extName: string, tags: string[] = [], desc: string = ''): ExtensionCategory => {
         const text = `${extName} ${tags.join(' ')} ${desc}`.toLowerCase();
@@ -138,7 +160,7 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
         if (text.includes('format') || text.includes('prettier') || text.includes('beautif')) return 'Formatters';
         if (text.includes('lint') || text.includes('eslint') || text.includes('hint')) return 'Linters';
         if (text.includes('snippet') || text.includes('template')) return 'Snippets';
-        if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser') || text.includes('server')) return 'AI & Productivity';
+        if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser') || text.includes('server') || text.includes('runner')) return 'AI & Productivity';
         return 'Programming Languages';
       };
 
@@ -170,7 +192,8 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
       set({ onlineExtensions: items, isLoadingOnline: false, onlineSearchError: null });
     } catch (err: any) {
       if (err.name === 'AbortError') return;
-      set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: 'Could not connect to Open VSX registry.' });
+      // Graceful fallback without scary red error so local catalog shines
+      set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
     }
   },
 

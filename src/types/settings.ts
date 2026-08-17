@@ -58,7 +58,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   uiDensity: 'comfortable',
   soundEffects: false,
   enableNativeCompiler: true,
-  enablePyodideRunner: false,
+  enablePyodideRunner: true,
   enableCloudflareSandbox: false,
   cloudflareSandboxEndpoint: '',
 };

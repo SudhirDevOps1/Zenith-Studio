@@ -99,13 +99,34 @@ export const ExtensionsPanel: React.FC = () => {
         const desc = e.description.toLowerCase();
         const tagStr = (e.tags || []).join(' ').toLowerCase();
 
-        return (
-          dName.includes(q) ||
-          pName.includes(q) ||
-          desc.includes(q) ||
-          tagStr.includes(q) ||
-          dName.replace(/[\s\-_]/g, '').includes(cleanQ) ||
-          tagStr.replace(/[\s\-_]/g, '').includes(cleanQ)
+        const aliases: Record<string, string[]> = {
+          'c++': ['c++', 'cpp', 'c/c++', 'clang', 'gcc', 'cplusplus'],
+          cpp: ['c++', 'cpp', 'c/c++', 'clang', 'gcc'],
+          c: ['c++', 'cpp', 'c/c++', 'clang', 'gcc'],
+          'c#': ['c#', 'csharp', 'dotnet'],
+          csharp: ['c#', 'csharp', 'dotnet'],
+          python: ['python', 'py', 'pyodide'],
+          py: ['python', 'py'],
+          javascript: ['javascript', 'js', 'node'],
+          js: ['javascript', 'js'],
+          typescript: ['typescript', 'ts'],
+          ts: ['typescript', 'ts'],
+          react: ['react', 'jsx', 'tsx'],
+          vue: ['vue'],
+          html: ['html', 'css', 'web'],
+          rust: ['rust', 'cargo'],
+          go: ['go', 'golang'],
+          server: ['live server', 'server', 'preview'],
+          live: ['live server', 'live preview', 'live'],
+        };
+
+        const targetWords = aliases[q] || [q, cleanQ];
+        return targetWords.some(
+          (w) =>
+            dName.includes(w) ||
+            pName.includes(w) ||
+            desc.includes(w) ||
+            tagStr.includes(w)
         );
       };
 

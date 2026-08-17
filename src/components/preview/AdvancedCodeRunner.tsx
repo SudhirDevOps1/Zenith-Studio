@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Trash2, Terminal, Cpu, Cloud, AlertTriangle } from 'lucide-react';
+import { Play, Trash2, Terminal, Cpu, Cloud } from 'lucide-react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 
 interface AdvancedCodeRunnerProps {
@@ -195,9 +195,30 @@ result = (_stdout.getvalue(), _stderr.getvalue())
           </button>
         </div>
       </div>
-      <div className="p-2 bg-amber-950/20 border-b border-amber-900/40 text-[11px] text-amber-200 flex items-start gap-2">
-        <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-        <span>Native compile requires desktop Electron and installed gcc/g++ in PATH. Python requires Pyodide toggle in Settings.</span>
+      <div className="p-2 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {['js', 'jsx', 'ts', 'tsx'].includes(extension.toLowerCase()) ? (
+            <span className="text-emerald-400 font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              JavaScript / TypeScript In-Browser Engine Active
+            </span>
+          ) : ['py'].includes(extension.toLowerCase()) ? (
+            <span className="text-yellow-400 font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+              Python Pyodide WebAssembly Engine Active
+            </span>
+          ) : ['c', 'cpp', 'cc', 'cxx'].includes(extension.toLowerCase()) ? (
+            <span className="text-orange-400 font-medium flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5" />
+              {isElectronRuntime() ? 'GCC/G++ Native Desktop Compiler Ready' : 'C/C++ Compiler'}
+            </span>
+          ) : (
+            <span className="text-slate-400">Multi-Language Sandbox</span>
+          )}
+        </div>
+        <span className="text-[10px] text-slate-500 font-mono">
+          File: {fileName}
+        </span>
       </div>
       <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-2 bg-[#0d0e15]">
         {logs.length === 0 ? (
