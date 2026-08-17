@@ -191,6 +191,7 @@ ipcMain.handle('dialog:openFolder', async () => {
   }
 
   const folderPath = result.filePaths[0];
+  activeTerminalCwd = folderPath;
   const folderName = path.basename(folderPath);
   const files = await scanDirectory(folderPath);
   return { folderPath, folderName, files };
@@ -289,9 +290,42 @@ ipcMain.handle('shell:openExternal', async (_, url) => {
 });
 
 // Execute real system shell command in active workspace directory
+let activeTerminalCwd = os.homedir();
+
 ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
   return new Promise((resolve) => {
-    let workingDir = cwd && typeof cwd === 'string' && fsSync.existsSync(cwd) ? cwd : process.cwd();
+    let workingDir = cwd && typeof cwd === 'string' && fsSync.existsSync(cwd)
+      ? cwd
+      : activeTerminalCwd && fsSync.existsSync(activeTerminalCwd)
+      ? activeTerminalCwd
+      : os.homedir();
+
+    const trimmed = (command || '').trim();
+
+    // Special handling for cd command to persist directory changes across shell calls
+    if (trimmed.toLowerCase().startsWith('cd ') || trimmed.toLowerCase() === 'cd') {
+      const target = trimmed.slice(2).trim().replace(/^["']|["']$/g, '');
+      if (!target || target === '~') {
+        activeTerminalCwd = os.homedir();
+        resolve({ code: 0, stdout: '', stderr: '', cwd: activeTerminalCwd });
+        return;
+      }
+
+      const resolved = path.isAbsolute(target) ? path.normalize(target) : path.resolve(workingDir, target);
+      if (fsSync.existsSync(resolved) && fsSync.statSync(resolved).isDirectory()) {
+        activeTerminalCwd = resolved;
+        resolve({ code: 0, stdout: '', stderr: '', cwd: activeTerminalCwd });
+      } else {
+        resolve({
+          code: 1,
+          stdout: '',
+          stderr: `Set-Location : Cannot find path '${target}' because it does not exist.\n`,
+          cwd: workingDir,
+        });
+      }
+      return;
+    }
+
     const isWin = process.platform === 'win32';
     const shellOpt = isWin ? 'powershell.exe' : '/bin/bash';
 
@@ -301,6 +335,7 @@ ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
         stdout: stdout || '',
         stderr: stderr || '',
         error: error ? error.message : null,
+        cwd: workingDir,
       });
     });
   });

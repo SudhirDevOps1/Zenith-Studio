@@ -12,9 +12,11 @@ interface FileStoreState {
   activePreviewMode: ActivePreviewMode;
   searchFilter: string;
   isInitialized: boolean;
+  rootFolderPath: string | null;
 
   // Actions
   initializeStore: () => Promise<void>;
+  setRootFolderPath: (path: string | null) => void;
   setActiveFile: (fileId: string | null) => void;
   openFileInTab: (fileId: string) => void;
   closeTab: (fileId: string) => void;
@@ -50,6 +52,15 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
   activePreviewMode: 'auto',
   searchFilter: '',
   isInitialized: false,
+  rootFolderPath: typeof window !== 'undefined' ? localStorage.getItem('codestudio_root_folder_path') || null : null,
+
+  setRootFolderPath: (path) => {
+    if (typeof window !== 'undefined') {
+      if (path) localStorage.setItem('codestudio_root_folder_path', path);
+      else localStorage.removeItem('codestudio_root_folder_path');
+    }
+    set({ rootFolderPath: path });
+  },
 
   initializeStore: async () => {
     const files = await loadFilesFromStorage();
@@ -519,8 +530,12 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
         if (!result || !result.files || result.files.length === 0) return;
 
         await saveFilesToStorage(result.files);
+        if (result.folderPath) {
+          localStorage.setItem('codestudio_root_folder_path', result.folderPath);
+        }
         set({
           files: result.files,
+          rootFolderPath: result.folderPath || null,
           openTabs: [],
           activeFileId: null,
         });

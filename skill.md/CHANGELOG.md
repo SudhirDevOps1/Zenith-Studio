@@ -2,6 +2,16 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Terminal Working Directory (CWD) Tracking & Persistent CD Support
+* **Issue Reported:** `npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C:\Users\DELL\AppData\Local\Programs\codestudio\package.json'` (Terminal ran in app install folder instead of user's project workspace).
+* **Fixes & Enhancements:**
+  - Tracked and persisted `rootFolderPath` whenever a project folder is opened via `File > Open Folder`.
+  - Added persistent `cd <path>` command support in Electron main IPC so directory navigation stays active for subsequent commands.
+  - Display active workspace path in prompt (`PS C:\...\project>`) and header badge.
+  - Automatically executes `npm`, `git`, `python`, `node`, `cargo`, `dir` inside the opened project directory.
+* **Files Modified:** `electron/main.js`, `src/stores/useFileStore.ts`, `src/components/ui/IntegratedTerminal.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Code Snapshot Studio: Custom Selection, Line Ranges & 1x-5x Quality Multipliers
 * **User Request:** "dekho code snap pr etna babada ka na ho samjhe manuly choose kr sake select krke kitne ka image banvana hain ..etc and 1x 2x ..etc all types ke quality ho bina kuchh hataye add and professional banao samjhe"
 * **Features Added & Upgraded:**

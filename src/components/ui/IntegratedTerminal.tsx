@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, X, Trash2, Maximize2, Minimize2, Loader2 } from 'lucide-react';
+import { Terminal, X, Trash2, Maximize2, Minimize2, Loader2, FolderOpen } from 'lucide-react';
 import { useFileStore } from '../../stores/useFileStore';
 import { isElectron } from '../../utils/fileUtils';
 
@@ -23,19 +23,34 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { files, createFile, deleteFileItem, openFileInTab } = useFileStore();
+  const { files, rootFolderPath, createFile, deleteFileItem, openFileInTab } = useFileStore();
+  const [cwd, setCwd] = useState<string>(rootFolderPath || '');
   const isDesktop = isElectron();
+
+  useEffect(() => {
+    if (rootFolderPath && !cwd) {
+      setCwd(rootFolderPath);
+    }
+  }, [rootFolderPath, cwd]);
 
   useEffect(() => {
     if (isDesktop) {
       addEntry('info', '💻 CodeStudio Native Desktop Shell Ready (PowerShell / System Shell)');
-      addEntry('info', 'Type any command: npm, git, node, python, dir, cargo, echo, etc.');
+      if (rootFolderPath) {
+        addEntry('info', `📂 Workspace Working Directory: ${rootFolderPath}`);
+      } else {
+        addEntry(
+          'info',
+          '💡 Tip: Open your project folder via (File > Open Folder) or use "cd <path>" to set your project root directory.'
+        );
+      }
+      addEntry('info', 'Type any command: npm, git, node, python, dir, cd, cargo, echo, etc.');
     } else {
       addEntry('info', '🚀 CodeStudio Integrated Terminal Ready (Web Sandbox)');
       addEntry('info', 'Type "help" for available commands (ls, cat, touch, rm, open, stats, eval, echo).');
     }
     addEntry('output', '');
-  }, [isDesktop]);
+  }, [isDesktop, rootFolderPath]);
 
   useEffect(() => {
     if (outputRef.current) {
@@ -74,7 +89,12 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
       try {
         const result = await (window as any).electronAPI.execTerminalCommand({
           command: trimmed,
+          cwd: cwd || rootFolderPath || undefined,
         });
+
+        if (result.cwd) {
+          setCwd(result.cwd);
+        }
 
         if (result.stdout) {
           addEntry('output', result.stdout);
@@ -228,7 +248,7 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
         break;
 
       case 'pwd':
-        addEntry('output', '/workspace');
+        addEntry('output', cwd || '/workspace');
         break;
 
       case 'date':
@@ -306,6 +326,12 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
     };
   }, [isDragging]);
 
+  const displayCwd = cwd
+    ? cwd.length > 40
+      ? '...' + cwd.slice(-36)
+      : cwd
+    : 'Workspace';
+
   return (
     <div
       style={{ height: isMaximized ? '70vh' : `${height}px` }}
@@ -332,6 +358,16 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
               Web Sandbox
             </span>
           )}
+
+          {cwd && (
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-slate-500 font-mono">
+              <FolderOpen className="w-3 h-3 text-amber-400/70" />
+              <span className="truncate max-w-[200px]" title={cwd}>
+                {cwd}
+              </span>
+            </span>
+          )}
+
           {isRunning && (
             <span className="flex items-center gap-1 text-cyan-400 text-[10px]">
               <Loader2 className="w-3 h-3 animate-spin" /> Running...
@@ -397,8 +433,8 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
 
       {/* Command Input Prompt */}
       <div className="flex items-center gap-2 p-2 bg-[#12131c] border-t border-slate-800/80">
-        <span className="text-cyan-400 font-bold pl-1 select-none">
-          {isDesktop ? 'PS >' : '❯'}
+        <span className="text-cyan-400 font-bold pl-1 select-none whitespace-nowrap text-[11px]">
+          {isDesktop ? `PS ${displayCwd}>` : '❯'}
         </span>
         <input
           ref={inputRef}
@@ -409,7 +445,7 @@ export const IntegratedTerminal: React.FC<{ onClose: () => void }> = ({ onClose 
           disabled={isRunning}
           placeholder={
             isDesktop
-              ? 'Execute real system command (e.g. npm run build, git status, dir, node)...'
+              ? 'Execute real system command (e.g. npm run build, git status, cd .., dir, node)...'
               : "Type a command (ls, cat, touch, rm, open, stats, eval) or 'help'..."
           }
           className="flex-1 bg-transparent text-white outline-none placeholder-slate-600 font-mono text-xs"
