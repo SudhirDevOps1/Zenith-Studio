@@ -89,24 +89,20 @@ export default function App() {
     applyAccentToDOM(settings.accentColor);
   }, [settings.accentColor]);
 
-  // Initialize store
+  // Initialize store (silently)
   useEffect(() => {
-    initializeStore().then(() => {
-      addToast({
-        type: 'success',
-        title: 'CodeStudio Ready',
-        message: 'All workspace files restored from local storage.',
-      });
-    });
-  }, [initializeStore, addToast]);
+    initializeStore();
+  }, [initializeStore]);
 
-  // Auto check for releases after startup
+
+  // Auto check for releases after startup (silent, with longer delay)
   useEffect(() => {
     const timer = setTimeout(() => {
-      checkForUpdates(false);
-    }, 3000);
+      checkForUpdates(false); // false = silent mode, no error toast
+    }, 8000); // 8s delay so app fully loads before network check
     return () => clearTimeout(timer);
   }, [checkForUpdates]);
+
 
   // Global Keyboard Shortcuts
   useEffect(() => {
