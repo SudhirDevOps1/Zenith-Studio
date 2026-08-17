@@ -2,6 +2,17 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Ultra-Vibrant Carbon / Ray.so Style Code to Image Generator
+* **User Request:** "ye bekar hain example ese analysis kro example live web https://sudhirdevops1.github.io/code-to-image-generator/ and es repo ko analysis kro https://github.com/SudhirDevOps1/code-to-image-generator.git yesa image bane"
+* **Features Added & Upgraded:**
+  - Full syntax highlighting engine inside `CodeSnapshotModal.tsx` tokenizing keywords (purple), strings (green), comments (italic gray), builtins/functions (cyan), types (gold), numbers (orange), and JSX/HTML tags (coral).
+  - 8 Premium gradient themes: Cosmic Purple, Sunset Rose, Cyberpunk Neon, Emerald Forest, Midnight Slate, Electric Cyan, Solar Amber, and Pure Dark.
+  - 2x High-DPI Retina resolution canvas export with deep drop shadows (`box-shadow: 0 40px 120px rgba(0,0,0,0.7)`).
+  - macOS 3-dot window buttons (`#ff5f56`, `#ffbd2e`, `#27c93f`), uppercase glowing Language Badges (e.g. `TYPESCRIPT`, `PYTHON`, `REACT TSX`), Padding selector (24/48/64), Line numbers toggle, and Watermark toggle.
+  - 1-Click **Copy Image to Clipboard** (`navigator.clipboard.write([new ClipboardItem(...)])`) & **Download 2x PNG**.
+* **Files Modified:** `src/components/ui/CodeSnapshotModal.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Robust Marketplace & Open VSX Live Search Engine
 * **User Request:** "Curated Catalog + Open VSX Live Registry not ache se kam kr raha hain search krne pr aa hi nahi raha hain"
 * **Root Cause & Enhancements:**
