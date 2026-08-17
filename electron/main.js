@@ -575,11 +575,21 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
         console.warn(`[AI Fetch] Non-whitelisted host: ${urlObj.hostname} — proceeding anyway for custom provider support.`);
       }
 
+      // Serialize body first so we can set Content-Length (required by some providers like Groq)
+      const bodyStr = body != null
+        ? (typeof body === 'string' ? body : JSON.stringify(body))
+        : null;
+
       const reqHeaders = {
         'Content-Type': 'application/json',
         'User-Agent': 'Zenith-Studio-IDE/1.0.3',
         ...(headers || {}),
       };
+
+      // Content-Length is mandatory for POST — without it Groq/OpenAI may reject or stall
+      if (bodyStr) {
+        reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr, 'utf8').toString();
+      }
 
       const req = net.request({
         method: (method || 'POST').toUpperCase(),
@@ -604,6 +614,7 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
           } catch {
             data = responseBody;
           }
+          console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${res.statusCode}`);
           resolve({
             ok: res.statusCode >= 200 && res.statusCode < 300,
             status: res.statusCode,
@@ -613,6 +624,7 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
         });
 
         res.on('error', (err) => {
+          console.error('[AI Fetch] Response stream error:', err.message);
           resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
         });
       });
@@ -622,11 +634,7 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
         resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
       });
 
-      if (body) {
-        const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
-        req.write(bodyStr);
-      }
-
+      if (bodyStr) req.write(bodyStr);
       req.end();
 
     } catch (err) {

@@ -117,9 +117,8 @@ export function normalizeModelName(rawModel: string, provider: AiProvider, endpo
 
 /**
  * Resilient Multi-Layer AI Fetch
- * 1. Native Electron IPC (Zero CORS, 100% Network Access)
- * 2. Direct Browser Fetch
- * 3. Resilient Proxy Fallback
+ * In Electron  → Uses native IPC (Electron net.request) — CORS never applies
+ * In Web/Browser → Uses direct fetch → CORS proxy fallback
  */
 async function safeAiFetch(
   url: string,
@@ -127,20 +126,40 @@ async function safeAiFetch(
   headers: Record<string, string>,
   body?: any
 ): Promise<{ ok: boolean; status: number; data: any; error?: string }> {
-  // 1. Electron Native IPC (Zero CORS)
+
+  // ─── 1. Electron Native IPC (Zero CORS, Chromium network stack) ────────────
   const electronApi = (window as any).electronAPI;
-  if (electronApi?.aiFetch) {
+  const isElectron = !!electronApi?.aiFetch;
+
+  if (isElectron) {
+    let ipcResult: any;
     try {
-      const res = await electronApi.aiFetch({ url, method, headers, body });
-      if (res && (res.status !== 0 || res.ok)) {
-        return res;
-      }
+      ipcResult = await electronApi.aiFetch({ url, method, headers, body });
     } catch (e: any) {
-      console.warn('Native Electron AI fetch fallback to web fetch:', e);
+      // IPC threw an exception — surface as clear error, don't silently fall through
+      throw new Error(`IPC bridge error: ${e?.message || e}`);
     }
+
+    if (!ipcResult) {
+      throw new Error('No response from Electron IPC bridge. Restart the app and try again.');
+    }
+
+    // IPC responded — return directly regardless of HTTP status
+    // (even 401/403 should be returned so the caller can show the proper error)
+    if (ipcResult.status && ipcResult.status !== 0) {
+      return ipcResult;
+    }
+
+    // status=0 means a low-level network failure (DNS, timeout, refused)
+    if (ipcResult.status === 0 || ipcResult.ok === false) {
+      const errMsg = ipcResult.error || ipcResult.statusText || 'Network error (status 0)';
+      throw new Error(`Electron native request failed: ${errMsg}`);
+    }
+
+    return ipcResult;
   }
 
-  // 2. Direct Browser Fetch
+  // ─── 2. Web Mode: Direct Browser Fetch ────────────────────────────────────
   try {
     const fetchOptions: RequestInit = {
       method,
@@ -165,7 +184,7 @@ async function safeAiFetch(
   } catch (fetchErr: any) {
     console.warn(`Direct fetch to ${url} failed, attempting CORS proxy:`, fetchErr);
 
-    // 3. Resilient Proxy Fallback for Web Mode
+    // ─── 3. Web Mode: CORS Proxy Fallback ──────────────────────────────────
     try {
       const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
       const proxyOptions: RequestInit = {
@@ -183,9 +202,7 @@ async function safeAiFetch(
       return { ok: proxyRes.ok, status: proxyRes.status, data };
     } catch (proxyErr: any) {
       let hostname = 'API endpoint';
-      try {
-        hostname = new URL(url).hostname;
-      } catch {}
+      try { hostname = new URL(url).hostname; } catch {}
       return {
         ok: false,
         status: 0,
@@ -195,6 +212,7 @@ async function safeAiFetch(
     }
   }
 }
+
 
 /**
  * Auto-detect available models from the configured AI provider
