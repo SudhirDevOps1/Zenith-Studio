@@ -3,6 +3,7 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useUpdateStore } from '../../stores/useUpdateStore';
+import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { getLanguageFromExtension, isElectron } from '../../utils/fileUtils';
 import {
   Terminal,
@@ -17,7 +18,10 @@ import {
   Zap,
   ZoomIn,
   ZoomOut,
+  AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
+
 
 interface StatusBarProps {
   onOpenGoToLine?: () => void;
@@ -28,10 +32,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
   const { settings, toggleZenMode, setCommandPaletteOpen, updateSettings, setSettingsOpen, increaseZoom, decreaseZoom, resetZoom } = useSettingsStore();
   const { addToast } = useToastStore();
   const { hasUpdate, latestVersion, openUpdateModal } = useUpdateStore();
+  const { diagnostics, toggleProblemsOpen } = useDiagnosticsStore();
 
   const [showIndentMenu, setShowIndentMenu] = useState(false);
   const indentMenuRef = useRef<HTMLDivElement>(null);
 
+  const errorCount = diagnostics.filter((d) => d.severity === 'error').length;
+  const warningCount = diagnostics.filter((d) => d.severity === 'warning').length;
 
   const activeFile = files.find((f) => f.id === activeFileId);
   const language = activeFile ? getLanguageFromExtension(activeFile.extension || '') : 'Plain Text';
@@ -74,6 +81,29 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           <GitBranch className="w-3 h-3 text-orange-400" />
           <span>main</span>
         </div>
+
+        {/* Problems / Diagnostics Pill */}
+        <button
+          onClick={toggleProblemsOpen}
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md transition cursor-pointer border ${
+            errorCount > 0
+              ? 'bg-red-950/60 border-red-800/60 text-red-300 hover:bg-red-900/60'
+              : warningCount > 0
+              ? 'bg-amber-950/60 border-amber-800/60 text-amber-300 hover:bg-amber-900/60'
+              : 'border-transparent hover:bg-slate-800/60 text-slate-400'
+          }`}
+          title="Toggle Problems Panel (Errors & Warnings)"
+        >
+          <div className="flex items-center gap-1">
+            <AlertCircle className={`w-3 h-3 ${errorCount > 0 ? 'text-red-400' : 'text-slate-500'}`} />
+            <span>{errorCount}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <AlertTriangle className={`w-3 h-3 ${warningCount > 0 ? 'text-amber-400' : 'text-slate-500'}`} />
+            <span>{warningCount}</span>
+          </div>
+        </button>
+
 
         {activeFile && (
           <button

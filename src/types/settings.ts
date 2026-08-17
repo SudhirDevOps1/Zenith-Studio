@@ -43,6 +43,9 @@ export interface EditorSettings {
   fontLigatures: boolean;
   indentGuides: boolean;
   mouseWheelZoom: boolean;
+  // AI Assistant Integration
+  geminiApiKey: string;
+  aiModel: 'gemini-1.5-flash' | 'gemini-1.5-pro' | 'gemini-2.0-flash';
 }
 
 export const DEFAULT_SETTINGS: EditorSettings = {
@@ -75,5 +78,8 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   fontLigatures: true,
   indentGuides: true,
   mouseWheelZoom: true,
+  geminiApiKey: '',
+  aiModel: 'gemini-1.5-flash',
 };
+
 

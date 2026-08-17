@@ -1,9 +1,11 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import Editor, { OnMount, OnChange, loader } from "@monaco-editor/react";
 import * as monacoInstance from "monaco-editor";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import { useFileStore } from "../../stores/useFileStore";
+import { useDiagnosticsStore } from "../../stores/useDiagnosticsStore";
 import { getLanguageFromExtension } from "../../utils/fileUtils";
+import { formatCode } from "../../utils/codeFormatter";
 import { registerCustomThemes } from "./monacoThemes";
 import { registerEmmetProviders } from "./emmetProvider";
 import { registerLanguageSnippets } from "./suggestionsProvider";
@@ -36,15 +38,27 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const { settings, increaseZoom, decreaseZoom, resetZoom } = useSettingsStore();
-  const { saveCurrentFile } = useFileStore();
+  const { saveCurrentFile, files } = useFileStore();
+  const { updateFileDiagnostics } = useDiagnosticsStore();
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const language = getLanguageFromExtension(extension);
+  const activeFile = files.find((f) => f.id === fileId);
 
   const baseFontSize = settings.fontSize ?? BASE_FONT_SIZE;
   const zoomLevel = settings.editorZoom ?? 0;
   const effectiveFontSize = Math.max(8, Math.min(72, baseFontSize + zoomLevel * ZOOM_STEP));
   const zoomPercent = Math.round((effectiveFontSize / baseFontSize) * 100);
+
+  const handleFormatDocument = useCallback(() => {
+    if (!editorRef.current) return;
+    const currentVal = editorRef.current.getValue();
+    const result = formatCode(currentVal, extension || language, settings.tabSize || 2);
+    if (result.formatted && result.formatted !== currentVal) {
+      editorRef.current.setValue(result.formatted);
+      onChange(result.formatted);
+    }
+  }, [extension, language, settings.tabSize, onChange]);
 
   const handleEditorWillMount = (monaco: any) => {
     registerCustomThemes(monaco);
@@ -58,7 +72,19 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     if (parentEditorRef) parentEditorRef.current = editor;
     if (parentMonacoRef) parentMonacoRef.current = monaco;
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => { saveCurrentFile(); });
+    // Ctrl+S: Save (with optional Format on Save)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      if (settings.formatOnSave) {
+        handleFormatDocument();
+      }
+      saveCurrentFile();
+    });
+
+    // Shift+Alt+F: Format Document (Standard VS Code shortcut)
+    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF, () => {
+      handleFormatDocument();
+    });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Equal, () => { increaseZoom(); });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Equal, () => { increaseZoom(); });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.NumpadAdd, () => { increaseZoom(); });
@@ -66,6 +92,15 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.NumpadSubtract, () => { decreaseZoom(); });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Digit0, () => { resetZoom(); });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Numpad0, () => { resetZoom(); });
+
+    // Sync editor syntax diagnostics markers with Problems panel
+    monaco.editor.onDidChangeMarkers(() => {
+      const model = editor.getModel();
+      if (model) {
+        const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+        updateFileDiagnostics(fileId, activeFile?.name || 'File', markers);
+      }
+    });
 
     if (onScrollPercentage) {
       editor.onDidScrollChange(() => {
@@ -76,6 +111,7 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     }
     editor.focus();
   };
+
 
   const handleChange: OnChange = (value) => {
     const val = value ?? "";

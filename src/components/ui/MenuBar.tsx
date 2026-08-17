@@ -3,7 +3,9 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useDialogStore } from '../../stores/useDialogStore';
 import { useUpdateStore } from '../../stores/useUpdateStore';
+import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { createZipFromFiles, isElectron } from '../../utils/fileUtils';
+import { formatCode } from '../../utils/codeFormatter';
 import {
   Code2,
   FilePlus,
@@ -21,11 +23,17 @@ import {
   Blocks,
   Globe,
   Sparkles,
+  Bot,
+  AlertCircle,
+  ZoomIn,
+  ZoomOut,
+  Search,
 } from 'lucide-react';
 
 export const MenuBar: React.FC = () => {
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId } = useFileStore();
-  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab } = useSettingsStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
+  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab, increaseZoom, decreaseZoom, resetZoom, settings } = useSettingsStore();
+  const { toggleProblemsOpen } = useDiagnosticsStore();
   const { openDialog } = useDialogStore();
   const { checkForUpdates, hasUpdate } = useUpdateStore();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -44,6 +52,16 @@ export const MenuBar: React.FC = () => {
     setOpenMenu(null);
   };
 
+  const handleFormat = () => {
+    if (activeFile && activeFile.content) {
+      const res = formatCode(activeFile.content, activeFile.extension || 'js', settings.tabSize || 2);
+      if (res.formatted) {
+        updateFileContent(activeFile.id, res.formatted);
+      }
+    }
+    closeMenus();
+  };
+
   const closeMenus = () => setOpenMenu(null);
 
   return (
@@ -58,9 +76,10 @@ export const MenuBar: React.FC = () => {
           <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-sm">
             <Code2 className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent font-mono text-sm font-semibold tracking-tight">
+          <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent tracking-tight">
             CodeStudio
           </span>
+          <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.2</span>
         </div>
 
         {/* File Menu */}
@@ -79,18 +98,21 @@ export const MenuBar: React.FC = () => {
             <div className="absolute left-0 top-full mt-1 w-56 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
               <button
                 onClick={async () => {
-                  const name = await openDialog({ type: 'file', title: 'Create New File', message: 'Enter filename with extension.', placeholder: 'index.ts', confirmText: 'Create File', cancelText: 'Cancel' });
+                  const name = await openDialog({ type: 'file', title: 'New File', message: 'Enter file name with extension:', placeholder: 'newFile.ts' });
                   if (name) createFile(name, null);
                   closeMenus();
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
               >
-                <FilePlus className="w-3.5 h-3.5 text-blue-400" /> New File
+                <span className="flex items-center gap-2">
+                  <FilePlus className="w-3.5 h-3.5 text-blue-400" /> New File
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+N</kbd>
               </button>
 
               <button
                 onClick={async () => {
-                  const name = await openDialog({ type: 'folder', title: 'Create New Folder', message: 'Enter folder name.', placeholder: 'src', confirmText: 'Create Folder', cancelText: 'Cancel' });
+                  const name = await openDialog({ type: 'folder', title: 'New Folder', message: 'Enter folder name:', placeholder: 'components' });
                   if (name) createFolder(name, null);
                   closeMenus();
                 }}
@@ -98,6 +120,7 @@ export const MenuBar: React.FC = () => {
               >
                 <FolderPlus className="w-3.5 h-3.5 text-amber-400" /> New Folder
               </button>
+
 
               <div className="border-t border-slate-800 my-1" />
 
@@ -164,6 +187,46 @@ export const MenuBar: React.FC = () => {
           )}
         </div>
 
+        {/* Edit Menu */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenMenu(openMenu === 'edit' ? null : 'edit');
+            }}
+            className={`px-2.5 py-1 rounded transition ${openMenu === 'edit' ? 'bg-slate-800 text-white' : 'hover:bg-slate-800/80'}`}
+          >
+            Edit
+          </button>
+
+          {openMenu === 'edit' && (
+            <div className="absolute left-0 top-full mt-1 w-56 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
+              <button
+                onClick={handleFormat}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Format Document
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Shift+Alt+F</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSidebarTab('search');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-blue-400" /> Find &amp; Replace
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+F</kbd>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* View Menu */}
         <div className="relative">
           <button
@@ -178,6 +241,33 @@ export const MenuBar: React.FC = () => {
 
           {openMenu === 'view' && (
             <div className="absolute left-0 top-full mt-1 w-56 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
+              <button
+                onClick={() => {
+                  setActiveSidebarTab('ai');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Bot className="w-3.5 h-3.5 text-cyan-400" /> AI Assistant (Gemini)
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+A</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  toggleProblemsOpen();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-400" /> Problems &amp; Diagnostics
+                </span>
+              </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
               <button
                 onClick={() => {
                   setActiveSidebarTab('extensions');
@@ -202,6 +292,47 @@ export const MenuBar: React.FC = () => {
                   <Code2 className="w-3.5 h-3.5 text-blue-400" /> Explorer
                 </span>
                 <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+E</kbd>
+              </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
+              <button
+                onClick={() => {
+                  increaseZoom();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <ZoomIn className="w-3.5 h-3.5 text-slate-400" /> Zoom In
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+=</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  decreaseZoom();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <ZoomOut className="w-3.5 h-3.5 text-slate-400" /> Zoom Out
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+-</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  resetZoom();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-400" /> Reset Zoom
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+0</kbd>
               </button>
 
               <div className="border-t border-slate-800 my-1" />

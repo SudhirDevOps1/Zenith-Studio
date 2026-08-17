@@ -19,7 +19,12 @@ import {
   Layers,
   Blocks,
   Globe,
+  Bot,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
+import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
+import { formatCode } from '../../utils/codeFormatter';
 
 interface CommandItem {
   id: string;
@@ -31,15 +36,54 @@ interface CommandItem {
 }
 
 export const CommandPalette: React.FC = () => {
-  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab } = useSettingsStore();
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
+  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab, settings } = useSettingsStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, updateFileContent, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
   const { setActiveTab } = useExtensionStore();
+  const { toggleProblemsOpen } = useDiagnosticsStore();
   const { openDialog } = useDialogStore();
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const activeFile = files.find((f) => f.id === activeFileId);
+
   const commands: CommandItem[] = [
+    {
+      id: 'ai-assistant',
+      title: 'AI: Open CodeStudio AI Assistant (Gemini)',
+      category: 'AI & Copilot',
+      icon: <Bot className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+Shift+A',
+      action: () => {
+        setActiveSidebarTab('ai');
+      },
+    },
+    {
+      id: 'format-document',
+      title: 'Format: Format Document (Prettier Engine)',
+      category: 'Format',
+      icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+      shortcut: 'Shift+Alt+F',
+      action: () => {
+        if (activeFile && activeFile.content) {
+          const res = formatCode(activeFile.content, activeFile.extension || 'js', settings.tabSize || 2);
+          if (res.formatted) {
+            updateFileContent(activeFile.id, res.formatted);
+          }
+        }
+      },
+    },
+
+    {
+      id: 'problems-panel',
+      title: 'View: Toggle Problems & Diagnostics Panel',
+      category: 'View',
+      icon: <AlertCircle className="w-4 h-4 text-red-400" />,
+      action: () => {
+        toggleProblemsOpen();
+      },
+    },
+
     {
       id: 'open-webview',
       title: 'Simple Browser: Show / Open Webview (Internet & Localhost)',

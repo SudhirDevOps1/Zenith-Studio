@@ -19,6 +19,7 @@ import {
   Sparkles,
   Keyboard,
   Blocks,
+  Bot,
 } from 'lucide-react';
 
 
@@ -140,6 +141,24 @@ export const ActivityBar: React.FC = () => {
           <Sparkles style={{ width: "18px", height: "18px" }} />
         </button>
 
+        {/* AI Assistant */}
+        <button
+          onClick={() => setActiveSidebarTab('ai')}
+          style={activeSidebarTab === 'ai' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
+            activeSidebarTab === 'ai'
+              ? 'shadow-inner'
+              : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
+          }`}
+          title="CodeStudio AI Assistant (Gemini)"
+        >
+          {activeSidebarTab === 'ai' && (
+            <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
+          )}
+          <Bot style={{ width: "18px", height: "18px" }} />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+        </button>
+
         {/* Extensions Marketplace */}
         <button
           onClick={() => setActiveSidebarTab('extensions')}
@@ -159,6 +178,7 @@ export const ActivityBar: React.FC = () => {
             <span style={{ backgroundColor: currentAccent.primary }} className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#0c0d14]" />
           )}
         </button>
+
 
         {/* Command Palette */}
         <button

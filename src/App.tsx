@@ -11,6 +11,7 @@ import { WorkspaceInfo } from './components/sidebar/WorkspaceInfo';
 import { GitControlPanel } from './components/sidebar/GitControlPanel';
 import { SnippetsPanel } from './components/sidebar/SnippetsPanel';
 import { ExtensionsPanel } from './components/sidebar/ExtensionsPanel';
+import { AiAssistantPanel } from './components/sidebar/AiAssistantPanel';
 import { TabsBar } from './components/tabs/TabsBar';
 import { MonacoEditorWrapper } from './components/editor/MonacoEditorWrapper';
 import { MarkdownPreview } from './components/preview/MarkdownPreview';
@@ -29,14 +30,17 @@ import { WelcomeScreen } from './components/ui/WelcomeScreen';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { FindReplacePanel } from './components/ui/FindReplacePanel';
 import { IntegratedTerminal } from './components/ui/IntegratedTerminal';
+import { ProblemsPanel } from './components/ui/ProblemsPanel';
 import { ShortcutsHelpModal } from './components/ui/ShortcutsHelpModal';
 import { QuickOpenModal } from './components/ui/QuickOpenModal';
 import { AppDialog } from './components/ui/AppDialog';
 import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
 import { UpdateModal } from './components/ui/UpdateModal';
 import { useUpdateStore } from './stores/useUpdateStore';
+import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
 import { applyAccentToDOM } from './utils/accentThemes';
 import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image, FileText } from 'lucide-react';
+
 
 export default function App() {
   const {
@@ -68,6 +72,7 @@ export default function App() {
   const { addToast } = useToastStore();
   const { isOpen: isDialogOpen, type: dialogType, title: dialogTitle, message: dialogMessage, defaultValue: dialogDefaultValue, placeholder: dialogPlaceholder, confirmText: dialogConfirmText, cancelText: dialogCancelText, confirm: dialogConfirm, cancel: dialogCancel } = useDialogStore();
   const { checkForUpdates } = useUpdateStore();
+  const { isProblemsOpen, setProblemsOpen } = useDiagnosticsStore();
 
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [editorSplitPct, setEditorSplitPct] = useState(50);
@@ -83,6 +88,15 @@ export default function App() {
   const isDraggingSplit = useRef(false);
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
+
+  const handleNavigateToLine = useCallback((lineNumber: number, column: number = 1) => {
+    if (editorRef.current) {
+      editorRef.current.revealLineInCenter(lineNumber);
+      editorRef.current.setPosition({ lineNumber, column });
+      editorRef.current.focus();
+    }
+  }, []);
+
 
   // Sync accent color to DOM
   useEffect(() => {
@@ -271,7 +285,9 @@ export default function App() {
             {activeSidebarTab === 'git' && <GitControlPanel />}
             {activeSidebarTab === 'snippets' && <SnippetsPanel />}
             {activeSidebarTab === 'extensions' && <ExtensionsPanel />}
+            {activeSidebarTab === 'ai' && <AiAssistantPanel />}
             {activeSidebarTab === 'info' && <WorkspaceInfo />}
+
 
             <div
               onMouseDown={() => {
@@ -373,8 +389,17 @@ export default function App() {
 
               {/* Integrated Terminal */}
               {showTerminal && <IntegratedTerminal onClose={() => setShowTerminal(false)} />}
+
+              {/* Problems & Diagnostics Panel */}
+              {isProblemsOpen && (
+                <ProblemsPanel
+                  onClose={() => setProblemsOpen(false)}
+                  onNavigateToLine={handleNavigateToLine}
+                />
+              )}
             </div>
           )}
+
 
           {/* Floating Find & Replace Panel */}
           {showFindReplace && activeFile && (

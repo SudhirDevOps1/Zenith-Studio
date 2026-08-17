@@ -3,7 +3,7 @@ import { EditorSettings, DEFAULT_SETTINGS } from '../types/settings';
 import { loadSettingsFromStorage, saveSettingsToStorage } from '../utils/storage';
 import { applyAccentToDOM } from '../utils/accentThemes';
 
-export type SidebarTab = 'explorer' | 'search' | 'git' | 'snippets' | 'extensions' | 'info' | 'settings';
+export type SidebarTab = 'explorer' | 'search' | 'git' | 'snippets' | 'extensions' | 'ai' | 'info' | 'settings';
 
 interface SettingsState {
   settings: EditorSettings;
