@@ -154,11 +154,11 @@ export const WelcomeScreen: React.FC = () => {
             <span className="text-emerald-400 font-semibold">Tailwind CSS</span>. Works in browser and as a desktop app.
           </p>
           <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-slate-500">
-            <span className="px-2 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60">v1.0.0</span>
-            <span className="px-2 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
-              <Globe className="w-2.5 h-2.5 text-blue-400" /> Web Ready
+            <span className="px-2.5 py-0.5 bg-blue-950/60 text-blue-300 rounded-full border border-blue-500/40 font-bold">v1.0.2</span>
+            <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
+              <Globe className="w-2.5 h-2.5 text-blue-400" /> Web & Desktop
             </span>
-            <span className="px-2 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
+            <span className="px-2.5 py-0.5 bg-slate-800/80 rounded-full border border-slate-700/60 flex items-center gap-1">
               <Moon className="w-2.5 h-2.5 text-purple-400" /> Dark Theme
             </span>
           </div>
@@ -168,39 +168,91 @@ export const WelcomeScreen: React.FC = () => {
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <button
             onClick={openSystemFolder}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 border border-blue-500 rounded-lg text-xs font-semibold text-white transition shadow-lg shadow-blue-600/30 hover:shadow-xl"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-blue-600/30 hover:scale-105"
           >
             <FolderOpen className="w-4 h-4 text-white group-hover:scale-110 transition" />
             <span>Open Folder...</span>
           </button>
           <button
             onClick={openSystemFile}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-[#141524] hover:bg-[#1c1e33] border border-slate-800 hover:border-slate-600 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition shadow-md hover:scale-105"
           >
             <FileText className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition" />
             <span>Open File...</span>
           </button>
           <button
             onClick={handleCreateFile}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-[#141524] hover:bg-[#1c1e33] border border-slate-800 hover:border-slate-600 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition shadow-md hover:scale-105"
           >
             <FilePlus className="w-4 h-4 text-blue-400 group-hover:scale-110 transition" />
             <span>New File</span>
           </button>
           <button
             onClick={handleCreateFolder}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-[#141524] hover:bg-[#1c1e33] border border-slate-800 hover:border-slate-600 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition shadow-md hover:scale-105"
           >
             <FolderPlus className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
             <span>New Folder</span>
           </button>
           <button
             onClick={handleUploadFiles}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-[#141524] hover:bg-[#1c1e33] border border-slate-800 hover:border-slate-600 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition shadow-md hover:scale-105"
           >
             <Upload className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
             <span>Upload / ZIP</span>
           </button>
+        </div>
+
+        {/* 1-Click Starter Templates */}
+        <div className="p-4 bg-slate-900/40 border border-slate-800/80 rounded-2xl">
+          <h2 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-mono">
+            ⚡ Quick 1-Click Starter Templates
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button
+              onClick={() => createFile('App.tsx', `import React, { useState } from 'react';\n\nexport default function App() {\n  const [count, setCount] = useState(0);\n  return (\n    <div className="p-8 text-center">\n      <h1 className="text-2xl font-bold">Hello React + TS!</h1>\n      <button onClick={() => setCount(c => c + 1)} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">\n        Count: {count}\n      </button>\n    </div>\n  );\n}`)}
+              className="p-3 bg-[#141524] hover:bg-blue-950/40 border border-slate-800 hover:border-blue-500/50 rounded-xl text-left transition group"
+            >
+              <div className="text-xs font-bold text-blue-400 group-hover:text-blue-300 flex items-center justify-between">
+                <span>React + TS</span>
+                <span className="text-[10px] text-slate-500">.tsx</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Interactive stateful component template</p>
+            </button>
+
+            <button
+              onClick={() => createFile('index.html', `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Modern Web App</title>\n  <script src="https://cdn.tailwindcss.com"></script>\n</head>\n<body className="bg-slate-900 text-white flex items-center justify-center min-h-screen">\n  <div className="text-center p-8 bg-slate-800 rounded-2xl shadow-xl">\n    <h1 className="text-3xl font-bold text-cyan-400">CodeStudio App</h1>\n    <p className="mt-2 text-slate-300">Live preview ready!</p>\n  </div>\n</body>\n</html>`)}
+              className="p-3 bg-[#141524] hover:bg-orange-950/40 border border-slate-800 hover:border-orange-500/50 rounded-xl text-left transition group"
+            >
+              <div className="text-xs font-bold text-orange-400 group-hover:text-orange-300 flex items-center justify-between">
+                <span>HTML5 Modern</span>
+                <span className="text-[10px] text-slate-500">.html</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Tailwind CSS & responsive layout</p>
+            </button>
+
+            <button
+              onClick={() => createFile('main.py', `import sys\n\ndef main():\n    print("CodeStudio Python Environment Ready!")\n    numbers = [x**2 for x in range(10)]\n    print(f"Computed squares: {numbers}")\n\nif __name__ == '__main__':\n    main()`)}
+              className="p-3 bg-[#141524] hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition group"
+            >
+              <div className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 flex items-center justify-between">
+                <span>Python Script</span>
+                <span className="text-[10px] text-slate-500">.py</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Clean script entrypoint with data logic</p>
+            </button>
+
+            <button
+              onClick={() => createFile('main.cpp', `#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    \n    cout << "CodeStudio Fast C++ Initialized!" << endl;\n    return 0;\n}`)}
+              className="p-3 bg-[#141524] hover:bg-purple-950/40 border border-slate-800 hover:border-purple-500/50 rounded-xl text-left transition group"
+            >
+              <div className="text-xs font-bold text-purple-400 group-hover:text-purple-300 flex items-center justify-between">
+                <span>C++ Fast I/O</span>
+                <span className="text-[10px] text-slate-500">.cpp</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Fast I/O & STL competitive boilerplate</p>
+            </button>
+          </div>
         </div>
 
         {/* Feature Cards Grid */}

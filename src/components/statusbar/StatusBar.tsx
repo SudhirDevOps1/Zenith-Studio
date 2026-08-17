@@ -4,7 +4,18 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useUpdateStore } from '../../stores/useUpdateStore';
 import { getLanguageFromExtension, isElectron } from '../../utils/fileUtils';
-import { Terminal, Check, RefreshCw, Cpu, HardDrive, FileCode2, WrapText, Sparkles } from 'lucide-react';
+import {
+  Terminal,
+  Check,
+  RefreshCw,
+  Cpu,
+  HardDrive,
+  FileCode2,
+  WrapText,
+  Sparkles,
+  GitBranch,
+  Zap,
+} from 'lucide-react';
 
 interface StatusBarProps {
   onOpenGoToLine?: () => void;
@@ -43,61 +54,73 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
   }, [showIndentMenu]);
 
   return (
-    <div className="h-6 bg-[#007acc] text-white flex items-center justify-between px-3 text-[11px] font-mono select-none shrink-0 z-20 relative">
+    <div className="h-6.5 bg-[#090a10] border-t border-slate-800/80 text-slate-400 flex items-center justify-between px-3 text-[11px] font-mono select-none shrink-0 z-20 relative">
       {/* Left items */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="flex items-center gap-1.5 hover:bg-white/20 px-1.5 py-0.5 rounded transition"
+          className="flex items-center gap-1.5 hover:bg-slate-800 hover:text-white px-2 py-0.5 rounded-md transition text-slate-300"
           title="Command Palette (Ctrl+Shift+P)"
         >
-          <Terminal className="w-3 h-3" />
-          <span>CodeStudio</span>
+          <Terminal className="w-3 h-3 text-blue-400" />
+          <span className="font-semibold">CodeStudio</span>
         </button>
+
+        {/* Git Branch Chip */}
+        <div className="flex items-center gap-1 text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded transition">
+          <GitBranch className="w-3 h-3 text-orange-400" />
+          <span>main</span>
+        </div>
 
         {activeFile && (
           <button
             onClick={onOpenGoToLine}
-            className="flex items-center gap-2 text-blue-100 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition cursor-pointer"
+            className="flex items-center gap-2 text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60 px-2 py-0.5 rounded-md transition cursor-pointer"
             title="Go to Line (Ctrl+G)"
           >
-            <span className="flex items-center gap-1">
-              <FileCode2 className="w-3 h-3 text-cyan-200" /> Ln {lineCount}
+            <span className="flex items-center gap-1 text-slate-300">
+              <FileCode2 className="w-3 h-3 text-cyan-400" /> Ln {lineCount}
             </span>
             <span>Col 1</span>
-            <span className="text-blue-200">({charCount} chars)</span>
+            <span className="text-slate-500">({charCount} chars)</span>
           </button>
         )}
       </div>
 
       {/* Right items */}
-      <div className="flex items-center gap-2.5 text-blue-100 relative">
+      <div className="flex items-center gap-2 text-slate-400 relative">
         {activeFile && (
-          <div className="flex items-center gap-1 cursor-pointer hover:bg-white/10 px-1.5 py-0.5 rounded transition" onClick={handleSave}>
+          <div className="flex items-center gap-1 cursor-pointer hover:bg-slate-800/80 px-2 py-0.5 rounded-md transition" onClick={handleSave}>
             {activeFile.isModified ? (
-              <span className="flex items-center gap-1 text-amber-200 font-semibold">
-                <RefreshCw className="w-3 h-3 animate-spin-slow" /> Unsaved (Ctrl+S)
+              <span className="flex items-center gap-1 text-amber-300 font-semibold">
+                <RefreshCw className="w-3 h-3 animate-spin" /> Unsaved (Ctrl+S)
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-emerald-200">
+              <span className="flex items-center gap-1 text-emerald-400">
                 <Check className="w-3 h-3" /> Saved
               </span>
             )}
           </div>
         )}
 
+        {/* Emmet Status Chip */}
+        <div className="flex items-center gap-1 bg-purple-950/40 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded-md text-[10px] font-semibold" title="Universal Emmet engine active">
+          <Zap className="w-2.5 h-2.5 text-purple-400" />
+          <span>Emmet</span>
+        </div>
+
         {/* Indent & Wrap Selector */}
         <div className="relative" ref={indentMenuRef}>
           <button
             onClick={() => setShowIndentMenu(!showIndentMenu)}
-            className="cursor-pointer hover:bg-white/15 px-1.5 py-0.5 rounded transition flex items-center gap-1"
+            className="cursor-pointer hover:bg-slate-800/80 hover:text-white px-1.5 py-0.5 rounded-md transition flex items-center gap-1 text-slate-300"
             title="Change Indentation and Wrap"
           >
             <span>Spaces: {settings.tabSize}</span>
           </button>
 
           {showIndentMenu && (
-            <div className="absolute right-0 bottom-full mb-1 w-44 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded-lg py-1 z-50 text-slate-200 text-xs font-sans">
+            <div className="absolute right-0 bottom-full mb-1 w-44 bg-[#141524]/95 backdrop-blur-xl border border-slate-700 shadow-2xl rounded-xl py-1 z-50 text-slate-200 text-xs font-sans">
               <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
                 Indentation Size
               </div>
@@ -136,12 +159,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
           )}
         </div>
 
-        <span>UTF-8</span>
+        <span className="text-slate-500">UTF-8</span>
 
         {/* Language Badge */}
         <button
           onClick={() => setSettingsOpen(true)}
-          className="uppercase font-semibold bg-white/20 px-1.5 py-0.5 rounded text-[10px] cursor-pointer hover:bg-white/30 transition"
+          className="uppercase font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded-md text-[10px] cursor-pointer transition border border-slate-700/60"
           title={`Language: ${language}. Click to configure settings`}
         >
           {language}
@@ -151,34 +174,34 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
         {hasUpdate && (
           <button
             onClick={openUpdateModal}
-            className="flex items-center gap-1 bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] animate-pulse hover:bg-amber-300 transition shadow-sm cursor-pointer"
+            className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] animate-pulse hover:scale-105 transition shadow-md shadow-amber-500/20 cursor-pointer"
             title={`CodeStudio v${latestVersion} is available! Click to update.`}
           >
             <Sparkles className="w-3 h-3" />
-            <span>v{latestVersion} Available</span>
+            <span>v{latestVersion} Ready</span>
           </button>
         )}
 
         {/* Zen Mode */}
         <button
           onClick={toggleZenMode}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-white/10 hover:bg-white/20 transition"
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] hover:bg-slate-800 hover:text-white transition text-slate-400"
           title="Toggle Zen Mode"
         >
           Zen
         </button>
 
         {/* Platform Badge */}
-        <div className="flex items-center gap-1 bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
+        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800/80 px-1.5 py-0.5 rounded-md text-[10px]">
           {isDesktop ? (
             <>
-              <Cpu className="w-3 h-3 text-emerald-300" />
-              <span>Electron</span>
+              <Cpu className="w-3 h-3 text-emerald-400" />
+              <span className="text-emerald-300">Desktop</span>
             </>
           ) : (
             <>
-              <HardDrive className="w-3 h-3 text-cyan-300" />
-              <span>VFS Web</span>
+              <HardDrive className="w-3 h-3 text-cyan-400" />
+              <span className="text-cyan-300">Web VFS</span>
             </>
           )}
         </div>

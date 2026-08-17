@@ -24,13 +24,15 @@ import {
 } from 'lucide-react';
 
 export const MenuBar: React.FC = () => {
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId } = useFileStore();
   const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab } = useSettingsStore();
   const { openDialog } = useDialogStore();
   const { checkForUpdates, hasUpdate } = useUpdateStore();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const isDesktop = isElectron();
+  const activeFile = files.find(f => f.id === activeFileId);
+  const folderName = rootFolderPath ? rootFolderPath.split(/[\\/]/).filter(Boolean).pop() : 'CodeStudio Workspace';
 
   const handleExportZip = async () => {
     const blob = await createZipFromFiles(files);
@@ -47,14 +49,16 @@ export const MenuBar: React.FC = () => {
   return (
     <div
       onClick={closeMenus}
-      className="h-9 bg-[#14141f] border-b border-slate-800 flex items-center justify-between px-3 text-xs text-slate-300 select-none shrink-0 z-30"
+      className="h-9 bg-[#0e0f18]/95 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between px-3 text-xs text-slate-300 select-none shrink-0 z-30 font-sans"
       style={{ WebkitAppRegion: 'drag' } as any}
     >
       {/* Left App Brand & Top Menu Items */}
-      <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-        <div className="flex items-center gap-2 font-bold text-white mr-3">
-          <Code2 className="w-4 h-4 text-blue-500" />
-          <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-mono text-sm">
+      <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        <div className="flex items-center gap-2 font-bold text-white mr-2.5 px-1 py-0.5 rounded-lg hover:bg-white/5 transition cursor-pointer">
+          <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-sm">
+            <Code2 className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent font-mono text-sm font-semibold tracking-tight">
             CodeStudio
           </span>
         </div>
@@ -302,9 +306,17 @@ export const MenuBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Center title indicator */}
-      <div className="text-[11px] text-slate-400 font-mono hidden md:block">
-        CodeStudio - Web &amp; Desktop Universal Code Editor
+      {/* Center Project / Workspace Badge */}
+      <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/60 border border-slate-800/80 rounded-full text-[11px] font-mono text-slate-300 shadow-inner hidden md:flex" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-slate-400">workspace:</span>
+        <span className="font-semibold text-white truncate max-w-[180px]">{folderName}</span>
+        {activeFile && (
+          <>
+            <span className="text-slate-600">/</span>
+            <span className="text-cyan-300 font-bold truncate max-w-[160px]">{activeFile.name}</span>
+          </>
+        )}
       </div>
 
       {/* Right Native Window Actions for Electron Desktop */}
@@ -312,19 +324,22 @@ export const MenuBar: React.FC = () => {
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <button
             onClick={() => (window as any).electronAPI?.minimizeWindow?.()}
-            className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
+            className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
+            title="Minimize"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => (window as any).electronAPI?.maximizeWindow?.()}
-            className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
+            className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
+            title="Maximize / Restore"
           >
             <Square className="w-3 h-3" />
           </button>
           <button
             onClick={() => (window as any).electronAPI?.closeWindow?.()}
-            className="p-1.5 hover:bg-red-600 rounded text-slate-400 hover:text-white transition"
+            className="p-1.5 hover:bg-red-600/90 rounded-lg text-slate-400 hover:text-white transition"
+            title="Close"
           >
             <X className="w-3.5 h-3.5" />
           </button>

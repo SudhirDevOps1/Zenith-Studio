@@ -51,13 +51,13 @@ export const ActivityBar: React.FC = () => {
   const installedExtensionsCount = useExtensionStore((s) => s.extensions.filter((e) => e.installed).length);
 
   return (
-    <div className="w-12 h-full min-h-0 bg-[#14141f] border-r border-slate-800/80 flex flex-col justify-between items-center py-2 text-slate-400 select-none shrink-0 z-20 overflow-hidden">
+    <div className="w-13 h-full min-h-0 bg-[#0c0d14] border-r border-slate-800/80 flex flex-col justify-between items-center py-2.5 text-slate-400 select-none shrink-0 z-20 overflow-hidden">
       {/* Top Main Section */}
-      <div className="flex flex-col items-center gap-1.5 overflow-y-auto pr-0.5 min-h-0 w-full px-1" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex flex-col items-center gap-2 overflow-y-auto pr-0.5 min-h-0 w-full px-1.5" style={{ scrollbarWidth: 'thin' }}>
         {/* Logo Icon */}
         <div
           onClick={() => setActiveSidebarTab('explorer')}
-          className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md mb-2 cursor-pointer hover:scale-105 transition"
+          className="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-600/30 mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"
           title="CodeStudio Home"
         >
           CS
@@ -66,94 +66,112 @@ export const ActivityBar: React.FC = () => {
         {/* Explorer */}
         <button
           onClick={() => setActiveSidebarTab('explorer')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'explorer'
-              ? 'bg-slate-800 text-blue-400 border-l-2 border-blue-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="File Explorer (Ctrl+Shift+E)"
         >
-          <Files className="w-5 h-5" />
+          {activeSidebarTab === 'explorer' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+          )}
+          <Files className="w-4.5 h-4.5" />
         </button>
 
         {/* Search */}
         <button
           onClick={() => setActiveSidebarTab('search')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'search'
-              ? 'bg-slate-800 text-blue-400 border-l-2 border-blue-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Search in Workspace (Ctrl+Shift+F)"
         >
-          <Search className="w-5 h-5" />
+          {activeSidebarTab === 'search' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+          )}
+          <Search className="w-4.5 h-4.5" />
         </button>
 
         {/* Git Control */}
         <button
           onClick={() => setActiveSidebarTab('git')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'git'
-              ? 'bg-slate-800 text-orange-400 border-l-2 border-orange-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-orange-600/20 text-orange-400 shadow-inner border border-orange-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Source Control / Git"
         >
-          <GitBranch className="w-5 h-5" />
+          {activeSidebarTab === 'git' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-orange-400 to-amber-500 rounded-r-full shadow-sm" />
+          )}
+          <GitBranch className="w-4.5 h-4.5" />
           {modifiedCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-[#0c0d14] animate-pulse" />
           )}
         </button>
 
         {/* Snippets Library */}
         <button
           onClick={() => setActiveSidebarTab('snippets')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'snippets'
-              ? 'bg-slate-800 text-purple-400 border-l-2 border-purple-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-purple-600/20 text-purple-400 shadow-inner border border-purple-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Snippet Library"
         >
-          <Sparkles className="w-5 h-5" />
+          {activeSidebarTab === 'snippets' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-purple-400 to-pink-500 rounded-r-full shadow-sm" />
+          )}
+          <Sparkles className="w-4.5 h-4.5" />
         </button>
 
         {/* Extensions Marketplace */}
         <button
           onClick={() => setActiveSidebarTab('extensions')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'extensions'
-              ? 'bg-slate-800 text-cyan-400 border-l-2 border-cyan-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-cyan-600/20 text-cyan-400 shadow-inner border border-cyan-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Extensions Marketplace (Ctrl+Shift+X)"
         >
-          <Blocks className="w-5 h-5" />
+          {activeSidebarTab === 'extensions' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-full shadow-sm" />
+          )}
+          <Blocks className="w-4.5 h-4.5" />
           {installedExtensionsCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-cyan-400" />
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-[#0c0d14]" />
           )}
         </button>
 
         {/* Command Palette */}
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="p-2.5 rounded-lg hover:text-slate-200 hover:bg-slate-800/60 transition"
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:text-slate-100 hover:bg-slate-800/50 transition-all text-slate-400"
           title="Command Palette (Ctrl+Shift+P)"
         >
-          <Terminal className="w-5 h-5" />
+          <Terminal className="w-4.5 h-4.5" />
         </button>
 
         {/* Info */}
         <button
           onClick={() => setActiveSidebarTab('info')}
-          className={`p-2.5 rounded-lg transition relative ${
+          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative ${
             activeSidebarTab === 'info'
-              ? 'bg-slate-800 text-blue-400 border-l-2 border-blue-500'
-              : 'hover:text-slate-200 hover:bg-slate-800/60'
+              ? 'bg-blue-600/20 text-blue-400 shadow-inner border border-blue-500/30'
+              : 'hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Workspace & Platform Info"
         >
-          <Info className="w-5 h-5" />
+          {activeSidebarTab === 'info' && (
+            <span className="absolute -left-1.5 top-2 bottom-2 w-1 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-r-full shadow-sm" />
+          )}
+          <Info className="w-4.5 h-4.5" />
         </button>
       </div>
 
