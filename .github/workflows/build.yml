@@ -10,12 +10,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      create_release:
-        description: 'Publish a GitHub Release with .exe installers?'
-        required: false
-        type: boolean
-        default: true
 
 permissions:
   contents: write
@@ -88,12 +82,12 @@ jobs:
           retention-days: 30
 
   # ==========================================
-  # JOB 3: Automated GitHub Release (on Tags or Manual Trigger)
+  # JOB 3: Automated GitHub Release with .exe Attachments
   # ==========================================
   create-release:
-    name: 🚀 Create GitHub Release
+    name: 🚀 Create / Update GitHub Release (.exe)
     needs: [build-web, build-desktop-windows]
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release == true)
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -116,9 +110,11 @@ jobs:
         run: |
           cd release-assets/web-dist && zip -r ../CodeStudio-Web-Build.zip . && cd ../..
 
-      - name: 🚀 Publish GitHub Release with Attachments
+      - name: 🚀 Publish GitHub Release with Attached .exe & .zip
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v1.0.0
+          name: "CodeStudio v1.0.0 — Universal Web & Desktop IDE"
           files: |
             release-assets/*.exe
             release-assets/CodeStudio-Web-Build.zip
