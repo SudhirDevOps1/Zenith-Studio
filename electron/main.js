@@ -1,8 +1,9 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
+const fsSync = require('fs');
 const os = require('os');
-const { execFile } = require('child_process');
+const { exec, execFile } = require('child_process');
 
 let mainWindow;
 
@@ -285,6 +286,24 @@ ipcMain.handle('shell:openExternal', async (_, url) => {
     return true;
   }
   return false;
+});
+
+// Execute real system shell command in active workspace directory
+ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
+  return new Promise((resolve) => {
+    let workingDir = cwd && typeof cwd === 'string' && fsSync.existsSync(cwd) ? cwd : process.cwd();
+    const isWin = process.platform === 'win32';
+    const shellOpt = isWin ? 'powershell.exe' : '/bin/bash';
+
+    exec(command, { cwd: workingDir, shell: shellOpt, maxBuffer: 1024 * 1024 * 10, timeout: 180000 }, (error, stdout, stderr) => {
+      resolve({
+        code: error ? (error.code !== undefined ? error.code : 1) : 0,
+        stdout: stdout || '',
+        stderr: stderr || '',
+        error: error ? error.message : null,
+      });
+    });
+  });
 });
 
 app.whenReady().then(() => {

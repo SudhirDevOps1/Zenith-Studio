@@ -2,6 +2,16 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
+## [2026-08-17] - Native Desktop PowerShell / Shell Execution in Integrated Terminal
+* **User Request:** "terminal not work"
+* **Features Added & Fixed:**
+  - Implemented `terminal:execCommand` IPC handler in `electron/main.js` and exposed via `electron/preload.js` allowing the Integrated Terminal to execute real system shell commands (`powershell.exe` / `bash` / `cmd.exe`).
+  - Running `npm run build`, `npm install`, `git status`, `node`, `python`, `cargo`, `dir`, `echo`, etc. in the Desktop App now runs directly in your system environment with live output streaming.
+  - Added Command History (navigate previous commands with **Arrow Up** / **Arrow Down**).
+  - Clear guidance in Web Sandbox mode explaining native vs browser command execution.
+* **Files Modified:** `electron/main.js`, `electron/preload.js`, `src/components/ui/IntegratedTerminal.tsx`, `skill.md/CHANGELOG.md`.
+
+---
 ## [2026-08-17] - Robust C/C++ & Multi-Language Marketplace Search & Auto Pyodide Engine
 * **User Request:** "ye kaisa dikha raa hain live search not work and download bahut se kami hain"
 * **Features Added & Fixed:**
