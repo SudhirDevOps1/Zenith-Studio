@@ -20,7 +20,10 @@ import {
   FileArchive,
 } from 'lucide-react';
 
+import { ZenithLogo } from './ZenithLogo';
+
 export const WelcomeScreen: React.FC = () => {
+
   const { createFile, createFolder, files, openFileInTab, importFilesFromOS, openSystemFolder, openSystemFile } = useFileStore();
   const { openDialog } = useDialogStore();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -140,11 +143,12 @@ export const WelcomeScreen: React.FC = () => {
       <div className="max-w-4xl w-full p-8 space-y-10 animate-fade-in-up">
         {/* Hero Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/25 mb-2 border border-cyan-500/30 p-1 bg-slate-900">
-            <img src="/icon.png" alt="Zenith Studio" className="w-full h-full rounded-xl object-cover" />
+          <div className="inline-flex items-center justify-center mb-2">
+            <ZenithLogo size={80} className="rounded-2xl shadow-2xl shadow-cyan-500/25 border border-cyan-500/30 p-1 bg-slate-900" />
           </div>
 
           <h1 className="text-3xl font-bold text-white">
+
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
               Zenith Studio
             </span>

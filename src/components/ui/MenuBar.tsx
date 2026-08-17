@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 
 import { AiSetupModal } from './AiSetupModal';
+import { ZenithLogo } from './ZenithLogo';
+
 
 export const MenuBar: React.FC = () => {
   const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
@@ -78,15 +80,13 @@ export const MenuBar: React.FC = () => {
       {/* Left App Brand & Top Menu Items */}
       <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
         <div className="flex items-center gap-2 font-bold text-white mr-2.5 px-1 py-0.5 rounded-lg hover:bg-white/5 transition cursor-pointer">
-          <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center shadow-sm border border-cyan-500/30">
-            <img src="/icon.png" alt="Zenith Studio" className="w-full h-full object-cover" />
-          </div>
+          <ZenithLogo className="w-5 h-5 rounded-md shadow-sm border border-cyan-500/30" />
           <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent tracking-tight">
             Zenith Studio
           </span>
-
           <span className="text-[10px] text-slate-400 font-mono font-normal">v1.0.3</span>
         </div>
+
 
 
 

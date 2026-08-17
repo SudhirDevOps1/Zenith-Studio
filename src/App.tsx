@@ -46,6 +46,8 @@ import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
 
 import { applyAccentToDOM } from './utils/accentThemes';
 import { X, PanelRightClose, PanelLeftClose } from 'lucide-react';
+import { ZenithLogo } from './components/ui/ZenithLogo';
+
 
 
 
@@ -275,10 +277,11 @@ export default function App() {
   if (!isInitialized) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#14141f] text-slate-300 font-sans space-y-4">
-        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/30 animate-bounce border border-cyan-500/30 p-1 bg-slate-900 flex items-center justify-center">
-          <img src="/icon.png" alt="Zenith Studio" className="w-full h-full rounded-xl object-cover" />
+        <div className="animate-bounce">
+          <ZenithLogo size={64} className="rounded-2xl shadow-2xl shadow-cyan-500/30 border border-cyan-500/30 p-1 bg-slate-900" />
         </div>
         <p className="text-sm font-mono text-slate-400 animate-pulse">Initializing Zenith Studio Workspace...</p>
+
 
 
         <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">

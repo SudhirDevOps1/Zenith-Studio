@@ -23,6 +23,8 @@ import {
   Bug,
 } from 'lucide-react';
 import { useComposerStore } from '../../stores/useComposerStore';
+import { ZenithLogo } from '../ui/ZenithLogo';
+
 
 
 
@@ -66,12 +68,12 @@ export const ActivityBar: React.FC = () => {
         {/* Logo Icon */}
         <div
           onClick={() => setActiveSidebarTab('explorer')}
-          style={{ width: '34px', height: '34px' }}
-          className="rounded-xl overflow-hidden flex items-center justify-center shadow-lg mb-2.5 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 border border-cyan-500/40 p-0.5 bg-slate-900"
+          className="cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 mb-2.5"
           title="Zenith Studio Home"
         >
-          <img src="/icon.png" alt="Zenith Studio" className="w-full h-full rounded-lg object-cover" />
+          <ZenithLogo size={34} className="rounded-xl border border-cyan-500/40 p-0.5 bg-slate-900 shadow-lg" />
         </div>
+
 
 
 
