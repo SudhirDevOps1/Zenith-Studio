@@ -38,7 +38,8 @@
 - [x] Git & Source Control panel (Diff viewer, Commit logs, Staged/Unstaged changes, real git CLI).
 - [x] Production Singlefile Web Bundle (`npm run build`).
 - [x] Desktop Setup Installer & Portable build (`npm run electron:build`).
-- [x] Live Deployment on Cloudflare Pages (`https://codestudio-web-app.pages.dev/`).
+- [x] Live Deployment on Cloudflare Pages (`https://zenith-studio-web.pages.dev/`).
+
 
 
 ## Future Enhancements

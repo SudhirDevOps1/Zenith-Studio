@@ -3,8 +3,9 @@ import { useToastStore } from './useToastStore';
 import { isElectron } from '../utils/fileUtils';
 
 export const CURRENT_VERSION = '1.0.3';
-const REPO_RELEASES_API = 'https://api.github.com/repos/SudhirDevOps1/CodeStudio/releases/latest';
-const REPO_RELEASES_PAGE = 'https://github.com/SudhirDevOps1/CodeStudio/releases/latest';
+const REPO_RELEASES_API = 'https://api.github.com/repos/SudhirDevOps1/Zenith-Studio/releases/latest';
+const REPO_RELEASES_PAGE = 'https://github.com/SudhirDevOps1/Zenith-Studio/releases/latest';
+
 
 interface UpdateStoreState {
   currentVersion: string;

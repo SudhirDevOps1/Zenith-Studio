@@ -23,7 +23,8 @@
 * **Standalone Mermaid & Markdown Preview:** Direct SVG rendering of `.mermaid` and `.mmd` diagrams with synchronized scrolling.
 * **Integrated Terminal:** Full command line interface with workspace state commands (`ls`, `cat`, `touch`, `rm`, `open`, `stats`, `eval`).
 * **Binary File Safety:** Base64 binary-safe import/export for Excel (`.xlsx`, `.xls`), images, PDFs, and ZIP archives.
-* **Dual Platform Delivery:** Singlefile web bundle deployed on Cloudflare Pages (`https://codestudio-web-app.pages.dev/`) + Windows `.exe` setup installer.
+* **Dual Platform Delivery:** Singlefile web bundle deployed on Cloudflare Pages (`https://zenith-studio-web.pages.dev/`) + Windows `.exe` setup installer.
+
 
 ## 2. What should be added? (Future 2027 Vision)
 * **WebRTC Pair Programming:** Real-time peer-to-peer collaborative multi-cursor coding directly in browser.

@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://codestudio-web-app.pages.dev/"><img src="https://img.shields.io/badge/Live%20Demo-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflarepages&logoColor=white" alt="Live Demo" /></a>
-  <a href="https://github.com/SudhirDevOps1/CodeStudio.git"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repo" /></a>
-  <a href="https://github.com/SudhirDevOps1/CodeStudio/actions"><img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
+  <a href="https://zenith-studio-web.pages.dev/"><img src="https://img.shields.io/badge/Live%20Demo-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflarepages&logoColor=white" alt="Live Demo" /></a>
+  <a href="https://github.com/SudhirDevOps1/Zenith-Studio.git"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repo" /></a>
+  <a href="https://github.com/SudhirDevOps1/Zenith-Studio/actions"><img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
   <img src="https://img.shields.io/badge/TypeScript-Strict%200%20Errors-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Monaco%20Editor-100%25%20Offline%20Bundled-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Monaco Editor" />
   <img src="https://img.shields.io/badge/Electron-Windows%20Setup%20.exe-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
@@ -20,10 +20,11 @@
 ---
 
 ## 📌 Quick Access & Deployment
-- 🌐 **Live Web Application**: [https://codestudio-web-app.pages.dev/](https://codestudio-web-app.pages.dev/)
-- 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/CodeStudio.git](https://github.com/SudhirDevOps1/CodeStudio.git)
-- 🚀 **GitHub Releases & `.exe` Downloads**: [https://github.com/SudhirDevOps1/CodeStudio/releases](https://github.com/SudhirDevOps1/CodeStudio/releases)
+- 🌐 **Live Web Application**: [https://zenith-studio-web.pages.dev/](https://zenith-studio-web.pages.dev/)
+- 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/Zenith-Studio.git](https://github.com/SudhirDevOps1/Zenith-Studio.git)
+- 🚀 **GitHub Releases & `.exe` Downloads**: [https://github.com/SudhirDevOps1/Zenith-Studio/releases](https://github.com/SudhirDevOps1/Zenith-Studio/releases)
 - 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `Zenith Studio Setup 1.0.3.exe` NSIS Installer and portable executable in `dist-electron/`)
+
 
 - ⚡ **Zero Setup Required**: Open directly in any modern browser or run as a standalone desktop executable on Windows.
 
@@ -199,10 +200,11 @@ CodeStudio Core Stack
 
 ### 2. Installation
 ```bash
-git clone https://github.com/SudhirDevOps1/CodeStudio.git
-cd CodeStudio
+git clone https://github.com/SudhirDevOps1/Zenith-Studio.git
+cd Zenith-Studio
 npm install
 ```
+
 
 ### 3. Local Web Development
 ```bash

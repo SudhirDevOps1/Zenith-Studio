@@ -44,7 +44,7 @@ export const WorkspaceInfo: React.FC = () => {
 
           <div className="flex items-center gap-2 flex-wrap">
             <a
-              href="https://codestudio-web-app.pages.dev/"
+              href="https://zenith-studio-web.pages.dev/"
               target="_blank"
               rel="noreferrer"
               className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded text-[10px] text-white font-medium transition flex items-center gap-1 shadow-sm"
@@ -60,13 +60,14 @@ export const WorkspaceInfo: React.FC = () => {
               GitHub Profile
             </a>
             <a
-              href="https://github.com/SudhirDevOps1/CodeStudio"
+              href="https://github.com/SudhirDevOps1/Zenith-Studio"
               target="_blank"
               rel="noreferrer"
               className="px-2 py-1 bg-blue-600 hover:bg-blue-500 rounded text-[10px] text-white transition flex items-center gap-1"
             >
               <Star className="w-3 h-3" /> Star Repo
             </a>
+
           </div>
         </div>
 

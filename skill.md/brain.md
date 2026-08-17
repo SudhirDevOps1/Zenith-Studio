@@ -15,7 +15,8 @@
   - **State Management & Storage:** Zustand, IndexedDB (`idb-keyval`)
   - **Desktop App:** Electron, Electron Builder (`nsis`, `portable`)
   - **Previews & Execution:** Local System Python 3.12 (`python.exe`), MinGW GCC/G++ (`gcc.exe`), Pyodide (Wasm Web), Babel standalone (TS/JS), Mermaid.js, XLSX, DOMPurify
-  - **Live Web Deployment:** Cloudflare Pages ([https://codestudio-web-app.pages.dev/](https://codestudio-web-app.pages.dev/))
+  - **Live Web Deployment:** Cloudflare Pages ([https://zenith-studio-web.pages.dev/](https://zenith-studio-web.pages.dev/))
+
   - **Registry:** Open VSX Extensions API (`https://open-vsx.org/api/`)
   - **AI Providers:** Google Gemini, OpenAI, Claude, Groq, OpenRouter, DeepSeek, Ollama, and Custom OpenAI-Compatible Endpoints with remote `/v1/models` discovery
 

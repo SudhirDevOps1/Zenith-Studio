@@ -31,9 +31,10 @@ const BOOKMARKS = [
 ];
 
 export const SimpleBrowserWebview: React.FC<SimpleBrowserProps> = ({
-  initialUrl = 'https://codestudio-web-app.pages.dev/',
+  initialUrl = 'https://zenith-studio-web.pages.dev/',
   onClose,
 }) => {
+
   const [urlInput, setUrlInput] = useState(initialUrl);
   const [currentUrl, setCurrentUrl] = useState(initialUrl);
   const [history, setHistory] = useState<string[]>([initialUrl]);
@@ -148,10 +149,11 @@ export const SimpleBrowserWebview: React.FC<SimpleBrowserProps> = ({
             <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
           <button
-            onClick={() => navigateTo('https://codestudio-web-app.pages.dev/')}
+            onClick={() => navigateTo('https://zenith-studio-web.pages.dev/')}
             className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition"
             title="Home"
           >
+
             <Home className="w-3.5 h-3.5" />
           </button>
         </div>
