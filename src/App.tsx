@@ -93,15 +93,36 @@ export default function App() {
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
-  const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
 
+  const [selectedSnapshotCode, setSelectedSnapshotCode] = useState<string | null>(null);
+  const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
 
   const isDraggingSidebar = useRef(false);
   const isDraggingSplit = useRef(false);
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
 
+  const handleOpenSnapshot = useCallback(() => {
+    if (editorRef.current) {
+      const selection = editorRef.current.getSelection();
+      if (selection && !selection.isEmpty()) {
+        const model = editorRef.current.getModel();
+        if (model) {
+          const selectedText = model.getValueInRange(selection);
+          if (selectedText && selectedText.trim().length > 0) {
+            setSelectedSnapshotCode(selectedText);
+            setShowSnapshot(true);
+            return;
+          }
+        }
+      }
+    }
+    setSelectedSnapshotCode(null);
+    setShowSnapshot(true);
+  }, []);
+
   const handleNavigateToLine = useCallback((lineNumber: number, column: number = 1) => {
+
     if (editorRef.current) {
       editorRef.current.revealLineInCenter(lineNumber);
       editorRef.current.setPosition({ lineNumber, column });
@@ -182,7 +203,7 @@ export default function App() {
 
       } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
-        setShowSnapshot(true);
+        handleOpenSnapshot();
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         saveCurrentFile();
@@ -210,14 +231,15 @@ export default function App() {
       }
     };
 
-    const handleOpenSnapshotEvent = () => setShowSnapshot(true);
+    const handleOpenSnapshotEvent = () => handleOpenSnapshot();
     window.addEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder]);
+  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder, handleOpenSnapshot]);
+
 
   // Mouse move resize handling
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -513,9 +535,13 @@ export default function App() {
         isOpen={showSnapshot}
         code={activeFile?.content || ''}
         fileName={activeFile?.name || 'snapshot'}
-        selectedCode={null}
-        onClose={() => setShowSnapshot(false)}
+        selectedCode={selectedSnapshotCode}
+        onClose={() => {
+          setShowSnapshot(false);
+          setSelectedSnapshotCode(null);
+        }}
       />
+
 
       <UpdateModal />
       <DebugToolbar />

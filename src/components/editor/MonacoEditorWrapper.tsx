@@ -123,6 +123,19 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Digit0, () => { resetZoom(); });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Numpad0, () => { resetZoom(); });
 
+    // Capture Code Snapshot action in right-click context menu and Alt+S
+    editor.addAction({
+      id: 'zenith-code-snapshot',
+      label: '📸 Capture Code Snapshot (Alt+S)',
+      keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyS],
+      contextMenuGroupId: '9_cutcopypaste',
+      contextMenuOrder: 4,
+      run: () => {
+        window.dispatchEvent(new CustomEvent('zenith:open-snapshot'));
+      },
+    });
+
+
     // Sync editor syntax diagnostics markers with Problems panel
     monaco.editor.onDidChangeMarkers(() => {
       const model = editor.getModel();
