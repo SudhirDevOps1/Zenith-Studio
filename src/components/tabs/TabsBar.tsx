@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { FileIcon } from '../filetree/FileIcon';
-import { X, ChevronRight, Split, Layers, Columns } from 'lucide-react';
+import { X, ChevronRight, Split, Layers, Columns, Globe } from 'lucide-react';
 
 export const TabsBar: React.FC = () => {
   const { openTabs, activeFileId, setActiveFile, closeTab, closeOtherTabs, closeAllTabs, files, activePreviewMode, setActivePreviewMode } = useFileStore();
@@ -87,6 +87,14 @@ export const TabsBar: React.FC = () => {
               title="Preview Only Mode"
             >
               <Layers className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setActivePreviewMode(activePreviewMode === 'webview' ? 'auto' : 'webview')}
+              className={`p-1.5 rounded transition ${activePreviewMode === 'webview' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 hover:text-emerald-300'}`}
+              title="Open Simple Browser Webview (Internet & Localhost)"
+            >
+              <Globe className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

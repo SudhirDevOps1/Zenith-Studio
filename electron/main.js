@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const os = require('os');
@@ -20,6 +20,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      webviewTag: true,
+      webSecurity: false, // Allows webview tag and iframes to access internet URLs & localhost freely
       sandbox: false,
     },
   });
@@ -86,11 +88,85 @@ ipcMain.on('window:maximize', () => {
 ipcMain.on('window:close', () => mainWindow?.close());
 
 // Native File System IPC
+async function scanDirectory(dirPath, rootPath = dirPath, parentId = null) {
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  let items = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    const relativePath = path.relative(rootPath, fullPath).replace(/\\/g, '/');
+    
+    // Ignore heavy non-source directories
+    if (['node_modules', '.git', 'dist', 'dist-electron', '.next', '.cache'].includes(entry.name)) {
+      continue;
+    }
+
+    const id = `fs_${Buffer.from(relativePath).toString('base64').replace(/=/g, '')}`;
+
+    if (entry.isDirectory()) {
+      items.push({
+        id,
+        name: entry.name,
+        path: relativePath,
+        type: 'folder',
+        parentId,
+        isExpanded: relativePath.split('/').length <= 1,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      try {
+        const subItems = await scanDirectory(fullPath, rootPath, id);
+        items = items.concat(subItems);
+      } catch (err) {
+        console.warn(`Could not read directory ${fullPath}:`, err.message);
+      }
+    } else if (entry.isFile()) {
+      let content = '';
+      const ext = path.extname(entry.name).replace('.', '').toLowerCase();
+      const isBinary = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'pdf', 'mp3', 'wav', 'mp4', 'xlsx', 'xls'].includes(ext);
+
+      try {
+        if (isBinary) {
+          const buffer = await fs.readFile(fullPath);
+          const mimeTypes = {
+            png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
+            webp: 'image/webp', ico: 'image/x-icon', pdf: 'application/pdf',
+            mp3: 'audio/mpeg', wav: 'audio/wav', mp4: 'video/mp4',
+            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            xls: 'application/vnd.ms-excel'
+          };
+          const mime = mimeTypes[ext] || 'application/octet-stream';
+          content = `data:${mime};base64,${buffer.toString('base64')}`;
+        } else {
+          content = await fs.readFile(fullPath, 'utf-8');
+        }
+      } catch (e) {
+        content = '';
+      }
+
+      items.push({
+        id,
+        name: entry.name,
+        path: relativePath,
+        type: 'file',
+        parentId,
+        extension: ext,
+        content,
+        isModified: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+  }
+
+  return items;
+}
+
 ipcMain.handle('dialog:openFile', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
-      { name: 'All Supported Files', extensions: ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'md', 'mermaid', 'py', 'cpp', 'java', 'sql', 'yaml', 'txt'] },
+      { name: 'All Supported Files', extensions: ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'md', 'mermaid', 'py', 'cpp', 'java', 'sql', 'yaml', 'txt', 'csv', 'tsv', 'svg'] },
       { name: 'All Files', extensions: ['*'] },
     ],
   });
@@ -113,7 +189,10 @@ ipcMain.handle('dialog:openFolder', async () => {
     return null;
   }
 
-  return result.filePaths[0];
+  const folderPath = result.filePaths[0];
+  const folderName = path.basename(folderPath);
+  const files = await scanDirectory(folderPath);
+  return { folderPath, folderName, files };
 });
 
 ipcMain.handle('fs:readFile', async (_, filePath) => {
@@ -197,6 +276,15 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       await fs.rm(tempDir, { recursive: true, force: true });
     } catch (_) {}
   }
+});
+
+// Open external URL in system browser
+ipcMain.handle('shell:openExternal', async (_, url) => {
+  if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:'))) {
+    await shell.openExternal(url);
+    return true;
+  }
+  return false;
 });
 
 app.whenReady().then(() => {

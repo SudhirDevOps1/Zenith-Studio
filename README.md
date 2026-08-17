@@ -1,288 +1,251 @@
-# 🚀 CodeStudio — Next-Gen Universal Code & Text Editor
+# 🚀 CodeStudio — Production-Grade Universal Code & Text Editor
 
 <p align="center">
-  <img src="public/icon.png" width="120" alt="CodeStudio Logo" />
+  <img src="public/icon.png" width="120" alt="CodeStudio Logo" style="border-radius: 20px;" />
 </p>
 
 <p align="center">
-  <strong>React 19 + Vite 7 + Tailwind CSS 4 + Monaco Editor + Electron</strong>
+  <strong>The Ultra-Fast, Lightweight, and Extensible VS Code / VSCodium Alternative for Web & Desktop</strong>
 </p>
 
 <p align="center">
-  🌐 Browser Me Chale • 💻 Desktop App Bane • 📦 GitHub Ready • 🔥 Production-Grade • ⚡ Ultra Fast
+  <a href="https://codestudio-web-app.pages.dev/"><img src="https://img.shields.io/badge/Live%20Demo-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflarepages&logoColor=white" alt="Live Demo" /></a>
+  <a href="https://github.com/SudhirDevOps1/CodeStudio.git"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repo" /></a>
+  <img src="https://img.shields.io/badge/TypeScript-Strict%200%20Errors-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Monaco%20Editor-100%2B%20Languages-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Monaco Editor" />
+  <img src="https://img.shields.io/badge/Electron-Windows%20Setup%20.exe-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
 </p>
 
 ---
 
-## 📌 GitHub Repository
-- **Repository URL**: [`https://github.com/SudhirDevOps1/CodeStudio.git`](https://github.com/SudhirDevOps1/CodeStudio.git)
-- **Production Build Size**: ~4.4MB (gzipped: 1.24MB)
-- **Zero Errors** • **Zero Warnings** • **TypeScript Strict Mode**
+## 📌 Quick Access & Deployment
+- 🌐 **Live Web Application**: [https://codestudio-web-app.pages.dev/](https://codestudio-web-app.pages.dev/)
+- 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/CodeStudio.git](https://github.com/SudhirDevOps1/CodeStudio.git)
+- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `CodeStudio Setup 1.0.0.exe` NSIS Installer and portable executable in `dist-electron/`)
+- ⚡ **Zero Setup Required**: Open in any browser or launch as a standalone desktop app!
 
 ---
 
-## ✨ Key Features
+## 🌟 Key Highlights & Feature Matrix
 
-### 🎨 Professional In-App Dialogs (No Browser Prompts!)
-| Feature | Description |
-|---------|-------------|
-| **Custom Modal System** | Beautiful dark-themed dialogs for file creation, folder creation, and user inputs |
-| **No Browser `prompt()`** | Sab kuch app ke andar hota hai, browser ka prompt nahi dikhta |
-| **OK/Cancel Buttons** | Professional button styling with keyboard support (Enter, Escape) |
-| **File Extension Suggestions** | New file dialog mein popular extensions ki suggestions |
+### 🧩 1. Extensions Marketplace (`Ctrl + Shift + X`)
+Just like VS Code and VSCodium, CodeStudio features a full **Extensions Marketplace**:
+* **Marketplace Tab**: Browse curated developer tools and live query the **Open VSX Registry** (`https://open-vsx.org/api/-/search`).
+* **Installed Tab**: Real-time counter badge, enable/disable toggles, and one-click uninstall.
+* **Popular Tab**: Filter community-favorite and highly-rated extensions.
+* **Category Filters**: Themes, Programming Languages, Formatters, Linters, Snippets, AI & Productivity.
+* **Extension Detail Modal**: Markdown README reader, version info, verified publisher badge, download count, star ratings, and contributed keywords.
+* **Persistent Storage**: Installed extensions and preferences are stored locally in IndexedDB (`idb-keyval`).
 
-### ⚙️ Code Compile & Run Options
-| Runtime | Status | Notes |
-|---------|--------|-------|
-| **JavaScript Runner** | ✅ Built-in | Runs inside browser with console output and timing |
-| **Python Pyodide Runner** | ✅ Optional | Enable from Settings. Loads Pyodide from CDN when first used |
-| **C / C++ GCC Runner** | ✅ Electron Desktop | Requires gcc/g++ installed in PATH. Works in `.exe`, `.dmg`, `.deb` desktop app |
-| **Cloudflare Sandbox SDK/Worker** | ✅ Optional | Enable from Settings and add your Cloudflare Worker endpoint |
+### 🌐 2. Built-In Webview & Simple Browser
+Browse live documentation and test local development servers right next to your code:
+* **Internet & Localhost Access**: Test `http://localhost:3000`, `http://localhost:5173`, or live URLs without CORS blockers.
+* **Browser Navigation**: Back, Forward, Reload (`RotateCw`), Home buttons, and smart address bar with automatic protocol resolution.
+* **Quick Bookmarks**: One-click shortcuts for `Localhost:5173`, `Localhost:3000`, `Tailwind Docs`, `React Docs`, `MDN Web Docs`, and `GitHub`.
+* **Multi-Device Responsive Presets**: Toggle between **Responsive (100%)**, **Desktop (1200px)**, **Tablet iPad (768px)**, and **Mobile iPhone (375px)**.
+* **External Launch**: Open any active URL in your default system browser with a single click (`ExternalLink`).
 
-### 🧩 Built-In Extension Manager
-| Extension | Description |
-|-----------|-------------|
-| **Monaco Editor Core** | Syntax highlighting, minimap, multi-cursor |
-| **Media Preview Pack** | Image, PDF, SVG, CSV, TSV, JSON, XLSX previews |
-| **Spreadsheet Viewer** | Excel/CSV/JSON table rendering |
-| **Native GCC/G++ Runner** | Desktop C/C++ compile and run |
-| **Pyodide Python Runner** | Optional Python execution |
-| **Cloudflare Sandbox Connector** | Optional serverless sandbox execution |
+### 📁 3. Native File & Folder Management (`Ctrl + O`, `Ctrl + Shift + O`)
+* **Open System Folder**: Recursive directory import via native OS Dialog (Electron) and browser File System Access API (`showDirectoryPicker()`).
+* **Open System File**: Binary and text file picker with automatic language detection.
+* **In-App Modal Dialogs**: Custom dark-themed dialogs for new files/folders (no native browser `prompt()` popups).
+* **ZIP Auto-Extraction & Export**: Drag-and-drop `.zip` files to extract nested structures, or export the entire workspace into a `.zip` archive with one click.
 
-### 📸 Built-In Code Snapshot Image Export
-| Feature | Description |
-|---------|-------------|
-| **Code to PNG** | Active code ko beautiful PNG image mein export karo |
-| **No VS Code Extension Needed** | Carbon/SnapCode jaise effect app mein hi built-in hai |
-| **Themes** | Blue, Purple, Emerald snapshot backgrounds |
-| **Branding** | Footer mein `Generated with CodeStudio by SudhirDevOps1` |
+### 🎨 4. 10 Dynamic Editor Themes & Custom Styling
+Monaco Editor dynamically applies custom theme definitions:
+1. **VS Code Dark (Default)**
+2. **One Dark Pro (Atom)**
+3. **Catppuccin Macchiato**
+4. **Tokyo Night**
+5. **SynthWave '84 (80s Neon Glow)**
+6. **Dracula Official**
+7. **Nord Arctic**
+8. **Monokai Pro**
+9. **GitHub Dark High Contrast**
+10. **VS Code Light**
+* **6 Accent Colors**: Electric Blue, Deep Purple, Emerald, Amber, Rose, Cyan.
+* **Typography Controls**: Font size (10–28px), line numbers (on/off/relative), cursor style (line, block, underline), word wrap, minimap toggle.
 
-### 📦 ZIP File Auto-Extraction
-| Feature | Description |
-|---------|-------------|
-| **Drag & Drop ZIP** | ZIP file ko drag karke drop karo, auto-extract hoga |
-| **Preserves Structure** | Folder structure maintain hoti hai extract hone ke baad |
-| **File Upload Button** | Upload button se bhi ZIP select kar sakte ho |
-| **Toast Notifications** | Extraction success/error messages |
+### ⚙️ 5. Multi-Language Runner & Compilers
+| Language / Environment | Execution Method | Output & Features |
+|---|---|---|
+| **TypeScript / TSX** | In-Browser Babel Type Stripping | Fast console output with execution duration timer |
+| **JavaScript / JSX** | In-Browser Sandbox | Object inspect, multi-line format, standard output |
+| **Python** | Pyodide WebAssembly (CDN) | Client-side Python execution without server |
+| **C / C++ GCC** | Desktop Electron Native Runner | Calls system `gcc`/`g++` directly from desktop `.exe` |
+| **Cloudflare Sandbox** | Optional Worker Endpoint | Serverless sandbox integration |
 
-### 🖼️ Universal File Previews
-| File Type | Preview Support |
-|-----------|----------------|
-| **Images** (PNG, JPG, GIF, WebP, ICO) | Zoom, Rotate, Fullscreen, Download |
-| **PDF Documents** | Page navigation, Zoom controls, Download |
-| **SVG Graphics** | Live preview + Edit mode, Save changes back to file |
-| **Spreadsheets** (CSV, TSV, JSON) | Table view with headers, row numbers, scrollable |
-| **Excel** (XLS, XLSX, XLSM) | SheetJS powered workbook preview |
-| **Audio/Video** | Built-in audio/video player with download |
-| **Markdown** | Live preview with Mermaid diagrams |
-| **HTML** | Live sandbox with responsive viewports |
-| **JavaScript/TypeScript** | Interactive console with execution timer |
+### 🖼️ 6. Universal File & Media Previews
+* **Markdown & Mermaid**: Real-time markdown preview with live SVG rendering for `.mermaid` and `.mmd` diagrams with synchronized scrolling.
+* **HTML / Web Sandbox**: Live multi-device responsive iframe preview.
+* **Spreadsheets**: SheetJS-powered tabular viewer for Excel (`.xlsx`, `.xls`, `.xlsm`), CSV, TSV, and JSON with binary export.
+* **Media Player**: Built-in player for Audio (`.mp3`, `.wav`, `.ogg`, `.flac`) and Video (`.mp4`, `.webm`, `.mov`).
+* **Documents & Vector Graphics**: Multi-page PDF viewer with zoom, and SVG graphics live preview with code-back sync.
+* **Images**: High-resolution zoom, rotate, fullscreen mode for PNG, JPG, GIF, WebP, ICO.
 
-### 🌿 Git Source Control Panel
-- Modified files ka live list with "M" badge
-- Stage/Unstage individual files
-- Stage All functionality
-- Commit with custom message
-- Commit history with timestamps
-- Branch indicator (main)
+### 🌿 7. Git & Source Control Panel (`Ctrl + Shift + G`)
+* Real-time file change tracker with `M` badge and modified file count.
+* Stage / Unstage individual files or Stage All.
+* Commit with custom messages and persistent commit history timeline.
+* Active branch indicator (`main`).
 
-### ✨ Snippets Library
-| Snippet | Description |
-|---------|-------------|
-| **React Component (TSX)** | Functional component with props interface |
-| **Mermaid Sequence Diagram** | API flow with actors and participants |
-| **Mermaid Flowchart** | Conditional flowchart template |
-| **Tailwind Glassmorphism Card** | Modern glassmorphism UI component |
-| **Async Fetch with Error Handling** | TypeScript async/await pattern |
-| **Markdown Table** | Pre-formatted table template |
-| **SQL JOIN Query** | Multi-table SELECT query |
+### 💻 8. Integrated Terminal (`` Ctrl + ` ``)
+* Full interactive CLI with workspace state commands: `ls`, `cat`, `touch`, `rm`, `open`, `stats`, `eval`, `clear`, `date`, `pwd`, `theme`, `version`, `help`.
+* Resizable top drag handle, minimize, maximize, and timestamp logs.
 
-### 🎨 Advanced Customization
-| Setting | Options |
-|---------|---------|
-| **6 Color Themes** | VS Code Dark, Dracula, Nord, Monokai Pro, GitHub Dark, Light |
-| **6 Accent Colors** | Electric Blue, Deep Purple, Emerald, Amber, Rose, Cyan |
-| **Cursor Styles** | Line (\|), Block (█), Underline (\_) |
-| **Auto-Closing Brackets** | Always, Language Defined, Never |
-| **Font & Tab Settings** | Size (10-28px), Family, Tab size (2/4 spaces) |
-
-### ⌨️ Keyboard Shortcuts (F1 for Help)
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+P` | Command Palette |
-| `Ctrl+S` | Save File |
-| `Ctrl+W` | Close Tab |
-| `Ctrl+F` | Find & Replace |
-| `Ctrl+Shift+E` | Explorer Sidebar |
-| `Ctrl+Shift+F` | Global Search |
-| `` Ctrl+` `` | Toggle Terminal |
-| `F1` or `Ctrl+/` | Keyboard Shortcuts Help |
-| `Esc` | Close Panels / Exit Zen Mode |
-
-### 💻 Integrated Terminal
-- Custom commands: `help`, `clear`, `date`, `ls`, `pwd`, `echo`, `whoami`, `version`, `theme`
-- Resizable panel with drag handle
-- Maximize/Minimize support
-- Command history with timestamps
-
-### 🔒 Privacy & Security
-- **100% Client-Side** — No server, no backend
-- **IndexedDB Storage** — Files persist locally in browser
-- **No Telemetry** — Zero tracking, zero analytics
-- **Offline Working** — Works without internet
+### 📸 9. Built-in Code Snapshot Image Generator
+* Export beautiful Carbon-style code snippets directly to high-resolution PNG images.
+* Customizable gradient backgrounds (Electric Blue, Purple Horizon, Emerald Glow) with custom branding.
 
 ---
 
-## 🚀 How to Use
+## ⌨️ Complete Keyboard Shortcuts Cheatsheet
 
-### Web Version (No Installation)
+| Category | Shortcut | Action |
+|---|---|---|
+| **Navigation** | `Ctrl + Shift + P` | Open Command Palette |
+| | `Ctrl + Shift + X` | Extensions Marketplace |
+| | `Ctrl + Shift + E` | Focus File Explorer |
+| | `Ctrl + Shift + F` | Global Workspace Search |
+| | `Ctrl + Shift + G` | Source Control / Git |
+| | `` Ctrl + ` `` | Toggle Integrated Terminal |
+| | `F1` / `Ctrl + /` | Keyboard Shortcuts Help |
+| **File Operations** | `Ctrl + O` | Open File from System |
+| | `Ctrl + Shift + O` | Open Folder from System |
+| | `Ctrl + S` | Save Active File |
+| | `Ctrl + W` | Close Active Tab |
+| | `Ctrl + F` | Monaco Find & Replace |
+| | `Shift + Alt + F` | Format Document (Prettier) |
+| | `Esc` | Close Dialogs / Exit Zen Mode |
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+```
+CodeStudio Core Stack
+├── Frontend Engine: React 18 + Vite 7 + Tailwind CSS 4
+├── Code Editing: Monaco Editor Core (@monaco-editor/react)
+├── Extensions Engine: Zustand + IndexedDB (idb-keyval) + Open VSX API
+├── Desktop Runtime: Electron 43 + Electron Builder (NSIS / Portable)
+├── Media & Previews: SheetJS (XLSX) + Mermaid.js + react-markdown + Babel
+└── Single-File Bundle: vite-plugin-singlefile (Zero 404 / Direct file:// load)
+```
+
+---
+
+## 🚀 Getting Started & Build Commands
+
+### 1. Prerequisites
+- Node.js `v18.0.0` or higher
+- npm `v9.0.0` or higher
+
+### 2. Installation
 ```bash
+git clone https://github.com/SudhirDevOps1/CodeStudio.git
+cd CodeStudio
 npm install
+```
+
+### 3. Local Web Development
+```bash
 npm run dev
-# Open http://localhost:5173
+# Starts local Vite dev server at http://localhost:5173
 ```
 
-### Build for Production
+### 4. TypeScript Strict Verification
+```bash
+npm run typecheck
+# Strict tsc --noEmit check (0 errors)
+```
+
+### 5. Production Web Build
 ```bash
 npm run build
-# Output: dist/index.html (single file, ~4.4MB)
+# Generates optimized singlefile bundle in dist/index.html (~4.8MB / 1.37MB gzipped)
 ```
 
-### Desktop App (Electron)
+### 6. Desktop Development (Electron)
 ```bash
-npm run electron:dev     # Development mode
-npm run electron:build   # Build .exe / .dmg / .deb
+npm run electron:dev
+# Launches hot-reloading desktop window
 ```
 
-### Deploy to GitHub Pages / Vercel / Netlify
+### 7. Build Windows Executable Installer (`.exe`)
 ```bash
-npm run build
-cp dist/index.html dist/404.html  # For SPAs
-git add dist
-git commit -m "Deploy"
-git push origin main
+npm run electron:build
+# Generates CodeStudio Setup 1.0.0.exe (NSIS Installer) and CodeStudio 1.0.0.exe (Portable) in dist-electron/
 ```
 
 ---
 
-## 📂 Project Structure
+## 📁 Repository Structure
 
 ```
-codestudio/
+CodeStudio/
 ├── public/
-│   └── icon.png                    # App icon (1024x1024)
+│   └── icon.png                    # High-res application icon
 ├── electron/
-│   ├── main.js                     # Electron main process
-│   └── preload.js                  # Secure IPC bridge
+│   ├── main.js                     # Electron main process (IPC, menus, webSecurity)
+│   └── preload.js                  # Context-isolated secure bridge
 ├── src/
 │   ├── components/
-│   │   ├── editor/                 # Monaco Editor + themes
-│   │   ├── filetree/               # File explorer with dialogs
-│   │   ├── preview/                # All file preview components
-│   │   │   ├── MarkdownPreview.tsx
-│   │   │   ├── HtmlPreview.tsx
-│   │   │   ├── JsSandboxPreview.tsx
-│   │   │   ├── ImagePreview.tsx    # 🆕 Image zoom/rotate
-│   │   │   ├── PdfPreview.tsx      # 🆕 PDF viewer
-│   │   │   ├── SvgPreview.tsx      # 🆕 SVG edit/preview
-│   │   │   └── SpreadsheetPreview.tsx  # 🆕 CSV/TSV/JSON
-│   │   ├── sidebar/                # All sidebar panels
-│   │   │   ├── ActivityBar.tsx
-│   │   │   ├── FileTree.tsx
-│   │   │   ├── GlobalSearch.tsx
-│   │   │   ├── GitControlPanel.tsx # 🆕 Git simulator
-│   │   │   ├── SnippetsPanel.tsx   # 🆕 Code snippets
-│   │   │   └── WorkspaceInfo.tsx
-│   │   ├── statusbar/
-│   │   │   └── StatusBar.tsx
-│   │   ├── tabs/
-│   │   │   └── TabsBar.tsx
-│   │   └── ui/                     # All UI components
-│   │       ├── AppDialog.tsx       # 🆕 Custom dialogs
-│   │       ├── CommandPalette.tsx
-│   │       ├── FindReplacePanel.tsx
-│   │       ├── IntegratedTerminal.tsx
-│   │       ├── MenuBar.tsx
-│   │       ├── SettingsModal.tsx
-│   │       ├── ShortcutsHelpModal.tsx
-│   │       ├── ToastContainer.tsx
-│   │       └── WelcomeScreen.tsx
-│   ├── stores/                     # Zustand state management
-│   │   ├── useDialogStore.ts       # 🆕 Dialog state
-│   │   ├── useFileStore.ts
-│   │   ├── useSettingsStore.ts
-│   │   └── useToastStore.ts
-│   ├── types/                      # TypeScript interfaces
-│   ├── utils/                      # Utilities
-│   │   ├── fileUtils.ts
-│   │   ├── storage.ts
-│   │   └── zipExtractor.ts         # 🆕 ZIP extraction
-│   ├── App.tsx                     # Main app component
-│   ├── index.css                   # Global styles + animations
-│   └── main.tsx                    # Vite entry point
-├── .gitignore                      # Git ignore rules
-├── index.html                      # HTML entry
-├── package.json                    # Dependencies
-├── README.md                       # This file
-└── vite.config.ts                  # Vite configuration
+│   │   ├── editor/                 # Monaco Editor wrapper & 10 theme definitions
+│   │   ├── extensions/             # Extension details modal & README reader
+│   │   ├── filetree/               # Explorer tree, icons, and dialogs
+│   │   ├── preview/                # Markdown, Mermaid, HTML, Webview, Spreadsheets, Media
+│   │   ├── sidebar/                # ActivityBar, Extensions, Git, Search, Snippets
+│   │   ├── statusbar/              # Real-time line/column, language, theme status
+│   │   ├── tabs/                   # Tab bar with preview mode toggles & webview button
+│   │   └── ui/                     # Terminal, Command Palette, Modals, MenuBar
+│   ├── data/                       # Default extensions catalog & themes
+│   ├── stores/                     # Zustand stores (Files, Settings, Extensions, Dialogs)
+│   ├── types/                      # TypeScript definitions (Files, Settings, Extensions)
+│   ├── utils/                      # File helpers, base64 binary converters, ZIP handlers
+│   ├── App.tsx                     # Main layout & keyboard shortcut hub
+│   ├── index.css                   # Global styles, scrollbars, animations
+│   └── main.tsx                    # React DOM root entry
+├── package.json                    # Scripts, dependencies, and build configuration
+├── vite.config.ts                  # Vite, singlefile, and Tailwind configuration
+├── tsconfig.json                   # Strict TypeScript compiler options
+└── README.md                       # Comprehensive documentation
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🥊 CodeStudio vs VS Code / VSCodium
 
-| Technology | Purpose |
-|------------|---------|
-| React 19 | UI Framework |
-| Vite 7 | Build Tool & Dev Server |
-| Tailwind CSS 4 | Styling |
-| Monaco Editor | Code Editing Engine |
-| Zustand | State Management |
-| JSZip | ZIP extraction |
-| Lucide React | Icons |
-| Mermaid | Diagram rendering |
-| react-markdown | Markdown preview |
-| Electron | Desktop app packaging |
-
----
-
-## 🎯 CodeStudio vs VS Code
-
-| Feature | VS Code | CodeStudio |
-|---------|---------|------------|
-| Installation Required | ✅ Yes | ❌ No (Browser) |
-| Size | ~300MB | ✅ ~4.4MB |
-| Startup Time | ~2-3 sec | ✅ <1 sec |
-| Offline Support | Limited | ✅ Full |
-| Privacy | Telemetry | ✅ Zero tracking |
-| ZIP Auto-Extract | ❌ Manual | ✅ Built-in |
-| Image/PDF/SVG Preview | Extensions | ✅ Built-in |
-| In-App Dialogs | ✅ Yes | ✅ Yes (Custom) |
-| Git Integration | Full Git | ✅ Basic simulator |
-| Snippets Library | Configurable | ✅ Built-in templates |
+| Feature | Standard VS Code | CodeStudio |
+|---|---|---|
+| **Installation** | Required (~300MB download) | **Zero-Install Web** or Lightweight Desktop App |
+| **Startup Time** | 2–5 Seconds | **< 800ms Instant Startup** |
+| **Extensions Marketplace** | Proprietary Marketplace | **Curated Catalog + Open VSX Live Registry** |
+| **Built-in Webview Browser** | Complex configuration | **One-click Simple Browser with Localhost & Bookmarks** |
+| **Spreadsheet Viewer** | Third-party extension needed | **Built-in SheetJS (Excel, CSV, TSV, JSON)** |
+| **ZIP File Handling** | Manual extract required | **Built-in drag-and-drop extraction & export** |
+| **Carbon Code Snapshots** | Extension needed | **Built-in beautiful image generator** |
+| **Privacy & Telemetry** | Microsoft telemetry active | **100% Client-side, zero tracking, zero analytics** |
 
 ---
 
 ## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+Contributions, issues, and feature requests are welcome!
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ---
 
 ## 📜 License
-
-**MIT License** — Free for personal and commercial use.
+Distributed under the **MIT License**. Free for personal, commercial, and open-source use.
 
 ---
 
 <p align="center">
-  Made with ❤️ in India • Universal CodeStudio Editor
+  Crafted with ❤️ by <strong>SudhirDevOps</strong> • Universal CodeStudio Editor
 </p>
-
 <p align="center">
-  <strong>⭐ Star this repository if you found it useful!</strong>
+  <strong>⭐ Star this repository on GitHub if you love this project!</strong>
 </p>

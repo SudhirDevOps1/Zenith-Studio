@@ -3,11 +3,13 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useDialogStore } from '../../stores/useDialogStore';
 import { ContextMenuTarget } from '../../types/fileSystem';
 import { FileIcon } from './FileIcon';
+import { downloadFileItem } from '../../utils/fileUtils';
 import {
   ChevronRight,
   ChevronDown,
   FilePlus,
   FolderPlus,
+  FolderOpen,
   Trash2,
   Edit3,
   Copy,
@@ -37,6 +39,8 @@ export const FileTree: React.FC = () => {
     collapseAllFolders: collapseAllStoreFolders,
     resetToDefaultFiles,
     importFilesFromOS,
+    openSystemFolder,
+    openSystemFile,
   } = useFileStore();
 
   const { openDialog } = useDialogStore();
@@ -280,16 +284,23 @@ export const FileTree: React.FC = () => {
           <button
             onClick={() => showCreateFileDialog(null)}
             className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition"
-            title="New File (Root)"
+            title="New File"
           >
             <FilePlus className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => showCreateFolderDialog(null)}
             className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition"
-            title="New Folder (Root)"
+            title="New Folder"
           >
             <FolderPlus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={openSystemFolder}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 rounded transition"
+            title="Open Folder from System (Ctrl+Shift+O)"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={collapseAllFolders}
@@ -387,6 +398,26 @@ export const FileTree: React.FC = () => {
               <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
               <span>New Folder</span>
             </button>
+            <button
+              onClick={() => {
+                openSystemFile();
+                closeContextMenu();
+              }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+            >
+              <FilePlus className="w-3.5 h-3.5 text-blue-400" />
+              <span>Open File from System</span>
+            </button>
+            <button
+              onClick={() => {
+                openSystemFolder();
+                closeContextMenu();
+              }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Open Folder from System</span>
+            </button>
           </div>
 
           {/* Quick Starter Templates */}
@@ -445,13 +476,8 @@ export const FileTree: React.FC = () => {
               <button
                 onClick={() => {
                   const item = files.find(f => f.id === contextMenu.fileId);
-                  if (item && item.content) {
-                    const blob = new Blob([item.content], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = item.name;
-                    a.click();
+                  if (item) {
+                    downloadFileItem(item);
                   }
                   closeContextMenu();
                 }}

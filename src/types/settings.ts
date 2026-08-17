@@ -1,4 +1,14 @@
-export type ThemeMode = 'vs-dark' | 'light' | 'dracula' | 'nord' | 'monokai' | 'github-dark';
+export type ThemeMode =
+  | 'vs-dark'
+  | 'light'
+  | 'dracula'
+  | 'nord'
+  | 'monokai'
+  | 'github-dark'
+  | 'one-dark-pro'
+  | 'catppuccin'
+  | 'synthwave-84'
+  | 'tokyo-night';
 export type AccentColor = 'blue' | 'purple' | 'emerald' | 'amber' | 'rose' | 'cyan';
 
 export interface EditorSettings {

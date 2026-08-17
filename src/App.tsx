@@ -21,6 +21,7 @@ import { PdfPreview } from './components/preview/PdfPreview';
 import { SvgPreview } from './components/preview/SvgPreview';
 import { SpreadsheetPreview } from './components/preview/SpreadsheetPreview';
 import { MediaPreview } from './components/preview/MediaPreview';
+import { SimpleBrowserWebview } from './components/preview/SimpleBrowserWebview';
 import { StatusBar } from './components/statusbar/StatusBar';
 import { SettingsModal } from './components/ui/SettingsModal';
 import { CommandPalette } from './components/ui/CommandPalette';
@@ -29,6 +30,7 @@ import { ToastContainer } from './components/ui/ToastContainer';
 import { FindReplacePanel } from './components/ui/FindReplacePanel';
 import { IntegratedTerminal } from './components/ui/IntegratedTerminal';
 import { ShortcutsHelpModal } from './components/ui/ShortcutsHelpModal';
+import { QuickOpenModal } from './components/ui/QuickOpenModal';
 import { AppDialog } from './components/ui/AppDialog';
 import { CodeSnapshotModal } from './components/ui/CodeSnapshotModal';
 import { Code2, Terminal, X, PanelRightClose, PanelLeftClose, Image, FileText } from 'lucide-react';
@@ -44,6 +46,9 @@ export default function App() {
     saveCurrentFile,
     closeTab,
     activePreviewMode,
+    setActivePreviewMode,
+    openSystemFile,
+    openSystemFolder,
   } = useFileStore();
 
   const {
@@ -66,6 +71,7 @@ export default function App() {
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
+  const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
 
   const isDraggingSidebar = useRef(false);
   const isDraggingSplit = useRef(false);
@@ -89,6 +95,26 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault();
         setCommandPaletteOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        setQuickOpenMode('file');
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'g' || e.key === 'G')) {
+        e.preventDefault();
+        setQuickOpenMode('line');
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
+        e.preventDefault();
+        openSystemFolder();
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'o' || e.key === 'O')) {
+        e.preventDefault();
+        openSystemFile();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
+        e.preventDefault();
+        setSidebarOpen(true);
+        setActiveSidebarTab('extensions');
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'G' || e.key === 'g')) {
+        e.preventDefault();
+        setSidebarOpen(true);
+        setActiveSidebarTab('git');
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
         e.preventDefault();
         setSidebarOpen(true);
@@ -119,13 +145,14 @@ export default function App() {
         setCommandPaletteOpen(false);
         setShortcutsModalOpen(false);
         setSettingsOpen(false);
+        setQuickOpenMode(null);
         if (isZenMode) toggleZenMode();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode]);
+  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder]);
 
   // Mouse move resize handling
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -187,10 +214,11 @@ export default function App() {
   const isPdf = ext === 'pdf';
   const isSvg = ext === 'svg';
   const isSpreadsheet = ext === 'csv' || ext === 'tsv' || ext === 'json' || ext === 'xlsx' || ext === 'xls' || ext === 'xlsm';
-  const isTextCode = !isImage && !isAudio && !isVideo && !isPdf && !isSpreadsheet;
+  const isWebview = activePreviewMode === 'webview' || activePreviewMode === 'browser';
+  const isTextCode = !isImage && !isAudio && !isVideo && !isPdf && !isSpreadsheet && !isWebview;
 
-  const canPreview = isMarkdown || isHtml || isRunnable || isImage || isAudio || isVideo || isPdf || isSvg || isSpreadsheet;
-  const showPreview = activePreviewMode !== 'off' && canPreview;
+  const canPreview = isMarkdown || isHtml || isRunnable || isImage || isAudio || isVideo || isPdf || isSvg || isSpreadsheet || isWebview;
+  const showPreview = (activePreviewMode !== 'off' && canPreview) || isWebview;
 
   // Get image source for image preview
   const getImageSrc = () => {
@@ -264,6 +292,8 @@ export default function App() {
                       extension={activeFile.extension || ''}
                       onChange={(val) => updateFileContent(activeFile.id, val)}
                       onScrollPercentage={setScrollPercentage}
+                      editorRef={editorRef}
+                      monacoRef={monacoRef}
                     />
                   </div>
                 )}
@@ -289,6 +319,7 @@ export default function App() {
                       <MarkdownPreview
                         content={content}
                         scrollPercentage={scrollPercentage}
+                        extension={ext}
                       />
                     )}
                     {isHtml && <HtmlPreview htmlContent={content} />}
@@ -311,6 +342,7 @@ export default function App() {
                         type={ext === 'json' ? 'json' : ext === 'tsv' ? 'tsv' : ext === 'xlsx' ? 'xlsx' : ext === 'xls' ? 'xls' : ext === 'xlsm' ? 'xlsm' : 'csv'}
                       />
                     )}
+                    {isWebview && <SimpleBrowserWebview onClose={() => setActivePreviewMode('auto')} />}
                   </div>
                 )}
 
@@ -398,12 +430,18 @@ export default function App() {
       </div>
 
       {/* Bottom Status Bar */}
-      {!isZenMode && <StatusBar />}
+      {!isZenMode && <StatusBar onOpenGoToLine={() => setQuickOpenMode('line')} />}
 
       {/* Dialog Modals */}
       <SettingsModal />
       <CommandPalette />
       <ShortcutsHelpModal />
+      <QuickOpenModal
+        isOpen={quickOpenMode !== null}
+        onClose={() => setQuickOpenMode(null)}
+        initialMode={quickOpenMode || 'file'}
+        editorRef={editorRef}
+      />
       <ToastContainer />
       <CodeSnapshotModal
         isOpen={showSnapshot}

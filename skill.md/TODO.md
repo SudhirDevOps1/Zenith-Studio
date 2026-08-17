@@ -1,0 +1,32 @@
+# ✅ TODO (CodeStudio Project Task Tracking)
+
+> Keep this updated. Mark completed items with `[x]` and pending with `[ ]`.
+
+## Completed Core Deliverables (v1.0.0 Production)
+- [x] Monaco Editor Integration (100+ languages, minimap, formatting, find/replace, local offline bundle).
+- [x] Quick Open File Switcher (`Ctrl+P`) with fuzzy filtering & instant file hopping.
+- [x] Go to Line Number (`Ctrl+G` or `:line`) with automated cursor position & reveal in center.
+- [x] Global Workspace Search & Replace (`Ctrl+Shift+F`) with Regex, Case, Whole Word, & Replace All.
+- [x] Interactive Status Bar Click Controls (Tab size picker, Word Wrap toggle, Line jumper, Settings).
+- [x] File Tree Drag & Drop moving with folder target highlighting.
+- [x] Extensions Marketplace with local catalog & live Open VSX API registry (`Ctrl+Shift+X`).
+- [x] 10 Editor Color Themes & 6 Accent Colors (One Dark Pro, Catppuccin, Tokyo Night, SynthWave '84, etc.).
+- [x] System File & Folder Opening (`Ctrl+O`, `Ctrl+Shift+O`) via native OS Dialog & File System Access API.
+- [x] Simple Browser & Webview with Internet & Localhost dev server access.
+- [x] Integrated Terminal with live workspace commands (`ls`, `cat`, `touch`, `rm`, `open`, `eval`).
+- [x] Multi-Language Execution (JS/TS with type stripping, Python Pyodide, native C/C++ GCC).
+- [x] Markdown Live Preview with interactive standalone Mermaid diagram rendering.
+- [x] Spreadsheet Viewer (Excel `.xlsx`, `.xls`, `.xlsm`, CSV, TSV, JSON) with binary-safe export.
+- [x] Media & PDF Viewer (Images, Audio, Video, PDF render).
+- [x] Git & Source Control panel (Diff viewer, Commit logs, Staged/Unstaged changes).
+- [x] Production Singlefile Web Bundle (`npm run build`).
+- [x] Desktop Setup Installer & Portable build (`npm run electron:build`).
+- [x] Live Deployment on Cloudflare Pages (`https://codestudio-web-app.pages.dev/`).
+
+## Future Enhancements
+- [ ] Collaborative Real-Time Editing with WebRTC / WebSockets.
+- [ ] Language Server Protocol (LSP) Worker bridge.
+- [ ] Cloud workspace synchronization with Supabase/PostgreSQL.
+
+---
+**Linked Files:** [MANIFEST.md](MANIFEST.md) | [CHANGELOG.md](CHANGELOG.md) | [brain.md](brain.md)

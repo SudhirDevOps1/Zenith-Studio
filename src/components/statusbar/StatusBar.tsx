@@ -1,16 +1,23 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { getLanguageFromExtension, isElectron } from '../../utils/fileUtils';
-import { Terminal, Check, RefreshCw, Cpu, HardDrive, Columns, Maximize2, FileCode2 } from 'lucide-react';
+import { Terminal, Check, RefreshCw, Cpu, HardDrive, FileCode2, WrapText } from 'lucide-react';
 
-export const StatusBar: React.FC = () => {
-  const { files, activeFileId, saveCurrentFile, setActivePreviewMode, activePreviewMode } = useFileStore();
-  const { settings, toggleZenMode, setCommandPaletteOpen } = useSettingsStore();
+interface StatusBarProps {
+  onOpenGoToLine?: () => void;
+}
+
+export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
+  const { files, activeFileId, saveCurrentFile } = useFileStore();
+  const { settings, toggleZenMode, setCommandPaletteOpen, updateSettings, setSettingsOpen } = useSettingsStore();
   const { addToast } = useToastStore();
 
-  const activeFile = files.find(f => f.id === activeFileId);
+  const [showIndentMenu, setShowIndentMenu] = useState(false);
+  const indentMenuRef = useRef<HTMLDivElement>(null);
+
+  const activeFile = files.find((f) => f.id === activeFileId);
   const language = activeFile ? getLanguageFromExtension(activeFile.extension || '') : 'Plain Text';
   const charCount = activeFile?.content?.length || 0;
   const lineCount = activeFile?.content ? activeFile.content.split('\n').length : 0;
@@ -21,8 +28,20 @@ export const StatusBar: React.FC = () => {
     addToast({ type: 'success', title: 'File Saved', message: `Saved ${activeFile?.name || 'file'} to local storage.` });
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (indentMenuRef.current && !indentMenuRef.current.contains(e.target as Node)) {
+        setShowIndentMenu(false);
+      }
+    };
+    if (showIndentMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showIndentMenu]);
+
   return (
-    <div className="h-6 bg-[#007acc] text-white flex items-center justify-between px-3 text-[11px] font-mono select-none shrink-0 z-20">
+    <div className="h-6 bg-[#007acc] text-white flex items-center justify-between px-3 text-[11px] font-mono select-none shrink-0 z-20 relative">
       {/* Left items */}
       <div className="flex items-center gap-3">
         <button
@@ -35,22 +54,27 @@ export const StatusBar: React.FC = () => {
         </button>
 
         {activeFile && (
-          <div className="flex items-center gap-2 text-blue-100">
+          <button
+            onClick={onOpenGoToLine}
+            className="flex items-center gap-2 text-blue-100 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition cursor-pointer"
+            title="Go to Line (Ctrl+G)"
+          >
             <span className="flex items-center gap-1">
-              <FileCode2 className="w-3 h-3" /> Lines: {lineCount}
+              <FileCode2 className="w-3 h-3 text-cyan-200" /> Ln {lineCount}
             </span>
-            <span>Chars: {charCount}</span>
-          </div>
+            <span>Col 1</span>
+            <span className="text-blue-200">({charCount} chars)</span>
+          </button>
         )}
       </div>
 
       {/* Right items */}
-      <div className="flex items-center gap-3 text-blue-100">
+      <div className="flex items-center gap-2.5 text-blue-100 relative">
         {activeFile && (
           <div className="flex items-center gap-1 cursor-pointer hover:bg-white/10 px-1.5 py-0.5 rounded transition" onClick={handleSave}>
             {activeFile.isModified ? (
-              <span className="flex items-center gap-1 text-amber-200">
-                <RefreshCw className="w-3 h-3 animate-spin-slow" /> Unsaved — Click to Save
+              <span className="flex items-center gap-1 text-amber-200 font-semibold">
+                <RefreshCw className="w-3 h-3 animate-spin-slow" /> Unsaved (Ctrl+S)
               </span>
             ) : (
               <span className="flex items-center gap-1 text-emerald-200">
@@ -60,41 +84,66 @@ export const StatusBar: React.FC = () => {
           </div>
         )}
 
-        <span className="cursor-pointer hover:bg-white/10 px-1.5 py-0.5 rounded transition">Spaces: {settings.tabSize}</span>
+        {/* Indent & Wrap Selector */}
+        <div className="relative" ref={indentMenuRef}>
+          <button
+            onClick={() => setShowIndentMenu(!showIndentMenu)}
+            className="cursor-pointer hover:bg-white/15 px-1.5 py-0.5 rounded transition flex items-center gap-1"
+            title="Change Indentation and Wrap"
+          >
+            <span>Spaces: {settings.tabSize}</span>
+          </button>
+
+          {showIndentMenu && (
+            <div className="absolute right-0 bottom-full mb-1 w-44 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded-lg py-1 z-50 text-slate-200 text-xs font-sans">
+              <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                Indentation Size
+              </div>
+              <button
+                onClick={() => {
+                  updateSettings({ tabSize: 2 });
+                  setShowIndentMenu(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white transition ${settings.tabSize === 2 ? 'text-cyan-400 font-semibold' : ''}`}
+              >
+                2 Spaces
+              </button>
+              <button
+                onClick={() => {
+                  updateSettings({ tabSize: 4 });
+                  setShowIndentMenu(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white transition ${settings.tabSize === 4 ? 'text-cyan-400 font-semibold' : ''}`}
+              >
+                4 Spaces
+              </button>
+              <div className="border-t border-slate-800 my-1" />
+              <button
+                onClick={() => {
+                  updateSettings({ wordWrap: settings.wordWrap === 'on' ? 'off' : 'on' });
+                  setShowIndentMenu(false);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-blue-600 hover:text-white transition flex items-center justify-between"
+              >
+                <span className="flex items-center gap-1.5">
+                  <WrapText className="w-3.5 h-3.5 text-amber-400" /> Word Wrap
+                </span>
+                <span className="text-[10px] text-slate-400">{settings.wordWrap === 'on' ? 'ON' : 'OFF'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         <span>UTF-8</span>
 
         {/* Language Badge */}
-        <span
+        <button
+          onClick={() => setSettingsOpen(true)}
           className="uppercase font-semibold bg-white/20 px-1.5 py-0.5 rounded text-[10px] cursor-pointer hover:bg-white/30 transition"
-          title={`Editing in ${language}`}
+          title={`Language: ${language}. Click to configure settings`}
         >
           {language}
-        </span>
-
-        {/* Split View Indicators */}
-        {activeFile && (activeFile.extension === 'md' || activeFile.extension === 'html' || activeFile.extension === 'js' || activeFile.extension === 'ts') && (
-          <>
-            <button
-              onClick={() => setActivePreviewMode(activePreviewMode === 'off' ? 'auto' : 'off')}
-              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] transition ${
-                activePreviewMode !== 'off' ? 'bg-white/30 font-bold' : 'bg-white/10 hover:bg-white/20'
-              }`}
-              title={activePreviewMode === 'off' ? 'Enable Preview' : 'Disable Preview'}
-            >
-              <Columns className="w-3 h-3" />
-              Preview
-            </button>
-            <button
-              onClick={() => setActivePreviewMode(activePreviewMode === 'split-edit' ? 'auto' : 'split-edit')}
-              className={`px-1.5 py-0.5 rounded text-[10px] transition ${
-                activePreviewMode === 'split-edit' ? 'bg-white/30 font-bold' : 'bg-white/10 hover:bg-white/20'
-              }`}
-              title="Split Code & Preview"
-            >
-              <Maximize2 className="w-3 h-3 inline" />
-            </button>
-          </>
-        )}
+        </button>
 
         {/* Zen Mode */}
         <button

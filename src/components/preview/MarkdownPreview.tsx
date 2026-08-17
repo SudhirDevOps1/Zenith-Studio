@@ -9,11 +9,18 @@ import { Printer, Copy, Check } from 'lucide-react';
 interface MarkdownPreviewProps {
   content: string;
   scrollPercentage?: number;
+  extension?: string;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, scrollPercentage }) => {
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, scrollPercentage, extension }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedCode, setCopiedCode] = React.useState<string | null>(null);
+
+  const trimmed = content.trim();
+  const isPureMermaid =
+    extension === 'mermaid' ||
+    extension === 'mmd' ||
+    /^(sequenceDiagram|graph\s|flowchart\s|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap)/i.test(trimmed);
 
   // Sync scroll from Monaco editor
   useEffect(() => {
@@ -86,10 +93,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, scrol
         ref={containerRef}
         className="flex-1 overflow-y-auto p-6 space-y-4 markdown-body text-slate-300 font-sans leading-relaxed selection:bg-blue-600 selection:text-white"
       >
-        {content.trim() === '' ? (
+        {trimmed === '' ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm italic">
-            <span>Empty Markdown Document</span>
-            <span className="text-xs text-slate-600 mt-1">Start typing in the editor to render formatted live markdown</span>
+            <span>Empty Document</span>
+            <span className="text-xs text-slate-600 mt-1">Start typing in the editor to render live preview</span>
+          </div>
+        ) : isPureMermaid ? (
+          <div className="max-w-4xl mx-auto py-4">
+            <MermaidRenderer code={trimmed} />
           </div>
         ) : (
           <ReactMarkdown

@@ -9,6 +9,7 @@ import {
   Palette,
   Shield,
   FilePlus,
+  FolderPlus,
   FolderOpen,
   Upload,
   Globe,
@@ -20,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export const WelcomeScreen: React.FC = () => {
-  const { createFile, createFolder, files, openFileInTab, importFilesFromOS } = useFileStore();
+  const { createFile, createFolder, files, openFileInTab, importFilesFromOS, openSystemFolder, openSystemFile } = useFileStore();
   const { openDialog } = useDialogStore();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
@@ -126,10 +127,12 @@ export const WelcomeScreen: React.FC = () => {
 
   const shortcuts = [
     { keys: 'Ctrl+Shift+P', label: 'Command Palette' },
+    { keys: 'Ctrl+Shift+O', label: 'Open Folder from System' },
+    { keys: 'Ctrl+O', label: 'Open File' },
     { keys: 'Ctrl+S', label: 'Save File' },
     { keys: 'Ctrl+W', label: 'Close Tab' },
     { keys: 'Ctrl+F', label: 'Find & Replace' },
-    { keys: 'Ctrl+Shift+E', label: 'Explorer' },
+    { keys: 'Ctrl+`', label: 'Toggle Terminal' },
   ];
 
   return (
@@ -164,6 +167,20 @@ export const WelcomeScreen: React.FC = () => {
         {/* Quick Actions */}
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <button
+            onClick={openSystemFolder}
+            className="group flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 border border-blue-500 rounded-lg text-xs font-semibold text-white transition shadow-lg shadow-blue-600/30 hover:shadow-xl"
+          >
+            <FolderOpen className="w-4 h-4 text-white group-hover:scale-110 transition" />
+            <span>Open Folder...</span>
+          </button>
+          <button
+            onClick={openSystemFile}
+            className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
+          >
+            <FileText className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition" />
+            <span>Open File...</span>
+          </button>
+          <button
             onClick={handleCreateFile}
             className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
           >
@@ -174,7 +191,7 @@ export const WelcomeScreen: React.FC = () => {
             onClick={handleCreateFolder}
             className="group flex items-center gap-2 px-4 py-2.5 bg-[#1e1e2e] hover:bg-[#252535] border border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-300 hover:text-white transition shadow-md hover:shadow-lg"
           >
-            <FolderOpen className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
+            <FolderPlus className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
             <span>New Folder</span>
           </button>
           <button

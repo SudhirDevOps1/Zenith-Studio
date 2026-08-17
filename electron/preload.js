@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   saveFile: (data) => ipcRenderer.invoke('fs:saveFile', data),
   runNativeCode: (data) => ipcRenderer.invoke('code:runNative', data),
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),

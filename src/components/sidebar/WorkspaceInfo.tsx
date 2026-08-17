@@ -41,7 +41,15 @@ export const WorkspaceInfo: React.FC = () => {
           <p className="text-[11px] text-slate-400 leading-relaxed">
             Official CodeStudio repository configured for GitHub profile SudhirDevOps1.
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href="https://codestudio-web-app.pages.dev/"
+              target="_blank"
+              rel="noreferrer"
+              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded text-[10px] text-white font-medium transition flex items-center gap-1 shadow-sm"
+            >
+              <Globe className="w-3 h-3" /> Live Web App
+            </a>
             <a
               href="https://github.com/SudhirDevOps1"
               target="_blank"

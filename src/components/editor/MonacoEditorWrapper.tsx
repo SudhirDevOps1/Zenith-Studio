@@ -1,9 +1,14 @@
 import React, { useRef, useEffect } from 'react';
-import Editor, { OnMount, OnChange } from '@monaco-editor/react';
+import Editor, { OnMount, OnChange, loader } from '@monaco-editor/react';
+import * as monacoInstance from 'monaco-editor';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
 import { getLanguageFromExtension } from '../../utils/fileUtils';
 import { registerCustomThemes } from './monacoThemes';
+import { Loader2 } from 'lucide-react';
+
+// Configure local monaco bundle (offline & Electron safe, 0 CDN dependency)
+loader.config({ monaco: monacoInstance });
 
 interface MonacoEditorWrapperProps {
   fileId: string;
@@ -11,6 +16,8 @@ interface MonacoEditorWrapperProps {
   extension: string;
   onChange: (value: string) => void;
   onScrollPercentage?: (percentage: number) => void;
+  editorRef?: React.MutableRefObject<any>;
+  monacoRef?: React.MutableRefObject<any>;
 }
 
 export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
@@ -19,6 +26,8 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
   extension,
   onChange,
   onScrollPercentage,
+  editorRef: parentEditorRef,
+  monacoRef: parentMonacoRef,
 }) => {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
@@ -35,6 +44,8 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    if (parentEditorRef) parentEditorRef.current = editor;
+    if (parentMonacoRef) parentMonacoRef.current = monaco;
 
     // Custom keybinding for Ctrl+S / Cmd+S
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
@@ -78,29 +89,24 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
     };
   }, [fileId]);
 
-  const themeMap: Record<string, string> = {
-    'vs-dark': 'vs-dark',
-    'light': 'light',
-    'dracula': 'dracula',
-    'nord': 'nord',
-    'monokai': 'monokai',
-    'github-dark': 'github-dark',
-  };
-
-  const currentTheme = themeMap[settings.theme] || 'vs-dark';
-
   return (
-    <div className="w-full h-full overflow-hidden relative">
+    <div className="w-full h-full overflow-hidden relative bg-[#14141f]">
       <Editor
         height="100%"
         path={fileId}
         defaultLanguage={language}
         language={language}
         value={content}
-        theme={currentTheme}
+        theme={settings.theme || 'vs-dark'}
         beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
         onChange={handleChange}
+        loading={
+          <div className="flex flex-col items-center justify-center h-full bg-[#14141f] text-slate-400 gap-2 font-sans">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <span className="text-xs font-mono text-slate-400">Initializing Monaco Editor...</span>
+          </div>
+        }
         options={{
           fontSize: settings.fontSize,
           fontFamily: settings.fontFamily,

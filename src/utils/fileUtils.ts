@@ -321,16 +321,37 @@ console.log("✅ Code execution completed successfully!");
 export const createZipFromFiles = async (files: FileItem[]): Promise<Blob> => {
   const zip = new JSZip();
 
-  const fileMap = new Map<string, FileItem>();
-  files.forEach(f => fileMap.set(f.id, f));
-
   files.forEach(file => {
     if (file.type === 'file') {
-      zip.file(file.path, file.content || '');
+      const content = file.content || '';
+      if (content.startsWith('data:') && content.includes(';base64,')) {
+        const base64Data = content.split(';base64,')[1];
+        zip.file(file.path, base64Data, { base64: true });
+      } else {
+        zip.file(file.path, content);
+      }
     } else if (file.type === 'folder') {
       zip.folder(file.path);
     }
   });
 
   return await zip.generateAsync({ type: 'blob' });
+};
+
+// Helper to trigger browser download for any file item (text or binary Data URL)
+export const downloadFileItem = (file: FileItem) => {
+  const content = file.content ?? '';
+  const a = document.createElement('a');
+  a.download = file.name;
+
+  if (content.startsWith('data:')) {
+    a.href = content;
+    a.click();
+  } else {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 };

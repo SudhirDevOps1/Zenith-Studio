@@ -29,19 +29,44 @@ export const AdvancedCodeRunner: React.FC<AdvancedCodeRunnerProps> = ({ code, ex
     setLogs((prev) => [...prev, { id: `${Date.now()}_${Math.random()}`, type, text }]);
   };
 
+  const formatArg = (arg: any): string => {
+    if (arg === null) return 'null';
+    if (arg === undefined) return 'undefined';
+    if (typeof arg === 'object') {
+      try {
+        return JSON.stringify(arg, null, 2);
+      } catch {
+        return String(arg);
+      }
+    }
+    return String(arg);
+  };
+
+  const stripTypeScript = (src: string): string => {
+    return src
+      .replace(/interface\s+\w+\s*\{[\s\S]*?\}/g, '')
+      .replace(/type\s+\w+\s*=[\s\S]*?;/g, '')
+      .replace(/:\s*(string|number|boolean|any|void|unknown|never|Record<[\w\s,]+>|\w+\[\]|\w+)\b/g, '')
+      .replace(/\bas\s+(string|number|boolean|any|unknown|\w+)\b/g, '');
+  };
+
   const runJavaScript = async () => {
     const captured: string[] = [];
     const customConsole = {
-      log: (...args: any[]) => captured.push(args.map(String).join(' ')),
-      error: (...args: any[]) => captured.push(`ERROR: ${args.map(String).join(' ')}`),
-      warn: (...args: any[]) => captured.push(`WARN: ${args.map(String).join(' ')}`),
+      log: (...args: any[]) => captured.push(args.map(formatArg).join(' ')),
+      error: (...args: any[]) => captured.push(`ERROR: ${args.map(formatArg).join(' ')}`),
+      warn: (...args: any[]) => captured.push(`WARN: ${args.map(formatArg).join(' ')}`),
+      info: (...args: any[]) => captured.push(`INFO: ${args.map(formatArg).join(' ')}`),
     };
 
     try {
       const start = performance.now();
-      new Function('console', code)(customConsole);
+      const executableCode = ['ts', 'tsx', 'mts', 'cts'].includes(extension.toLowerCase())
+        ? stripTypeScript(code)
+        : code;
+      new Function('console', executableCode)(customConsole);
       const elapsed = (performance.now() - start).toFixed(2);
-      captured.forEach((line) => addLog(line.startsWith('ERROR') ? 'err' : 'out', line));
+      captured.forEach((line) => addLog(line.startsWith('ERROR') ? 'err' : line.startsWith('WARN') ? 'info' : 'out', line));
       addLog('info', `Completed in ${elapsed} ms`);
     } catch (err: any) {
       addLog('err', `${err.name}: ${err.message}`);
@@ -139,7 +164,7 @@ result = (_stdout.getvalue(), _stderr.getvalue())
     addLog('info', `Running ${fileName}...`);
     const ext = extension.toLowerCase();
     try {
-      if (['js', 'jsx', 'mjs', 'cjs'].includes(ext)) await runJavaScript();
+      if (['js', 'jsx', 'mjs', 'cjs', 'ts', 'tsx', 'mts', 'cts'].includes(ext)) await runJavaScript();
       else if (['py'].includes(ext)) await runPythonWithPyodide();
       else if (['c', 'cpp', 'cc', 'cxx'].includes(ext)) await runNativeCompiler();
       else await runCloudflareSandbox();

@@ -71,13 +71,38 @@ export const SpreadsheetPreview: React.FC<SpreadsheetPreviewProps> = ({
   }, [content, type]);
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
     a.download = fileName || `data.${type}`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    if (content.startsWith('data:')) {
+      a.href = content;
+      a.click();
+    } else if (type === 'xlsx' || type === 'xls' || type === 'xlsm') {
+      try {
+        const base64 = content.includes(',') ? content.split(',')[1] : content;
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch {
+        a.href = `data:application/octet-stream;base64,${content}`;
+        a.click();
+      }
+    } else {
+      const mimeType = type === 'json' ? 'application/json' : 'text/plain;charset=utf-8';
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   };
 
   return (

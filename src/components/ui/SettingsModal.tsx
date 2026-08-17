@@ -70,6 +70,10 @@ export const SettingsModal: React.FC = () => {
               className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white outline-none focus:border-blue-500 transition font-mono"
             >
               <option value="vs-dark">VS Code Dark (Default)</option>
+              <option value="one-dark-pro">One Dark Pro (Atom / Marketplace)</option>
+              <option value="catppuccin">Catppuccin Macchiato (Marketplace)</option>
+              <option value="tokyo-night">Tokyo Night (Marketplace)</option>
+              <option value="synthwave-84">SynthWave '84 (Neon Glow / Marketplace)</option>
               <option value="dracula">Dracula Official</option>
               <option value="nord">Nord Arctic</option>
               <option value="monokai">Monokai Pro</option>

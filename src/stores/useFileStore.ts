@@ -38,6 +38,9 @@ interface FileStoreState {
   resetToDefaultFiles: () => Promise<void>;
   importFilesFromOS: (fileList: FileList, targetParentId?: string | null) => Promise<void>;
   importZipFile: (file: File, targetParentId?: string | null) => Promise<void>;
+  openSystemFolder: () => Promise<void>;
+  openSystemFile: () => Promise<void>;
+  openFolderFromWeb: (files: FileList) => Promise<void>;
 }
 
 export const useFileStore = create<FileStoreState>((set, get) => ({
@@ -504,5 +507,286 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
         message: 'Failed to extract ZIP file.',
       });
     }
+  },
+
+  openSystemFolder: async () => {
+    const { addToast } = useToastStore.getState();
+
+    // Electron Desktop Mode
+    if (isElectron()) {
+      try {
+        const result = await (window as any).electronAPI.openFolderDialog();
+        if (!result || !result.files || result.files.length === 0) return;
+
+        await saveFilesToStorage(result.files);
+        set({
+          files: result.files,
+          openTabs: [],
+          activeFileId: null,
+        });
+
+        const firstFile = result.files.find((f: FileItem) => f.type === 'file');
+        if (firstFile) {
+          get().openFileInTab(firstFile.id);
+        }
+
+        addToast({
+          type: 'success',
+          title: 'Folder Opened',
+          message: `Loaded ${result.folderName || 'folder'} (${result.files.length} items).`,
+        });
+      } catch (err: any) {
+        console.error('Failed to open native folder:', err);
+        addToast({
+          type: 'error',
+          title: 'Open Folder Failed',
+          message: err.message || 'Could not open folder.',
+        });
+      }
+      return;
+    }
+
+    // Modern Web Browser with File System Access API (showDirectoryPicker)
+    if ('showDirectoryPicker' in window) {
+      try {
+        const dirHandle = await (window as any).showDirectoryPicker();
+        const collectedFiles: FileItem[] = [];
+
+        async function readDirHandle(handle: any, parentPath = '', parentId: string | null = null) {
+          for await (const entry of handle.values()) {
+            const currentPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+            const id = `web_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+            if (entry.kind === 'directory') {
+              if (['node_modules', '.git', 'dist', '.cache'].includes(entry.name)) continue;
+
+              collectedFiles.push({
+                id,
+                name: entry.name,
+                path: currentPath,
+                type: 'folder',
+                parentId,
+                isExpanded: !parentPath,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              });
+              await readDirHandle(entry, currentPath, id);
+            } else if (entry.kind === 'file') {
+              const fileData = await entry.getFile();
+              const ext = getFileExtension(entry.name);
+              const lower = entry.name.toLowerCase();
+              const isBinary =
+                fileData.type.startsWith('image/') ||
+                fileData.type.startsWith('audio/') ||
+                fileData.type.startsWith('video/') ||
+                fileData.type === 'application/pdf' ||
+                lower.endsWith('.pdf') ||
+                lower.endsWith('.xlsx') ||
+                lower.endsWith('.xls') ||
+                lower.endsWith('.xlsm');
+
+              let content = '';
+              if (isBinary) {
+                content = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = (e) => resolve(e.target?.result as string);
+                  reader.readAsDataURL(fileData);
+                });
+              } else {
+                content = await fileData.text();
+              }
+
+              collectedFiles.push({
+                id,
+                name: entry.name,
+                path: currentPath,
+                type: 'file',
+                parentId,
+                extension: ext,
+                content,
+                isModified: false,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              });
+            }
+          }
+        }
+
+        await readDirHandle(dirHandle);
+
+        if (collectedFiles.length > 0) {
+          await saveFilesToStorage(collectedFiles);
+          set({
+            files: collectedFiles,
+            openTabs: [],
+            activeFileId: null,
+          });
+
+          const firstFile = collectedFiles.find(f => f.type === 'file');
+          if (firstFile) {
+            get().openFileInTab(firstFile.id);
+          }
+
+          addToast({
+            type: 'success',
+            title: 'Folder Opened',
+            message: `Loaded ${dirHandle.name} (${collectedFiles.length} items).`,
+          });
+        }
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return; // User cancelled picker
+        console.warn('showDirectoryPicker error, falling back to input:', err);
+      }
+    }
+
+    // Fallback: directory picker via input webkitdirectory
+    const input = document.createElement('input');
+    input.type = 'file';
+    (input as any).webkitdirectory = true;
+    (input as any).directory = true;
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const fileList: FileList = e.target.files;
+      if (fileList && fileList.length > 0) {
+        await get().openFolderFromWeb(fileList);
+      }
+    };
+    input.click();
+  },
+
+  openFolderFromWeb: async (fileList: FileList) => {
+    const { addToast } = useToastStore.getState();
+    const folderMap = new Map<string, string>(); // path -> id
+    const items: FileItem[] = [];
+
+    // First ensure folder records exist
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      const relPath = file.webkitRelativePath || file.name;
+      const parts = relPath.split('/');
+
+      // Create folder hierarchy
+      let accumulatedPath = '';
+      let currentParentId: string | null = null;
+
+      for (let p = 0; p < parts.length - 1; p++) {
+        const folderName = parts[p];
+        accumulatedPath = accumulatedPath ? `${accumulatedPath}/${folderName}` : folderName;
+
+        if (['node_modules', '.git', 'dist'].includes(folderName)) break;
+
+        if (!folderMap.has(accumulatedPath)) {
+          const folderId = `folder_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+          folderMap.set(accumulatedPath, folderId);
+          items.push({
+            id: folderId,
+            name: folderName,
+            path: accumulatedPath,
+            type: 'folder',
+            parentId: currentParentId,
+            isExpanded: p <= 1,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+        currentParentId = folderMap.get(accumulatedPath) || null;
+      }
+
+      // Add file
+      const fileName = parts[parts.length - 1];
+      const ext = getFileExtension(fileName);
+      const lower = fileName.toLowerCase();
+      const isBinary =
+        file.type.startsWith('image/') ||
+        file.type.startsWith('audio/') ||
+        file.type.startsWith('video/') ||
+        file.type === 'application/pdf' ||
+        lower.endsWith('.pdf') ||
+        lower.endsWith('.xlsx') ||
+        lower.endsWith('.xls') ||
+        lower.endsWith('.xlsm');
+
+      let content = '';
+      if (isBinary) {
+        content = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+      } else {
+        content = await file.text();
+      }
+
+      const fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      items.push({
+        id: fileId,
+        name: fileName,
+        path: relPath,
+        type: 'file',
+        parentId: currentParentId,
+        extension: ext,
+        content,
+        isModified: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    if (items.length > 0) {
+      await saveFilesToStorage(items);
+      set({ files: items, openTabs: [], activeFileId: null });
+      const firstFile = items.find(f => f.type === 'file');
+      if (firstFile) {
+        get().openFileInTab(firstFile.id);
+      }
+      addToast({
+        type: 'success',
+        title: 'Folder Opened',
+        message: `Loaded ${fileList.length} files into workspace.`,
+      });
+    }
+  },
+
+  openSystemFile: async () => {
+    const { addToast } = useToastStore.getState();
+
+    // Electron Desktop Mode
+    if (isElectron()) {
+      try {
+        const result = await (window as any).electronAPI.openFileDialog();
+        if (!result) return;
+
+        const { createFile, openFileInTab, files } = get();
+        const existing = files.find(f => f.name === result.name && f.parentId === null);
+        if (existing) {
+          get().updateFileContent(existing.id, result.content);
+          openFileInTab(existing.id);
+        } else {
+          const newId = createFile(result.name, null, result.content);
+          openFileInTab(newId);
+        }
+        addToast({
+          type: 'success',
+          title: 'File Opened',
+          message: `Opened ${result.name}.`,
+        });
+      } catch (err: any) {
+        console.error('Failed to open native file:', err);
+      }
+      return;
+    }
+
+    // Web Browser Open File
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = false;
+    input.onchange = async (e: any) => {
+      const fileList: FileList = e.target.files;
+      if (fileList && fileList.length > 0) {
+        await get().importFilesFromOS(fileList, null);
+      }
+    };
+    input.click();
   },
 }));

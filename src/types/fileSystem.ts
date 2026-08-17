@@ -23,7 +23,7 @@ export interface OpenTab {
   cursorPosition?: { lineNumber: number; column: number };
 }
 
-export type ActivePreviewMode = 'auto' | 'markdown' | 'html' | 'js-sandbox' | 'split-edit' | 'preview-only' | 'off';
+export type ActivePreviewMode = 'auto' | 'markdown' | 'html' | 'js-sandbox' | 'split-edit' | 'preview-only' | 'webview' | 'browser' | 'off';
 
 export interface ContextMenuTarget {
   x: number;

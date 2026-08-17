@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
+import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useDialogStore } from '../../stores/useDialogStore';
 import { ThemeMode } from '../../types/settings';
 import { createZipFromFiles } from '../../utils/fileUtils';
@@ -16,6 +17,8 @@ import {
   Sun,
   X,
   Layers,
+  Blocks,
+  Globe,
 } from 'lucide-react';
 
 interface CommandItem {
@@ -28,14 +31,91 @@ interface CommandItem {
 }
 
 export const CommandPalette: React.FC = () => {
-  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings } = useSettingsStore();
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, setActivePreviewMode } = useFileStore();
+  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab } = useSettingsStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
+  const { setActiveTab } = useExtensionStore();
   const { openDialog } = useDialogStore();
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const commands: CommandItem[] = [
+    {
+      id: 'open-webview',
+      title: 'Simple Browser: Show / Open Webview (Internet & Localhost)',
+      category: 'View',
+      icon: <Globe className="w-4 h-4 text-emerald-400" />,
+      action: () => {
+        setActivePreviewMode('webview');
+      },
+    },
+    {
+      id: 'open-extensions',
+      title: 'Extensions: Open Extensions Marketplace',
+      category: 'Extensions',
+      icon: <Blocks className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+Shift+X',
+      action: () => {
+        setActiveSidebarTab('extensions');
+        setActiveTab('marketplace');
+      },
+    },
+    {
+      id: 'show-installed-extensions',
+      title: 'Extensions: Show Installed Extensions',
+      category: 'Extensions',
+      icon: <Blocks className="w-4 h-4 text-emerald-400" />,
+      action: () => {
+        setActiveSidebarTab('extensions');
+        setActiveTab('installed');
+      },
+    },
+    {
+      id: 'quick-open',
+      title: 'File: Quick Open, Go to File...',
+      category: 'File Operations',
+      icon: <FilePlus className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+P',
+      action: () => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', ctrlKey: true }));
+      },
+    },
+    {
+      id: 'goto-line',
+      title: 'Go to Line Number in Editor (:line)...',
+      category: 'Navigation',
+      icon: <Terminal className="w-4 h-4 text-amber-400" />,
+      shortcut: 'Ctrl+G',
+      action: () => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', ctrlKey: true }));
+      },
+    },
+    {
+      id: 'workspace-search',
+      title: 'Search: Find and Replace in Files',
+      category: 'Search',
+      icon: <Terminal className="w-4 h-4 text-blue-400" />,
+      shortcut: 'Ctrl+Shift+F',
+      action: () => {
+        setActiveSidebarTab('search');
+      },
+    },
+    {
+      id: 'open-file',
+      title: 'Open File from System...',
+      category: 'File Operations',
+      icon: <FilePlus className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+O',
+      action: () => openSystemFile(),
+    },
+    {
+      id: 'open-folder',
+      title: 'Open Folder from System...',
+      category: 'File Operations',
+      icon: <FolderPlus className="w-4 h-4 text-indigo-400" />,
+      shortcut: 'Ctrl+Shift+O',
+      action: () => openSystemFolder(),
+    },
     {
       id: 'new-file',
       title: 'Create New File',

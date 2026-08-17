@@ -1,6 +1,6 @@
-import React from 'react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
+import { useExtensionStore } from '../../stores/useExtensionStore';
 import { createZipFromFiles, isElectron } from '../../utils/fileUtils';
 import {
   Files,
@@ -16,7 +16,7 @@ import {
   GitBranch,
   Sparkles,
   Keyboard,
-  PackagePlus,
+  Blocks,
 } from 'lucide-react';
 
 export const ActivityBar: React.FC = () => {
@@ -48,6 +48,7 @@ export const ActivityBar: React.FC = () => {
 
   const isDesktopEnv = isElectron();
   const modifiedCount = files.filter((f) => f.type === 'file' && f.isModified).length;
+  const installedExtensionsCount = useExtensionStore((s) => s.extensions.filter((e) => e.installed).length);
 
   return (
     <div className="w-12 h-full min-h-0 bg-[#14141f] border-r border-slate-800/80 flex flex-col justify-between items-center py-2 text-slate-400 select-none shrink-0 z-20 overflow-hidden">
@@ -117,7 +118,7 @@ export const ActivityBar: React.FC = () => {
           <Sparkles className="w-5 h-5" />
         </button>
 
-        {/* Extensions */}
+        {/* Extensions Marketplace */}
         <button
           onClick={() => setActiveSidebarTab('extensions')}
           className={`p-2.5 rounded-lg transition relative ${
@@ -125,9 +126,12 @@ export const ActivityBar: React.FC = () => {
               ? 'bg-slate-800 text-cyan-400 border-l-2 border-cyan-500'
               : 'hover:text-slate-200 hover:bg-slate-800/60'
           }`}
-          title="Built-in Extensions"
+          title="Extensions Marketplace (Ctrl+Shift+X)"
         >
-          <PackagePlus className="w-5 h-5" />
+          <Blocks className="w-5 h-5" />
+          {installedExtensionsCount > 0 && (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-cyan-400" />
+          )}
         </button>
 
         {/* Command Palette */}

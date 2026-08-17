@@ -17,11 +17,13 @@ import {
   Minus,
   Square,
   X,
+  Blocks,
+  Globe,
 } from 'lucide-react';
 
 export const MenuBar: React.FC = () => {
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode } = useFileStore();
-  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode } = useSettingsStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
+  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab } = useSettingsStore();
   const { openDialog } = useDialogStore();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
@@ -67,7 +69,7 @@ export const MenuBar: React.FC = () => {
           </button>
 
           {openMenu === 'file' && (
-            <div className="absolute left-0 top-full mt-1 w-52 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
+            <div className="absolute left-0 top-full mt-1 w-56 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
               <button
                 onClick={async () => {
                   const name = await openDialog({ type: 'file', title: 'Create New File', message: 'Enter filename with extension.', placeholder: 'index.ts', confirmText: 'Create File', cancelText: 'Cancel' });
@@ -88,6 +90,34 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
               >
                 <FolderPlus className="w-3.5 h-3.5 text-amber-400" /> New Folder
+              </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
+              <button
+                onClick={() => {
+                  openSystemFile();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <FilePlus className="w-3.5 h-3.5 text-cyan-400" /> Open File...
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+O</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  openSystemFolder();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <FolderPlus className="w-3.5 h-3.5 text-indigo-400" /> Open Folder...
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+O</kbd>
               </button>
 
               <div className="border-t border-slate-800 my-1" />
@@ -140,7 +170,45 @@ export const MenuBar: React.FC = () => {
           </button>
 
           {openMenu === 'view' && (
-            <div className="absolute left-0 top-full mt-1 w-52 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
+            <div className="absolute left-0 top-full mt-1 w-56 bg-[#1e1e2e] border border-slate-700 shadow-2xl rounded py-1 z-50 text-slate-200">
+              <button
+                onClick={() => {
+                  setActiveSidebarTab('extensions');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Blocks className="w-3.5 h-3.5 text-cyan-400" /> Extensions
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+X</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSidebarTab('explorer');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Code2 className="w-3.5 h-3.5 text-blue-400" /> Explorer
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+E</kbd>
+              </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
+              <button
+                onClick={() => {
+                  setActivePreviewMode('webview');
+                  closeMenus();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-400" /> Simple Browser / Webview
+              </button>
+
               <button
                 onClick={() => {
                   setActivePreviewMode('split-edit');

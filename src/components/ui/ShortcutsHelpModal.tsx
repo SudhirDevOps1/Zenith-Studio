@@ -11,9 +11,12 @@ export const ShortcutsHelpModal: React.FC = () => {
     {
       title: 'Navigation & Command Palette',
       shortcuts: [
+        { key: 'Ctrl + P', desc: 'Quick Open File Switcher' },
+        { key: 'Ctrl + G', desc: 'Go to Line Number (:line)' },
         { key: 'Ctrl + Shift + P', desc: 'Open Command Palette' },
+        { key: 'Ctrl + Shift + X', desc: 'Extensions Marketplace' },
         { key: 'Ctrl + Shift + E', desc: 'Focus Explorer Sidebar' },
-        { key: 'Ctrl + Shift + F', desc: 'Focus Workspace Search' },
+        { key: 'Ctrl + Shift + F', desc: 'Focus Workspace Search & Replace' },
         { key: 'Ctrl + `', desc: 'Toggle Integrated Terminal' },
         { key: 'F1 / Ctrl + /', desc: 'Show Keyboard Shortcuts' },
       ],
@@ -21,10 +24,11 @@ export const ShortcutsHelpModal: React.FC = () => {
     {
       title: 'Editor & File Actions',
       shortcuts: [
+        { key: 'Ctrl + O', desc: 'Open File from System' },
+        { key: 'Ctrl + Shift + O', desc: 'Open Folder from System' },
         { key: 'Ctrl + S', desc: 'Save Active File' },
         { key: 'Ctrl + W', desc: 'Close Active Tab' },
         { key: 'Ctrl + F', desc: 'Find & Replace' },
-        { key: 'Ctrl + Shift + T', desc: 'Toggle Terminal Panel' },
         { key: 'Esc', desc: 'Close Modal / Exit Zen Mode' },
       ],
     },
