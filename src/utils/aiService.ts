@@ -143,16 +143,12 @@ async function safeAiFetch(
       throw new Error('No response from Electron IPC bridge. Restart the app and try again.');
     }
 
-    if (ipcResult.status && ipcResult.status !== 0) {
+    if (typeof ipcResult.status === 'number' && ipcResult.status > 0) {
       return ipcResult;
     }
 
-    if (ipcResult.status === 0 || ipcResult.ok === false) {
-      const errMsg = ipcResult.error || ipcResult.statusText || 'Network error (status 0)';
-      throw new Error(`Electron native request failed: ${errMsg}`);
-    }
-
-    return ipcResult;
+    const errMsg = ipcResult.error || ipcResult.statusText || 'Unable to connect to AI server (network error 0). Check your internet connection or proxy.';
+    throw new Error(errMsg);
   }
 
   // 2. Web Mode: Direct Browser Fetch
@@ -215,7 +211,7 @@ async function safeAiFetch(
  */
 export async function detectProviderModels(settings: Partial<EditorSettings>): Promise<ModelInfo[]> {
   const provider = settings.aiProvider || 'gemini';
-  const apiKey = settings.aiApiKey || settings.geminiApiKey || '';
+  const apiKey = (settings.aiApiKey || settings.geminiApiKey || '').replace(/[\r\n\t\s]+/g, '').trim();
 
   try {
     switch (provider) {
@@ -398,7 +394,7 @@ export async function generateAiContent(
     provider === 'gemini'
       ? (settings.geminiApiKey || settings.aiApiKey || '')
       : (settings.aiApiKey || '')
-  ).trim();
+  ).replace(/[\r\n\t\s]+/g, '').trim();
   const rawModel = settings.aiModel || settings.aiCustomModelName || (DEFAULT_PROVIDER_MODELS[provider] || ['gpt-4o'])[0];
   const endpoint = settings.aiCustomEndpoint || '';
   const model = normalizeModelName(rawModel, provider, endpoint);
@@ -499,7 +495,7 @@ export async function generateAiContent(
  */
 export async function testAiConnection(settings: Partial<EditorSettings>): Promise<TestConnectionResult> {
   const provider = settings.aiProvider || 'gemini';
-  const apiKey = (settings.aiApiKey || settings.geminiApiKey || '').trim();
+  const apiKey = (settings.aiApiKey || settings.geminiApiKey || '').replace(/[\r\n\t\s]+/g, '').trim();
   const startTime = performance.now();
 
   try {

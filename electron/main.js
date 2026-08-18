@@ -574,20 +574,39 @@ ipcMain.handle('openvsx:extension', async (_, { namespace, name }) => {
   }
 });
 
-// Helper: Direct Node.js TCP HTTPS fetch (Zero QUIC dependency, immune to UDP drops)
-function nodeHttpsFetchDirect(url, method, headers, bodyStr) {
+// Helper: Direct Node.js TCP HTTPS fetch (Zero QUIC dependency, immune to UDP/Chromium drops)
+function nodeHttpsFetchDirect(url, method = 'POST', headers = {}, bodyStr = null, hops = 0) {
   return new Promise((resolve) => {
+    if (hops > 5) {
+      return resolve({ ok: false, status: 0, statusText: 'Too many redirects', data: null, error: 'Too many redirects' });
+    }
     try {
       const urlObj = new URL(url);
       const isHttps = urlObj.protocol === 'https:';
       const transport = isHttps ? https : require('http');
 
+      // Sanitize header keys and values (strip newlines, tabs, invalid non-ASCII header chars)
       const reqHeaders = {
-        'Content-Type': 'application/json',
+        Accept: 'application/json',
         'User-Agent': 'Zenith-Studio-IDE/1.0.3',
-        ...(headers || {}),
       };
+
+      for (const [key, val] of Object.entries(headers || {})) {
+        if (!key) continue;
+        const cleanKey = String(key).trim();
+        let cleanVal = '';
+        if (typeof val === 'string') {
+          cleanVal = val.replace(/[\r\n]+/g, ' ').trim();
+        } else if (val != null) {
+          cleanVal = String(val);
+        }
+        reqHeaders[cleanKey] = cleanVal;
+      }
+
       if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+        if (!reqHeaders['Content-Type']) {
+          reqHeaders['Content-Type'] = 'application/json';
+        }
         reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr, 'utf8').toString();
       }
 
@@ -598,9 +617,15 @@ function nodeHttpsFetchDirect(url, method, headers, bodyStr) {
           path: urlObj.pathname + urlObj.search,
           method: (method || 'POST').toUpperCase(),
           headers: reqHeaders,
-          timeout: 35000,
+          timeout: 45000,
         },
         (res) => {
+          // Handle 301, 302, 307, 308 HTTP Redirects
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            const redirectUrl = new URL(res.headers.location, url).toString();
+            return nodeHttpsFetchDirect(redirectUrl, method, headers, bodyStr, hops + 1).then(resolve);
+          }
+
           const chunks = [];
           res.on('data', (c) => chunks.push(c));
           res.on('end', () => {
@@ -629,7 +654,7 @@ function nodeHttpsFetchDirect(url, method, headers, bodyStr) {
 
       req.on('timeout', () => {
         req.destroy();
-        resolve({ ok: false, status: 0, statusText: 'Request timeout (35s)', data: null, error: 'Request timeout (35s)' });
+        resolve({ ok: false, status: 0, statusText: 'Request timeout (45s)', data: null, error: 'Request timeout (45s)' });
       });
 
       if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
@@ -637,63 +662,37 @@ function nodeHttpsFetchDirect(url, method, headers, bodyStr) {
       }
       req.end();
     } catch (e) {
+      console.error('[AI Fetch - Node HTTPS Exception]:', e.message);
       resolve({ ok: false, status: 0, statusText: e.message, data: null, error: e.message });
     }
   });
 }
 
 // ─── AI Secure Proxy Fetch IPC ──────────────────────────────────────────────────
-// Dual-Layer Transport:
-// 1. Electron net.fetch (Chromium network stack with disable-quic flag)
-// 2. Node.js Native HTTPS (Direct TCP TLS — 100% immune to QUIC/UDP protocol drops)
+// Primary Transport: Node.js Native HTTPS (Direct TCP TLS — 100% immune to QUIC/Chromium network drops)
+// Secondary Transport: Electron net.fetch
 ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
   try {
-    const urlObj = new URL(url);
-
-    // ── Security Whitelist: Only known AI providers + localhost are allowed ──
-    const ALLOWED_AI_HOSTS = [
-      'generativelanguage.googleapis.com', // Google Gemini
-      'api.groq.com',                      // Groq
-      'api.openai.com',                    // OpenAI
-      'api.anthropic.com',                 // Anthropic Claude
-      'openrouter.ai',                     // OpenRouter
-      'api.deepseek.com',                  // DeepSeek
-      'api.mistral.ai',                    // Mistral
-      'api.cohere.com',                    // Cohere
-      'api.together.xyz',                  // Together AI
-      'api.cerebras.ai',                   // Cerebras
-      'api.x.ai',                          // xAI / Grok
-      'api.perplexity.ai',                 // Perplexity
-      'corsproxy.io',                      // CORS proxy fallback
-      'localhost',                         // Local Ollama / LM Studio
-      '127.0.0.1',                         // Local Ollama / LM Studio
-      '0.0.0.0',                           // Local dev
-    ];
-
-    const isAllowed = ALLOWED_AI_HOSTS.some(
-      (host) => urlObj.hostname === host || urlObj.hostname.endsWith('.' + host)
-    );
-
-    if (!isAllowed) {
-      console.warn(`[AI Fetch] Non-whitelisted host: ${urlObj.hostname} — proceeding for custom provider support.`);
-    }
-
-    const reqHeaders = {
-      'Content-Type': 'application/json',
-      'User-Agent': 'Zenith-Studio-IDE/1.0.3',
-      ...(headers || {}),
-    };
-
     const bodyStr = body != null
       ? (typeof body === 'string' ? body : JSON.stringify(body))
       : null;
 
-    // ── Layer 1: Electron net.fetch ──
+    // ── Layer 1: Node.js Direct HTTPS TCP Socket (Zero QUIC / Zero Chromium sandbox interference) ──
+    const nodeResult = await nodeHttpsFetchDirect(url, method, headers, bodyStr);
+    if (nodeResult.status > 0) {
+      return nodeResult;
+    }
+
+    // ── Layer 2 Fallback: Electron net.fetch ──
     if (typeof net !== 'undefined' && typeof net.fetch === 'function') {
       try {
         const fetchOptions = {
           method: (method || 'POST').toUpperCase(),
-          headers: reqHeaders,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Zenith-Studio-IDE/1.0.3',
+            ...(headers || {}),
+          },
         };
         if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
           fetchOptions.body = bodyStr;
@@ -708,7 +707,6 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
           data = await response.text().catch(() => '');
         }
 
-        console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${response.status}`);
         return {
           ok: response.ok,
           status: response.status,
@@ -716,15 +714,11 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
           data,
         };
       } catch (netErr) {
-        console.warn('[AI Fetch] net.fetch failed (e.g. QUIC error), falling back to Node HTTPS:', netErr.message);
-        // Fallback to Layer 2: Node.js direct HTTPS TCP socket
-        return await nodeHttpsFetchDirect(url, method, headers, bodyStr);
+        console.warn('[AI Fetch] net.fetch also failed:', netErr.message);
       }
     }
 
-    // ── Layer 2 Direct fallback ──
-    return await nodeHttpsFetchDirect(url, method, headers, bodyStr);
-
+    return nodeResult;
   } catch (err) {
     console.error('[AI Fetch] Fatal setup error:', err.message);
     return { ok: false, status: 0, statusText: err.message, data: null, error: err.message };
