@@ -18,6 +18,7 @@ import {
   detectProviderModels,
   testAiConnection,
   ModelInfo,
+  DEFAULT_PROVIDER_MODELS,
 } from '../../utils/aiService';
 
 
@@ -73,9 +74,22 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
     }
   }, [isOpen, settings]);
 
-  // Load models on provider change
+  // Bug #1 + #2 + #5: On provider switch — clear old key, reset model to provider default,
+  // clear test result, and only auto-detect if a key already exists.
   useEffect(() => {
-    handleDetectModels(false);
+    const defaultModel = (DEFAULT_PROVIDER_MODELS[provider] || [])[0] || '';
+    setApiKey('');
+    setModel(defaultModel);
+    setTestResult(null);
+    setAvailableModels([]);
+    // Only attempt detection if a key is already saved for this provider
+    const savedKey = (settings.aiProvider === provider)
+      ? (settings.aiApiKey || settings.geminiApiKey || '')
+      : '';
+    if (savedKey.trim()) {
+      handleDetectModels(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider]);
 
   const handleDetectModels = async (showToastMessage = true) => {
@@ -276,7 +290,9 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
                 </button>
               </div>
               <p className="text-[10px] text-slate-500 italic">
-                API Key is saved securely in local IndexedDB only.
+                {typeof (window as any).electronAPI?.setSecret === 'function'
+                  ? '🔐 Saved in OS Credential Vault (Windows DPAPI / macOS Keychain).'
+                  : '💾 Saved in browser localStorage (web mode).'}
               </p>
             </div>
           )}

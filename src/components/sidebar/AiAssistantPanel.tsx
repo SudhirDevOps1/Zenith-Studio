@@ -55,6 +55,17 @@ export const AiAssistantPanel: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Bug #4: Keep welcome message in sync with provider/model settings changes
+  useEffect(() => {
+    setMessages((prev) => [
+      {
+        ...prev[0],
+        text: `👋 Hi! I'm **Zenith Studio AI Assistant**.\n\nConnected to **${(settings.aiProvider || 'gemini').toUpperCase()}** (${settings.aiModel || 'gemini-1.5-flash'}).\n\nI can explain your code, fix bugs, optimize architecture, generate unit tests, or build new features. Choose an action below or ask any question!`,
+      },
+      ...prev.slice(1),
+    ]);
+  }, [settings.aiProvider, settings.aiModel]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);

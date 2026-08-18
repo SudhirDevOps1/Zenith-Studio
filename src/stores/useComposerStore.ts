@@ -60,10 +60,29 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
     const { files } = useFileStore.getState();
     const { settings } = useSettingsStore.getState();
 
+    // Bug #6: Validate API key before attempting any AI call
+    const provider = settings.aiProvider || 'gemini';
+    const apiKey = (
+      provider === 'gemini'
+        ? (settings.geminiApiKey || settings.aiApiKey || '')
+        : (settings.aiApiKey || '')
+    ).trim();
+
+    if (!apiKey && provider !== 'ollama') {
+      set({
+        isGenerating: false,
+        logs: [
+          '[Composer] ❌ No API Key configured.',
+          `[Composer] → Open AI Setup (top bar) and save your ${provider.toUpperCase()} API key first.`,
+        ],
+      });
+      return;
+    }
+
     set({ isGenerating: true, logs: ['[Composer] Scanning selected workspace files...'], patches: [] });
 
     try {
-      // Gather selected files or fallback to first 5 workspace files
+      // Gather selected files or fallback to first 6 workspace files
       const targetFiles = selectedFiles.length > 0
         ? files.filter((f) => f.type === 'file' && selectedFiles.includes(f.path || f.name))
         : files.filter((f) => f.type === 'file').slice(0, 6);

@@ -392,7 +392,13 @@ export async function generateAiContent(
   settings: EditorSettings
 ): Promise<string> {
   const provider = settings.aiProvider || 'gemini';
-  const apiKey = settings.aiApiKey || settings.geminiApiKey || '';
+  // Bug #3: Provider-aware key — Gemini uses geminiApiKey, all others use only aiApiKey.
+  // This prevents a stale Gemini key being picked up when provider is Groq/OpenAI etc.
+  const apiKey = (
+    provider === 'gemini'
+      ? (settings.geminiApiKey || settings.aiApiKey || '')
+      : (settings.aiApiKey || '')
+  ).trim();
   const rawModel = settings.aiModel || settings.aiCustomModelName || (DEFAULT_PROVIDER_MODELS[provider] || ['gpt-4o'])[0];
   const endpoint = settings.aiCustomEndpoint || '';
   const model = normalizeModelName(rawModel, provider, endpoint);
