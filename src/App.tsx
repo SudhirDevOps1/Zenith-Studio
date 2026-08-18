@@ -509,7 +509,13 @@ export default function App() {
                             extension={ext}
                           />
                         )}
-                        {isHtml && <HtmlPreview htmlContent={content} />}
+                        {isHtml && (
+                          <HtmlPreview
+                            htmlContent={content}
+                            fileName={activeFile.name}
+                            filePath={activeFile.path}
+                          />
+                        )}
                         {isRunnable && <AdvancedCodeRunner code={content} extension={ext} fileName={activeFile.name} />}
                         {isSvg && (
                           <SvgPreview

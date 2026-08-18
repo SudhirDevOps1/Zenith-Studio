@@ -5,11 +5,13 @@ import { useFileStore } from '../../stores/useFileStore';
 
 interface HtmlPreviewProps {
   htmlContent: string;
+  fileName?: string;
+  filePath?: string;
 }
 
 type DeviceWidth = '100%' | '1024px' | '768px' | '375px';
 
-export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
+export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent, filePath }) => {
   const { files } = useFileStore();
   const [deviceWidth, setDeviceWidth] = useState<DeviceWidth>('100%');
   const [key, setKey] = useState(0);
@@ -123,7 +125,7 @@ ${result}
 
   const handleOpenNewTab = async () => {
     if (isElectron() && (window as any).electronAPI?.openHtmlPreview) {
-      await (window as any).electronAPI.openHtmlPreview({ content: formattedHtml });
+      await (window as any).electronAPI.openHtmlPreview({ content: formattedHtml, filePath });
     } else {
       const blob = new Blob([formattedHtml], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
