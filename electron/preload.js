@@ -21,12 +21,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
 
+  // 🛡️ Live Real-time Disk File Watcher (VS Code / Cursor parity)
+  watchWorkspace: (folderPath) => ipcRenderer.invoke('fs:watchWorkspace', folderPath),
+  onFileChanged: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('fs:file-changed', handler);
+    return () => ipcRenderer.removeListener('fs:file-changed', handler);
+  },
+
   // 🛡️ Enterprise OS Credential Vault (VS Code standard)
   setSecret: (key, value) => ipcRenderer.invoke('vault:setSecret', { key, value }),
   getSecret: (key) => ipcRenderer.invoke('vault:getSecret', { key }),
   deleteSecret: (key) => ipcRenderer.invoke('vault:deleteSecret', { key }),
   hasSecret: (key) => ipcRenderer.invoke('vault:hasSecret', { key }),
 });
-
-
-

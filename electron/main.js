@@ -212,6 +212,70 @@ ipcMain.handle('dialog:openFile', async () => {
   return { filePath, name: path.basename(filePath), content };
 });
 
+let workspaceWatcher = null;
+const watchDebounceTimers = new Map();
+let lastSavedFileTimes = new Map();
+
+function startWatchingWorkspace(targetDir) {
+  if (workspaceWatcher) {
+    try {
+      workspaceWatcher.close();
+    } catch (_) {}
+    workspaceWatcher = null;
+  }
+
+  if (!targetDir || !fsSync.existsSync(targetDir)) return;
+
+  try {
+    workspaceWatcher = fsSync.watch(targetDir, { recursive: true }, (eventType, filename) => {
+      if (!filename) return;
+      const cleanNorm = filename.replace(/\\/g, '/');
+      if (cleanNorm.includes('.git/') || cleanNorm.includes('node_modules/') || cleanNorm.includes('.cache/') || cleanNorm.includes('.zenith/')) return;
+
+      const fullPath = path.isAbsolute(filename) ? filename : path.join(targetDir, filename);
+
+      // Skip if internally saved within last 800ms
+      const lastSave = lastSavedFileTimes.get(fullPath) || 0;
+      if (Date.now() - lastSave < 800) return;
+
+      if (watchDebounceTimers.has(fullPath)) {
+        clearTimeout(watchDebounceTimers.get(fullPath));
+      }
+
+      watchDebounceTimers.set(fullPath, setTimeout(async () => {
+        watchDebounceTimers.delete(fullPath);
+        try {
+          if (fsSync.existsSync(fullPath)) {
+            const stat = fsSync.statSync(fullPath);
+            if (stat.isFile()) {
+              // Read updated content from disk
+              const content = await fs.readFile(fullPath, 'utf-8');
+              if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('fs:file-changed', {
+                  filePath: fullPath,
+                  fileName: path.basename(fullPath),
+                  content,
+                  eventType,
+                });
+              }
+            }
+          }
+        } catch (_) {}
+      }, 150));
+    });
+  } catch (err) {
+    console.warn('Workspace file watcher error:', err.message);
+  }
+}
+
+ipcMain.handle('fs:watchWorkspace', async (_, folderPath) => {
+  if (folderPath && fsSync.existsSync(folderPath)) {
+    startWatchingWorkspace(folderPath);
+    return { success: true };
+  }
+  return { success: false };
+});
+
 ipcMain.handle('dialog:openFolder', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory'],
@@ -223,6 +287,7 @@ ipcMain.handle('dialog:openFolder', async () => {
 
   const folderPath = result.filePaths[0];
   activeTerminalCwd = folderPath;
+  startWatchingWorkspace(folderPath);
   const folderName = path.basename(folderPath);
   const files = await scanDirectory(folderPath);
   return { folderPath, folderName, files };
@@ -236,6 +301,7 @@ ipcMain.handle('fs:openWorkspacePath', async (_, folderPath) => {
       return { success: false, error: `Directory not found: ${folderPath}` };
     }
     activeTerminalCwd = folderPath;
+    startWatchingWorkspace(folderPath);
     const folderName = path.basename(folderPath);
     const files = await scanDirectory(folderPath);
     return { success: true, folderPath, folderName, files };
@@ -291,6 +357,7 @@ ipcMain.handle('fs:saveFile', async (_, { path: targetPath, content }) => {
     // Ensure directory exists
     await fs.mkdir(path.dirname(savePath), { recursive: true });
     await fs.writeFile(savePath, content || '', 'utf-8');
+    lastSavedFileTimes.set(savePath, Date.now());
     return { success: true, path: savePath };
   } catch (err) {
     return { success: false, error: err.message };

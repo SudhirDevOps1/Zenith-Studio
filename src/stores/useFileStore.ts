@@ -1141,3 +1141,51 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     });
   },
 }));
+
+// 🛡️ Live Real-Time File Watcher Auto-Sync (VS Code / Cursor parity)
+if (typeof window !== 'undefined' && isElectron()) {
+  try {
+    const api = (window as any).electronAPI;
+    if (api && typeof api.onFileChanged === 'function') {
+      api.onFileChanged(({ filePath, content }: { filePath: string; content: string }) => {
+        const { files, activeFileId } = useFileStore.getState();
+        if (!filePath || !Array.isArray(files)) return;
+
+        const normTarget = filePath.replace(/\\/g, '/').toLowerCase();
+        const existingFile = files.find(f => {
+          if (!f.path) return false;
+          const normPath = f.path.replace(/\\/g, '/').toLowerCase();
+          return normPath === normTarget || normTarget.endsWith('/' + normPath) || normTarget.endsWith(normPath);
+        });
+
+        if (existingFile && existingFile.content !== content) {
+          const updatedFiles = files.map(f => {
+            if (f.id === existingFile.id) {
+              return {
+                ...f,
+                content,
+                isModified: false,
+                updatedAt: Date.now(),
+              };
+            }
+            return f;
+          });
+
+          useFileStore.setState({ files: updatedFiles });
+          saveFilesToStorage(updatedFiles);
+
+          if (existingFile.id === activeFileId) {
+            useToastStore.getState().addToast({
+              type: 'info',
+              title: 'File Updated',
+              message: `${existingFile.name} reloaded from disk.`,
+            });
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Failed to bind onFileChanged listener:', err);
+  }
+}
+

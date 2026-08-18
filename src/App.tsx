@@ -109,6 +109,7 @@ export default function App() {
 
   const [selectedSnapshotCode, setSelectedSnapshotCode] = useState<string | null>(null);
   const [quickOpenMode, setQuickOpenMode] = useState<'file' | 'line' | null>(null);
+  const [isResizingSplit, setIsResizingSplit] = useState(false);
 
   const isDraggingSidebar = useRef(false);
   const isDraggingSplit = useRef(false);
@@ -305,6 +306,9 @@ export default function App() {
     if (isDraggingSidebar.current) {
       const newWidth = Math.max(160, Math.min(500, e.clientX - 48));
       setSidebarWidth(newWidth);
+      if (editorRef.current?.layout) {
+        editorRef.current.layout();
+      }
     } else if (isDraggingSplit.current) {
       const mainContainer = document.getElementById('editor-preview-container');
       if (mainContainer) {
@@ -312,6 +316,9 @@ export default function App() {
         const relativeX = e.clientX - rect.left;
         const pct = Math.max(20, Math.min(80, (relativeX / rect.width) * 100));
         setEditorSplitPct(pct);
+        if (editorRef.current?.layout) {
+          editorRef.current.layout();
+        }
       }
     }
   }, []);
@@ -319,7 +326,11 @@ export default function App() {
   const handleMouseUp = useCallback(() => {
     isDraggingSidebar.current = false;
     isDraggingSplit.current = false;
+    setIsResizingSplit(false);
     document.body.style.cursor = 'default';
+    if (editorRef.current?.layout) {
+      setTimeout(() => editorRef.current?.layout(), 50);
+    }
   }, []);
 
   useEffect(() => {
@@ -471,19 +482,25 @@ export default function App() {
                     {/* Split Drag Divider */}
                     {showPreview && activePreviewMode !== 'preview-only' && (
                       <div
-                        onMouseDown={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           isDraggingSplit.current = true;
+                          setIsResizingSplit(true);
                           document.body.style.cursor = 'col-resize';
                         }}
-                        className="w-1.5 hover:w-2 bg-slate-800 hover:bg-blue-500 cursor-col-resize z-10 shrink-0 transition-all shadow-md"
+                        className="w-1.5 hover:w-2 bg-slate-800 hover:bg-blue-500 cursor-col-resize z-20 shrink-0 transition-all shadow-md active:bg-cyan-500"
+                        title="Drag to resize Editor / Preview split"
                       />
                     )}
 
                     {/* Live Preview Pane */}
                     {showPreview && (
                       <div
-                        style={{ width: activePreviewMode === 'preview-only' ? '100%' : `${100 - editorSplitPct}%` }}
-                        className="h-full overflow-hidden shrink-0 animate-slide-in-right"
+                        style={{
+                          width: activePreviewMode === 'preview-only' ? '100%' : `${100 - editorSplitPct}%`,
+                          pointerEvents: isResizingSplit ? 'none' : 'auto',
+                        }}
+                        className="h-full overflow-hidden shrink-0 animate-slide-in-right relative select-none"
                       >
                         {isMarkdown && (
                           <MarkdownPreview
@@ -600,6 +617,11 @@ export default function App() {
         onConfirm={dialogConfirm}
         onCancel={dialogCancel}
       />
+
+      {/* Fullscreen mouse capture barrier while resizing split to guarantee 60fps smooth dragging */}
+      {isResizingSplit && (
+        <div className="fixed inset-0 z-[9999] cursor-col-resize select-none bg-transparent" />
+      )}
     </div>
   );
 }
