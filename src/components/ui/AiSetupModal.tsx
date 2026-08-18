@@ -74,18 +74,16 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
     }
   }, [isOpen, settings]);
 
-  // Bug #1 + #2 + #5: On provider switch — clear old key, reset model to provider default,
-  // clear test result, and only auto-detect if a key already exists.
+  // On provider switch — load saved key if matching, or reset model to provider default
   useEffect(() => {
     const defaultModel = (DEFAULT_PROVIDER_MODELS[provider] || [])[0] || '';
-    setApiKey('');
-    setModel(defaultModel);
-    setTestResult(null);
-    setAvailableModels([]);
-    // Only attempt detection if a key is already saved for this provider
     const savedKey = (settings.aiProvider === provider)
       ? (settings.aiApiKey || settings.geminiApiKey || '')
       : '';
+    setApiKey(savedKey);
+    setModel((settings.aiProvider === provider && settings.aiModel) ? settings.aiModel : defaultModel);
+    setTestResult(null);
+    setAvailableModels([]);
     if (savedKey.trim()) {
       handleDetectModels(false);
     }

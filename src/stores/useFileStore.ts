@@ -211,27 +211,49 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
   },
 
   saveCurrentFile: async () => {
-    const { activeFileId, markFileSaved, files } = get();
+    const { activeFileId, markFileSaved, files, rootFolderPath } = get();
     if (!activeFileId) return;
 
     const file = files.find(f => f.id === activeFileId);
     if (!file) return;
 
-    if (isElectron()) {
+    if (isElectron() && (window as any).electronAPI?.saveFile) {
       try {
+        let diskPath = file.path;
+        if (rootFolderPath && diskPath && !diskPath.startsWith('/') && !diskPath.includes(':')) {
+          diskPath = `${rootFolderPath}/${diskPath}`.replace(/\\/g, '/');
+        }
+
         const result = await (window as any).electronAPI.saveFile({
-          path: file.path,
+          path: diskPath,
           content: file.content || '',
         });
-        if (result.success) {
+
+        if (result && result.success) {
+          if (result.path && result.path !== file.path) {
+            set((state) => ({
+              files: state.files.map((f) => (f.id === file.id ? { ...f, path: result.path, name: result.path.split(/[\\/]/).pop() || f.name } : f)),
+            }));
+          }
           markFileSaved(activeFileId);
+          useToastStore.getState().addToast({
+            type: 'success',
+            title: 'File Saved',
+            message: `${file.name} saved successfully.`,
+          });
+          return;
         }
       } catch (err) {
-        console.error('Failed native save in Electron:', err);
+        console.warn('Native save fallback to IndexedDB:', err);
       }
-    } else {
-      markFileSaved(activeFileId);
     }
+
+    markFileSaved(activeFileId);
+    useToastStore.getState().addToast({
+      type: 'success',
+      title: 'File Saved',
+      message: `${file.name} saved to workspace.`,
+    });
   },
 
   saveAllFiles: async () => {
@@ -777,14 +799,33 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
         const result = await (window as any).electronAPI.openFileDialog();
         if (!result) return;
 
-        const { createFile, openFileInTab, files } = get();
-        const existing = files.find(f => f.name === result.name && f.parentId === null);
+        const { openFileInTab, files } = get();
+        const existing = files.find(f => f.path === result.filePath || f.name === result.name);
         if (existing) {
           get().updateFileContent(existing.id, result.content);
+          set((state) => ({
+            files: state.files.map((f) => f.id === existing.id ? { ...f, path: result.filePath, isModified: false } : f),
+          }));
           openFileInTab(existing.id);
         } else {
-          const newId = createFile(result.name, null, result.content);
-          openFileInTab(newId);
+          const extension = getFileExtension(result.name);
+          const id = `file_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+          const newFile: FileItem = {
+            id,
+            name: result.name,
+            path: result.filePath, // Full native path preserved for instant saving
+            type: 'file',
+            parentId: null,
+            extension,
+            content: result.content || '',
+            isModified: false,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const updated = [...files, newFile];
+          set({ files: updated });
+          saveFilesToStorage(updated);
+          openFileInTab(id);
         }
         addToast({
           type: 'success',

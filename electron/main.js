@@ -240,6 +240,12 @@ ipcMain.handle('fs:readFile', async (_, filePath) => {
 ipcMain.handle('fs:saveFile', async (_, { path: targetPath, content }) => {
   try {
     let savePath = targetPath;
+    if (savePath && !path.isAbsolute(savePath)) {
+      if (activeTerminalCwd) {
+        savePath = path.resolve(activeTerminalCwd, savePath);
+      }
+    }
+
     if (!savePath) {
       const result = await dialog.showSaveDialog(mainWindow, {
         title: 'Save File As',
@@ -250,7 +256,9 @@ ipcMain.handle('fs:saveFile', async (_, { path: targetPath, content }) => {
       savePath = result.filePath;
     }
 
-    await fs.writeFile(savePath, content, 'utf-8');
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(savePath), { recursive: true });
+    await fs.writeFile(savePath, content || '', 'utf-8');
     return { success: true, path: savePath };
   } catch (err) {
     return { success: false, error: err.message };
