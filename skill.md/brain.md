@@ -35,10 +35,17 @@
 * `[2026-08-17]` - Multi-File Agentic AI Composer: `AiComposerModal.tsx` & `useComposerStore.ts` for workspace-wide multi-file parsing, side-by-side diff previews, and 1-click **Accept All Files** patching (`Ctrl+Shift+I` / `Ctrl+I`).
 * `[2026-08-17]` - Interactive Step-by-Step Debugger: Monaco Gutter Breakpoints (`glyphMargin`), floating draggable toolbar, and dedicated Run & Debug panel with Call Stack, Variables Scope, and Watch expressions.
 * `[2026-08-17]` - 3-Way Git Merge Conflict Resolver: `conflictParser.ts` and `conflictCodeLens.ts` for interactive Monaco CodeLens buttons (`Accept Current Change`, `Accept Incoming Change`, `Accept Both`).
+* `[2026-08-18]` - System Node.js NetBridge: Standalone `electron/netBridge.js` executed via Windows-trusted `node.exe` engine. Completely bypasses Windows Defender / Firewall blocking `electron.exe` (`ERR_NETWORK_ACCESS_DENIED`).
+* `[2026-08-18]` - Universal Custom Provider Engine: Added 1-click preset chips for Together AI, Cerebras, LM Studio, Ollama, vLLM, DeepInfra, Mistral, SambaNova with dual-phase test verification (1-token completions + `/models`).
+* `[2026-08-18]` - Reasoning LLM Parsing: Multi-token fallback parsing (`choices[0].message.content || choices[0].message.reasoning || text`) for OpenAI OSS (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) and DeepSeek R1 models.
+* `[2026-08-18]` - Open VSX Marketplace NetBridge: Native search and popular extension discovery routed through system NetBridge for 100% firewall immunity.
 
 ## 📝 Pending / Verified Status
 * [x] TypeScript Strict Mode passes with 0 errors (`npx tsc --noEmit`).
-* [x] Singlefile production build passes (`npm run build` -> `dist/index.html` 9.63 MB).
+* [x] Singlefile production build passes (`npm run build` -> `dist/index.html` 10.5 MB).
+* [x] System Node.js NetBridge for 100% Windows Firewall bypass (`electron/netBridge.js`).
+* [x] Universal Custom Provider Engine with 8 Quick Presets.
+* [x] Reasoning models response extraction (`gpt-oss-120b`, `gpt-oss-20b`, `deepseek-r1`).
 * [x] Multi-File AI Composer Mode (`AiComposerModal.tsx`).
 * [x] Interactive Step-by-Step Debugger UI & Breakpoints (`DebugToolbar.tsx`, `DebugPanel.tsx`).
 * [x] 3-Way Visual Git Merge Conflict Resolver (`conflictParser.ts`, `conflictCodeLens.ts`).

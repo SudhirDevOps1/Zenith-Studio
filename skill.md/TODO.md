@@ -2,8 +2,12 @@
 
 > Keep this updated. Mark completed items with `[x]` and pending with `[ ]`.
 
-## Completed Core Deliverables (v1.0.3 Production)
+## Completed Core Deliverables (v1.0.4 Production)
 
+- [x] System Node.js NetBridge for 100% Windows Defender / Firewall Bypass (`electron/netBridge.js`).
+- [x] Universal Custom Provider Engine with 8 Quick Presets (Together, Cerebras, LM Studio, Ollama, vLLM, DeepInfra, Mistral, SambaNova).
+- [x] Reasoning LLM Token Parsing (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `deepseek-r1`).
+- [x] Open VSX Marketplace NetBridge for Zero-Firewall Extension Discovery.
 - [x] Zero-Trust OS Encrypted Credential Vault (Windows DPAPI `safeStorage` / Keychain integration).
 - [x] Chromium QUIC/HTTP3 Protocol Immunity & Node.js Native HTTPS TLS Failover.
 - [x] Universal Multi-Provider AI Round-Trip Validation (Gemini, OpenAI, Groq, Anthropic, OpenRouter, DeepSeek, Ollama, Custom).

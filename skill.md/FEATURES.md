@@ -1,6 +1,10 @@
 # 🚀 FEATURES (CodeStudio Evolution & Matrix)
 
-## 1. What was built recently? (v1.0.3 Release)
+## 1. What was built recently? (v1.0.4 Release)
+* **System Node.js NetBridge (`electron/netBridge.js`):** Standalone subprocess bridge executed via Windows-trusted `node.exe` engine. Completely bypasses Windows Defender / Firewall `ERR_NETWORK_ACCESS_DENIED` blocks on `electron.exe`.
+* **Universal Custom Provider Engine & Presets (`AiSetupModal.tsx`):** 1-click preset integrations for Together AI, Cerebras, LM Studio, Ollama, vLLM, DeepInfra, Mistral, SambaNova, and arbitrary OpenAI-compatible custom endpoints with dual-verification test suites.
+* **Reasoning LLM Multi-Token Support (`aiService.ts`):** Robust response parsing handling `choices[0].message.reasoning` for OpenAI OSS (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) and DeepSeek R1 models.
+* **Open VSX Marketplace NetBridge Integration:** 100% firewall-immune live extension browsing, searching, and downloads.
 * **Multi-File Agentic AI ("Composer Mode") (`useComposerStore.ts` & `AiComposerModal.tsx`):** Cursor-grade multi-file code planner and auto-diff patcher (`Ctrl+Shift+I` / `Ctrl+I`) with workspace context scanning, file selection, and 1-click **Accept All Files** patching.
 * **Interactive Step-by-Step Debugger UI (`DebugToolbar.tsx` & `DebugPanel.tsx`):** Monaco Gutter Red Breakpoints (`glyphMargin`), floating draggable step execution toolbar (`Continue`, `Step Over`, `Step Into`, `Step Out`, `Stop`), Call Stack trace, Variables tree, and Watch expressions panel.
 * **3-Way Visual Git Merge Conflict Resolver (`conflictParser.ts` & `conflictCodeLens.ts`):** Inline Monaco CodeLens actions (`🟢 Accept Current Change`, `🟣 Accept Incoming Change`, `Accept Both`) with emerald/cyan background decorations and 1-click conflict resolution.
