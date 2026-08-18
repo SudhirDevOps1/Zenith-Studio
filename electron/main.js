@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage, net } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const fsSync = require('fs');
@@ -657,7 +657,7 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
       : null;
 
     // ── Layer 1: Electron net.fetch ──
-    if (typeof net.fetch === 'function') {
+    if (typeof net !== 'undefined' && typeof net.fetch === 'function') {
       try {
         const fetchOptions = {
           method: (method || 'POST').toUpperCase(),
