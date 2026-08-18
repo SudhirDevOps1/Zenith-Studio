@@ -994,9 +994,6 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
   try {
     const bridgeResult = await runSystemNetBridge(url, method, headers, body);
     if (bridgeResult && typeof bridgeResult.status === 'number' && bridgeResult.status > 0) {
-      try {
-        console.log(`[AI Fetch - System Node Bridge] ${(method || 'POST').toUpperCase()} ${new URL(url).hostname} → ${bridgeResult.status}`);
-      } catch {}
       return bridgeResult;
     }
   } catch (bridgeErr) {

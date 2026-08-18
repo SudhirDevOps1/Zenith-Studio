@@ -12,6 +12,9 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), viteSingleFile()],
+  optimizeDeps: {
+    exclude: ['monaco-editor', '@monaco-editor/react'],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
