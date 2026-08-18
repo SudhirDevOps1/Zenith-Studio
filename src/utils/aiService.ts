@@ -38,9 +38,9 @@ export const DEFAULT_PROVIDER_MODELS: Record<AiProvider, string[]> = {
     'claude-3-opus-20240229',
   ],
   groq: [
+    'llama-3.1-8b-instant',
     'llama-3.3-70b-versatile',
     'deepseek-r1-distill-llama-70b',
-    'llama-3.1-8b-instant',
     'mixtral-8x7b-32768',
     'gemma2-9b-it',
   ],
@@ -482,14 +482,27 @@ export async function generateAiContent(
     if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
-  const res = await safeAiFetch(endpointUrl, 'POST', headers, {
-    model: model || 'gpt-4o',
+  let res = await safeAiFetch(endpointUrl, 'POST', headers, {
+    model: model || (provider === 'groq' ? 'llama-3.1-8b-instant' : 'gpt-4o'),
     messages: [
       { role: 'system', content: systemInstruction },
       { role: 'user', content: prompt },
     ],
     temperature,
   });
+
+  // Auto-failover for Groq if the selected model is restricted/missing (404)
+  if (!res.ok && provider === 'groq' && res.status === 404 && model !== 'llama-3.1-8b-instant') {
+    console.warn(`[AI Service] Groq model '${model}' returned 404, falling back to 'llama-3.1-8b-instant'...`);
+    res = await safeAiFetch(endpointUrl, 'POST', headers, {
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        { role: 'system', content: systemInstruction },
+        { role: 'user', content: prompt },
+      ],
+      temperature,
+    });
+  }
 
   if (!res.ok) {
     const errorMsg = res.data?.error?.message || res.data?.message || res.error || `API error (${res.status}) from ${provider.toUpperCase()}`;
