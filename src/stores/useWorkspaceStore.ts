@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useFileStore } from './useFileStore';
 import { useToastStore } from './useToastStore';
+import { saveFilesToStorage } from '../utils/storage';
 
 export interface WorkspaceItem {
   id: string;
@@ -122,6 +123,38 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
     });
 
     fileStore.setRootFolderPath(workspace.path);
+
+    // In Electron: Scan folder from disk and load real files
+    if (typeof window !== 'undefined' && window.electronAPI?.openWorkspacePath) {
+      try {
+        const result = await window.electronAPI.openWorkspacePath(workspace.path);
+        if (result && result.success && Array.isArray(result.files)) {
+          await saveFilesToStorage(result.files);
+          useFileStore.setState({
+            files: result.files,
+            openTabs: [],
+            activeFileId: null,
+            rootFolderPath: workspace.path,
+          });
+
+          // Open README or first file
+          const readme = result.files.find((f: any) => f.name.toLowerCase() === 'readme.md' && f.type === 'file');
+          const first = readme || result.files.find((f: any) => f.type === 'file');
+          if (first) {
+            useFileStore.getState().openFileInTab(first.id);
+          }
+
+          addToast({
+            type: 'success',
+            title: `Opened ${workspace.name}`,
+            message: `Loaded ${result.files.length} project files from disk.`,
+          });
+          return;
+        }
+      } catch (err: any) {
+        console.warn('Could not scan workspace folder:', err);
+      }
+    }
 
     addToast({
       type: 'success',

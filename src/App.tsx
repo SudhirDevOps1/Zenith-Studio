@@ -217,13 +217,16 @@ export default function App() {
         setSidebarOpen(true);
         setActiveSidebarTab('search');
 
-      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
-        handleOpenSnapshot();
+        useFileStore.getState().saveFileAs();
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         saveCurrentFile();
-        addToast({ type: 'success', title: 'File Saved', message: 'Changes saved to storage.' });
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        const untitledNum = useFileStore.getState().files.filter(f => f.name.startsWith('Untitled')).length + 1;
+        useFileStore.getState().createFile(`Untitled-${untitledNum}.txt`, null, '');
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
         e.preventDefault();
         if (activeFileId) closeTab(activeFileId);

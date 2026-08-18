@@ -25,6 +25,7 @@ interface FileStoreState {
   updateFileContent: (fileId: string, content: string) => void;
   markFileSaved: (fileId: string) => void;
   saveCurrentFile: () => Promise<void>;
+  saveFileAs: (fileId?: string) => Promise<void>;
   saveAllFiles: () => Promise<void>;
   
   createFile: (name: string, parentId: string | null, content?: string) => string;
@@ -213,11 +214,17 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
   },
 
   saveCurrentFile: async () => {
-    const { activeFileId, markFileSaved, files, rootFolderPath } = get();
+    const { activeFileId, markFileSaved, files, rootFolderPath, saveFileAs } = get();
     if (!activeFileId) return;
 
     const file = files.find(f => f.id === activeFileId);
     if (!file) return;
+
+    // If file is an Untitled scratch buffer with no established path on disk, open Save As dialog
+    if (isElectron() && file.name.startsWith('Untitled') && (!file.path || file.path === file.name)) {
+      await saveFileAs(file.id);
+      return;
+    }
 
     if (isElectron() && (window as any).electronAPI?.saveFile) {
       try {
@@ -256,6 +263,67 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
       title: 'File Saved',
       message: `${file.name} saved to workspace.`,
     });
+  },
+
+  saveFileAs: async (fileId?: string) => {
+    const { activeFileId, markFileSaved, files, rootFolderPath } = get();
+    const targetId = fileId || activeFileId;
+    if (!targetId) return;
+
+    const file = files.find(f => f.id === targetId);
+    if (!file) return;
+
+    if (isElectron() && (window as any).electronAPI?.saveFileAsDialog) {
+      try {
+        const dialogRes = await (window as any).electronAPI.saveFileAsDialog({
+          defaultPath: rootFolderPath || undefined,
+          defaultName: file.name || 'Untitled.txt',
+        });
+
+        if (dialogRes.canceled || !dialogRes.filePath) return;
+
+        const newPath = dialogRes.filePath;
+        const newName = dialogRes.fileName || newPath.split(/[\\/]/).pop() || file.name;
+        const newExt = getFileExtension(newName);
+
+        await (window as any).electronAPI.saveFile({
+          path: newPath,
+          content: file.content || '',
+        });
+
+        const updatedFiles = files.map((f) => f.id === targetId ? {
+          ...f,
+          name: newName,
+          path: newPath,
+          extension: newExt,
+          isModified: false,
+          updatedAt: Date.now(),
+        } : f);
+
+        const updatedTabs = get().openTabs.map((t) => t.fileId === targetId ? {
+          ...t,
+          title: newName,
+          path: newPath,
+          extension: newExt,
+          isModified: false,
+        } : t);
+
+        set({ files: updatedFiles, openTabs: updatedTabs });
+        saveFilesToStorage(updatedFiles);
+        markFileSaved(targetId);
+
+        useToastStore.getState().addToast({
+          type: 'success',
+          title: 'File Saved As',
+          message: `${newName} saved to disk.`,
+        });
+        return;
+      } catch (err: any) {
+        console.warn('Native saveFileAs error:', err);
+      }
+    }
+
+    markFileSaved(targetId);
   },
 
   saveAllFiles: async () => {

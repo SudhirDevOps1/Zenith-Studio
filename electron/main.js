@@ -228,6 +228,38 @@ ipcMain.handle('dialog:openFolder', async () => {
   return { folderPath, folderName, files };
 });
 
+ipcMain.handle('fs:openWorkspacePath', async (_, folderPath) => {
+  try {
+    if (!folderPath) return { success: false, error: 'Path is required' };
+    const stat = await fs.stat(folderPath).catch(() => null);
+    if (!stat || !stat.isDirectory()) {
+      return { success: false, error: `Directory not found: ${folderPath}` };
+    }
+    activeTerminalCwd = folderPath;
+    const folderName = path.basename(folderPath);
+    const files = await scanDirectory(folderPath);
+    return { success: true, folderPath, folderName, files };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('dialog:saveFileAs', async (_, options = {}) => {
+  const defaultPath = options.defaultPath || (activeTerminalCwd ? path.join(activeTerminalCwd, options.defaultName || 'Untitled.txt') : options.defaultName || 'Untitled.txt');
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Save As...',
+    defaultPath,
+    filters: options.filters || [
+      { name: 'All Supported Files', extensions: ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'md', 'py', 'cpp', 'c', 'java', 'rs', 'go', 'php', 'rb', 'kt', 'cs', 'sh', 'txt'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+  if (result.canceled || !result.filePath) {
+    return { canceled: true };
+  }
+  return { canceled: false, filePath: result.filePath, fileName: path.basename(result.filePath) };
+});
+
 ipcMain.handle('fs:readFile', async (_, filePath) => {
   try {
     const content = await fs.readFile(filePath, 'utf-8');

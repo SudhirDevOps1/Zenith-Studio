@@ -21,6 +21,8 @@ interface Window {
   electronAPI?: {
     openFileDialog: () => Promise<any>;
     openFolderDialog: () => Promise<any>;
+    openWorkspacePath: (folderPath: string) => Promise<{ success: boolean; folderPath?: string; folderName?: string; files?: any[]; error?: string }>;
+    saveFileAsDialog: (options?: { defaultPath?: string; defaultName?: string; filters?: any[] }) => Promise<{ canceled: boolean; filePath?: string; fileName?: string }>;
     readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>;
     saveFile: (data: { filePath: string; content: string }) => Promise<{ success: boolean; error?: string }>;
     runNativeCode: (data: any) => Promise<any>;
