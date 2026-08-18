@@ -101,9 +101,24 @@ export const FileTree: React.FC = () => {
   const handleContextMenu = (e: React.MouseEvent, fileId: string | null, isFolder: boolean) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const menuWidth = 230;
+    const menuHeight = 360;
+    const padding = 12;
+
+    let posX = e.clientX;
+    let posY = e.clientY;
+
+    if (posX + menuWidth > window.innerWidth - padding) {
+      posX = window.innerWidth - menuWidth - padding;
+    }
+    if (posY + menuHeight > window.innerHeight - padding) {
+      posY = Math.max(padding, window.innerHeight - menuHeight - padding);
+    }
+
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
+      x: Math.max(padding, posX),
+      y: Math.max(padding, posY),
       fileId,
       isFolder,
     });
@@ -382,13 +397,22 @@ export const FileTree: React.FC = () => {
         </button>
       </div>
 
-      {/* Context Menu Popup */}
+      {/* Context Menu Popup & Backdrop */}
       {contextMenu && (
-        <div
-          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          className="fixed z-50 w-52 bg-[#1e1e2e] border border-slate-700/80 shadow-2xl rounded-md py-1 text-xs text-slate-200 divide-y divide-slate-800 font-sans"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <>
+          <div
+            className="fixed inset-0 z-[999] bg-transparent"
+            onClick={closeContextMenu}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              closeContextMenu();
+            }}
+          />
+          <div
+            style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+            className="fixed z-[1000] w-56 max-h-[calc(100vh-24px)] overflow-y-auto bg-[#181926] border border-slate-700/90 shadow-2xl rounded-xl py-1 text-xs text-slate-200 divide-y divide-slate-800 font-sans backdrop-blur-md animate-in fade-in zoom-in-95 duration-100"
+            onClick={(e) => e.stopPropagation()}
+          >
           <div className="py-1">
             <button
               onClick={() => {
@@ -535,6 +559,7 @@ export const FileTree: React.FC = () => {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );
