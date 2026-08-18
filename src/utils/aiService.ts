@@ -117,8 +117,8 @@ export function normalizeModelName(rawModel: string, provider: AiProvider, endpo
 
 /**
  * Resilient Multi-Layer AI Fetch
- * In Electron  → Uses native IPC (Electron net.request) — CORS never applies
- * In Web/Browser → Uses direct fetch → CORS proxy fallback
+ * In Electron  -> Uses native IPC (Electron net.request) -- CORS never applies
+ * In Web/Browser -> Uses direct fetch -> CORS proxy fallback
  */
 async function safeAiFetch(
   url: string,
@@ -127,7 +127,7 @@ async function safeAiFetch(
   body?: any
 ): Promise<{ ok: boolean; status: number; data: any; error?: string }> {
 
-  // ─── 1. Electron Native IPC (Zero CORS, Chromium network stack) ────────────
+  // 1. Electron Native IPC (Zero CORS, Chromium network stack)
   const electronApi = (window as any).electronAPI;
   const isElectron = !!electronApi?.aiFetch;
 
@@ -136,7 +136,6 @@ async function safeAiFetch(
     try {
       ipcResult = await electronApi.aiFetch({ url, method, headers, body });
     } catch (e: any) {
-      // IPC threw an exception — surface as clear error, don't silently fall through
       throw new Error(`IPC bridge error: ${e?.message || e}`);
     }
 
@@ -144,13 +143,10 @@ async function safeAiFetch(
       throw new Error('No response from Electron IPC bridge. Restart the app and try again.');
     }
 
-    // IPC responded — return directly regardless of HTTP status
-    // (even 401/403 should be returned so the caller can show the proper error)
     if (ipcResult.status && ipcResult.status !== 0) {
       return ipcResult;
     }
 
-    // status=0 means a low-level network failure (DNS, timeout, refused)
     if (ipcResult.status === 0 || ipcResult.ok === false) {
       const errMsg = ipcResult.error || ipcResult.statusText || 'Network error (status 0)';
       throw new Error(`Electron native request failed: ${errMsg}`);
@@ -159,7 +155,7 @@ async function safeAiFetch(
     return ipcResult;
   }
 
-  // ─── 2. Web Mode: Direct Browser Fetch ────────────────────────────────────
+  // 2. Web Mode: Direct Browser Fetch
   try {
     const fetchOptions: RequestInit = {
       method,
@@ -184,7 +180,7 @@ async function safeAiFetch(
   } catch (fetchErr: any) {
     console.warn(`Direct fetch to ${url} failed, attempting CORS proxy:`, fetchErr);
 
-    // ─── 3. Web Mode: CORS Proxy Fallback ──────────────────────────────────
+    // 3. Web Mode: CORS Proxy Fallback
     try {
       const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
       const proxyOptions: RequestInit = {
@@ -491,36 +487,150 @@ export async function generateAiContent(
 }
 
 /**
- * Test Connection with provider API.
- * Uses model listing (GET request) rather than a generation call to avoid CORS
- * issues in web mode and to provide a fast, reliable connection check.
+ * Test Connection -- performs a REAL per-provider HTTP round-trip.
+ * Never falls back to default model lists.
+ * Wrong-provider key (e.g. Groq key in Gemini field) correctly returns failure.
  */
 export async function testAiConnection(settings: Partial<EditorSettings>): Promise<TestConnectionResult> {
   const provider = settings.aiProvider || 'gemini';
+  const apiKey = (settings.aiApiKey || settings.geminiApiKey || '').trim();
   const startTime = performance.now();
 
   try {
-    const models = await detectProviderModels(settings);
-    const latencyMs = Math.round(performance.now() - startTime);
+    let res: { ok: boolean; status: number; data: any; error?: string };
 
-    if (models.length > 0) {
-      return {
-        success: true,
-        message: `Successfully connected to ${provider.toUpperCase()}! Found ${models.length} available model${models.length !== 1 ? 's' : ''}. Latency: ${latencyMs}ms.`,
-        latencyMs,
-        modelsFound: models.length,
-      };
+    switch (provider) {
+      case 'gemini': {
+        if (!apiKey) throw new Error('Gemini API Key is required. Please enter your key.');
+        res = await safeAiFetch(
+          `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+          'GET',
+          {}
+        );
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`Gemini Auth Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      case 'openai': {
+        if (!apiKey) throw new Error('OpenAI API Key is required. Please enter your key.');
+        res = await safeAiFetch('https://api.openai.com/v1/models', 'GET', {
+          Authorization: `Bearer ${apiKey}`,
+        });
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`OpenAI Auth Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      case 'groq': {
+        if (!apiKey) throw new Error('Groq API Key is required. Please enter your key.');
+        res = await safeAiFetch('https://api.groq.com/openai/v1/models', 'GET', {
+          Authorization: `Bearer ${apiKey}`,
+        });
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`Groq Auth Failed (${res.status}): ${msg}. Make sure you selected "Groq" as provider.`);
+        }
+        break;
+      }
+
+      case 'anthropic': {
+        if (!apiKey) throw new Error('Anthropic API Key is required. Please enter your key.');
+        res = await safeAiFetch(
+          'https://api.anthropic.com/v1/messages',
+          'POST',
+          {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          {
+            model: settings.aiModel || 'claude-3-5-haiku-20241022',
+            max_tokens: 10,
+            messages: [{ role: 'user', content: 'Hi' }],
+          }
+        );
+        if (res.status === 401 || res.status === 403) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`Anthropic Auth Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      case 'openrouter': {
+        const orHeaders: Record<string, string> = {};
+        if (apiKey) orHeaders['Authorization'] = `Bearer ${apiKey}`;
+        res = await safeAiFetch('https://openrouter.ai/api/v1/models', 'GET', orHeaders);
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`OpenRouter Auth Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      case 'deepseek': {
+        if (!apiKey) throw new Error('DeepSeek API Key is required. Please enter your key.');
+        res = await safeAiFetch('https://api.deepseek.com/v1/models', 'GET', {
+          Authorization: `Bearer ${apiKey}`,
+        });
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`DeepSeek Auth Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      case 'ollama': {
+        const ep = (settings.aiCustomEndpoint || 'http://localhost:11434').replace(/\/v1.*$/, '');
+        res = await safeAiFetch(`${ep}/api/tags`, 'GET', {});
+        if (!res.ok) {
+          throw new Error(`Ollama not reachable at ${ep}. Is Ollama running? (HTTP ${res.status})`);
+        }
+        break;
+      }
+
+      case 'custom': {
+        const ep = settings.aiCustomEndpoint || '';
+        if (!ep) throw new Error('Custom API Endpoint URL is required.');
+        let baseUrl = ep.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, '');
+        if (!baseUrl.endsWith('/v1') && ep.includes('/v1')) {
+          baseUrl = baseUrl.split('/v1')[0] + '/v1';
+        }
+        res = await safeAiFetch(
+          `${baseUrl}/models`,
+          'GET',
+          apiKey ? { Authorization: `Bearer ${apiKey}` } : {}
+        );
+        if (!res.ok) {
+          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`Custom Provider Failed (${res.status}): ${msg}`);
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unknown provider: ${provider}`);
     }
+
+    const latencyMs = Math.round(performance.now() - startTime);
+    const data = (res as any).data;
+    const rawList = data?.models || data?.data || (Array.isArray(data) ? data : []);
+    const count: number = Array.isArray(rawList) ? rawList.length : 0;
 
     return {
       success: true,
-      message: `Connected to ${provider.toUpperCase()} (${latencyMs} ms). Ready for coding!`,
+      message: `Successfully connected to ${provider.toUpperCase()}! Found ${count > 0 ? count : 'available'} model${count !== 1 ? 's' : ''}. Latency: ${latencyMs}ms.`,
       latencyMs,
+      modelsFound: count,
     };
   } catch (err: any) {
     return {
       success: false,
-      message: `Connection failed: ${err.message || 'Check your API Key, Endpoint URL, or Model name.'}`,
+      message: err.message || 'Connection failed. Check your API Key, Provider selection, and internet connection.',
     };
   }
 }
