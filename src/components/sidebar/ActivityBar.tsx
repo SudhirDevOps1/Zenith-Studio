@@ -21,8 +21,10 @@ import {
   Blocks,
   Bot,
   Bug,
+  Command,
 } from 'lucide-react';
 import { useComposerStore } from '../../stores/useComposerStore';
+import { useTerminalStore } from '../../stores/useTerminalStore';
 import { ZenithLogo } from '../ui/ZenithLogo';
 
 
@@ -215,13 +217,22 @@ export const ActivityBar: React.FC = () => {
 
 
 
-        {/* Command Palette */}
+        {/* Integrated Terminal Button */}
+        <button
+          onClick={() => useTerminalStore.getState().toggleOpen()}
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:text-cyan-300 hover:bg-slate-800/50 transition-all text-slate-400"
+          title="Integrated Terminal (Ctrl+`)"
+        >
+          <Terminal style={{ width: "18px", height: "18px" }} />
+        </button>
+
+        {/* Command Palette Button */}
         <button
           onClick={() => setCommandPaletteOpen(true)}
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:text-slate-100 hover:bg-slate-800/50 transition-all text-slate-400"
           title="Command Palette (Ctrl+Shift+P)"
         >
-          <Terminal style={{ width: "18px", height: "18px" }} />
+          <Command style={{ width: "18px", height: "18px" }} />
         </button>
 
         {/* Info */}

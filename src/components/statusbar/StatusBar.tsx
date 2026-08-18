@@ -4,6 +4,7 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useUpdateStore } from '../../stores/useUpdateStore';
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
+import { useTerminalStore } from '../../stores/useTerminalStore';
 import { getLanguageFromExtension, isElectron } from '../../utils/fileUtils';
 import {
   Terminal,
@@ -103,6 +104,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onOpenGoToLine }) => {
             <AlertTriangle className={`w-3 h-3 ${warningCount > 0 ? 'text-amber-400' : 'text-slate-500'}`} />
             <span>{warningCount}</span>
           </div>
+        </button>
+
+        {/* Integrated Terminal Toggle Button */}
+        <button
+          onClick={() => useTerminalStore.getState().toggleOpen()}
+          className="flex items-center gap-1.5 hover:bg-slate-800 hover:text-cyan-300 px-2 py-0.5 rounded-md transition cursor-pointer text-slate-300 border border-slate-800/80 bg-slate-900/50"
+          title="Toggle Integrated Terminal (Ctrl+`)"
+        >
+          <Terminal className="w-3 h-3 text-cyan-400" />
+          <span className="font-semibold">Terminal</span>
         </button>
 
 

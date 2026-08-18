@@ -48,8 +48,10 @@ export const ExtensionsPanel: React.FC = () => {
     searchQuery,
     isLoadingOnline,
     onlineExtensions,
+    popularExtensions,
     onlineSearchError,
     initializeExtensions,
+    fetchPopularOpenVSX,
     installExtension,
     toggleExtension,
     searchOpenVSX,
@@ -64,15 +66,16 @@ export const ExtensionsPanel: React.FC = () => {
 
   useEffect(() => {
     initializeExtensions();
-  }, [initializeExtensions]);
+    fetchPopularOpenVSX();
+  }, [initializeExtensions, fetchPopularOpenVSX]);
 
-  // Debounced search for Open VSX when typing
+  // Debounced search for Open VSX when typing (supports single char searches like C, R, P)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
+      if (searchQuery.trim().length >= 1) {
         searchOpenVSX(searchQuery);
       }
-    }, 300);
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchQuery, searchOpenVSX]);
 
@@ -137,8 +140,7 @@ export const ExtensionsPanel: React.FC = () => {
 
       // Category filter application
       if (selectedCategory !== 'All') {
-        const catMatches = queryMatches.filter((e) => e.category === selectedCategory);
-        if (catMatches.length > 0) return catMatches;
+        queryMatches = queryMatches.filter((e) => e.category === selectedCategory);
       }
 
       return queryMatches;
@@ -150,7 +152,14 @@ export const ExtensionsPanel: React.FC = () => {
     } else if (activeTab === 'recommended') {
       pool = extensions.filter((e) => e.rating >= 4.85 || e.downloadsCount > 10000000);
     } else {
+      // Marketplace tab: Merge curated catalog + Open VSX popular feed
       pool = [...extensions];
+      const existingIds = new Set(pool.map((e) => e.id));
+      popularExtensions.forEach((pop) => {
+        if (!existingIds.has(pop.id)) {
+          pool.push(pop);
+        }
+      });
     }
 
     if (selectedCategory !== 'All') {

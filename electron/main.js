@@ -474,40 +474,60 @@ ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
   });
 });
 
-// Helper for native HTTPS GET requests (Zero CORS)
-function fetchJsonDirect(url) {
+// Helper for native HTTPS GET requests (Zero CORS, auto-redirect up to 5 hops)
+function fetchJsonDirect(url, hops = 0) {
   return new Promise((resolve, reject) => {
-    https
-      .get(
-        url,
-        {
-          headers: {
-            'User-Agent': 'Zenith-Studio-IDE/1.0.3 (Universal AI Developer Environment)',
+    if (hops > 5) {
+      return reject(new Error('Too many redirects'));
+    }
+    try {
+      const parsedUrl = new URL(url);
+      const isHttps = parsedUrl.protocol === 'https:';
+      const transport = isHttps ? https : require('http');
 
-            Accept: 'application/json',
+      transport
+        .get(
+          url,
+          {
+            headers: {
+              'User-Agent': 'Zenith-Studio-IDE/1.0.3 (VSCodium Compatible Open VSX Client)',
+              Accept: 'application/json',
+            },
+            timeout: 20000,
           },
-        },
-        (res) => {
-          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            return fetchJsonDirect(res.headers.location).then(resolve).catch(reject);
-          }
-          let rawData = '';
-          res.on('data', (chunk) => {
-            rawData += chunk;
-          });
-          res.on('end', () => {
-            try {
-              const parsed = JSON.parse(rawData);
-              resolve(parsed);
-            } catch (e) {
-              reject(new Error(`JSON Parse Error: ${e.message}`));
+          (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+              const redirectUrl = new URL(res.headers.location, url).toString();
+              return fetchJsonDirect(redirectUrl, hops + 1).then(resolve).catch(reject);
             }
-          });
-        }
-      )
-      .on('error', (err) => {
-        reject(err);
-      });
+
+            if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+              return reject(new Error(`HTTP ${res.statusCode} ${res.statusMessage || ''}`));
+            }
+
+            let rawData = '';
+            res.on('data', (chunk) => {
+              rawData += chunk;
+            });
+            res.on('end', () => {
+              try {
+                const parsed = JSON.parse(rawData);
+                resolve(parsed);
+              } catch (e) {
+                reject(new Error(`JSON Parse Error: ${e.message}`));
+              }
+            });
+          }
+        )
+        .on('error', (err) => {
+          reject(err);
+        })
+        .on('timeout', () => {
+          reject(new Error('Request timeout (20s)'));
+        });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -520,11 +540,23 @@ ipcMain.handle('openvsx:search', async (_, query) => {
     if (trimmed.toLowerCase() === 'c++') searchParam = 'cpp';
     else if (trimmed.toLowerCase() === 'c#') searchParam = 'csharp';
 
-    const url = `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`;
+    const url = `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=50&sortBy=relevance`;
     const data = await fetchJsonDirect(url);
     return data;
   } catch (err) {
     console.error('Failed to search Open VSX natively:', err.message);
+    return { extensions: [], error: err.message };
+  }
+});
+
+// Open VSX API Popular / Trending Extensions (VSCodium standard initial feed)
+ipcMain.handle('openvsx:popular', async () => {
+  try {
+    const url = `https://open-vsx.org/api/-/search?size=50&sortBy=downloadCount&sortOrder=desc`;
+    const data = await fetchJsonDirect(url);
+    return data;
+  } catch (err) {
+    console.error('Failed to fetch popular Open VSX extensions natively:', err.message);
     return { extensions: [], error: err.message };
   }
 });

@@ -28,6 +28,7 @@ import {
 
 
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
+import { useTerminalStore } from '../../stores/useTerminalStore';
 import { formatCode } from '../../utils/codeFormatter';
 
 interface CommandItem {
@@ -102,6 +103,28 @@ export const CommandPalette: React.FC = () => {
       },
     },
 
+    {
+      id: 'toggle-terminal',
+      title: 'Terminal: Toggle Integrated Terminal',
+      category: 'Terminal',
+      icon: <Terminal className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+`',
+      action: () => {
+        useTerminalStore.getState().toggleOpen();
+      },
+    },
+    {
+      id: 'new-terminal',
+      title: 'Terminal: Create New PowerShell Terminal Session',
+      category: 'Terminal',
+      icon: <Terminal className="w-4 h-4 text-emerald-400" />,
+      shortcut: 'Ctrl+Shift+`',
+      action: () => {
+        const t = useTerminalStore.getState();
+        t.createSession('powershell', 'PowerShell');
+        t.setIsOpen(true);
+      },
+    },
     {
       id: 'problems-panel',
       title: 'View: Toggle Problems & Diagnostics Panel',

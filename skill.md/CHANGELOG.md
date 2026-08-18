@@ -28,12 +28,17 @@
     - Fixed `Ctrl + P` Quick Open and `Ctrl + G` Go to Line actions in Command Palette by replacing non-functional synthetic `KeyboardEvent` with `CustomEvent` listeners.
     - Extracted `AiSetupModal` to global App level so Command Palette selection no longer causes instant unmount flashing.
     - Added `URL.revokeObjectURL()` cleanup in ZIP export actions to eliminate memory leaks.
-  - **UI & Performance Fixes (`MenuBar.tsx`, `SettingsModal.tsx`, `GitControlPanel.tsx`)**:
-    - Dynamic AI Assistant menu label reflecting current provider (e.g. `AI Assistant (GROQ)`).
-    - Protected OS Vault keys during Settings Reset with a warning confirmation dialog.
-    - Fixed Git status re-triggering on every single editor keypress by removing `files` reference from dependency array.
-    - Visually disabled Git commit button when commit message is blank.
-    - Dynamic workspace status indicator (amber when modified files exist, green when clean).
+  - **Integrated Terminal Global Access & UI Overhaul (`useTerminalStore.ts`, `MenuBar.tsx`, `StatusBar.tsx`, `ActivityBar.tsx`, `CommandPalette.tsx`, `App.tsx`)**:
+    - Added `isOpen`, `setIsOpen`, and `toggleOpen` to `useTerminalStore` to eliminate local state isolation.
+    - Added dedicated top-level **`Terminal`** menu to MenuBar (`New Terminal (Ctrl+Shift+\`)`, `Toggle Terminal (Ctrl+\`)`, `Split Terminal`, `Clear Active Terminal`).
+    - Added `Integrated Terminal` to `View` dropdown menu.
+    - Added clickable **`>_ Terminal`** button in the bottom StatusBar next to Problems & Diagnostics.
+    - Re-linked ActivityBar Terminal button to toggle the real Integrated Terminal (moved Command Palette to its own dedicated shortcut button).
+  - **Extensions Marketplace VSCodium / Open VSX Overhaul (`electron/main.js`, `electron/preload.js`, `useExtensionStore.ts`, `ExtensionsPanel.tsx`)**:
+    - Added automatic **Live Popular Feed** fetching top downloaded Open VSX extensions on startup (`sortBy=downloadCount`).
+    - Sequence counter lock on search queries to eliminate race condition overwrites from asynchronous IPC/network responses.
+    - Added 1-character search support and multi-hop safe redirect resolution (up to 5 hops) in Electron HTTPS fetcher.
+    - Seamless category filtering across both curated local catalog and live Open VSX results.
 * **Files Modified:** `electron/main.js`, `electron/preload.js`, `src/utils/aiService.ts`, `src/utils/storage.ts`, `src/stores/useSettingsStore.ts`, `src/stores/useComposerStore.ts`, `src/components/ui/AiSetupModal.tsx`, `src/components/sidebar/AiAssistantPanel.tsx`, `src/components/sidebar/GitControlPanel.tsx`, `src/components/ui/MenuBar.tsx`, `src/components/ui/SettingsModal.tsx`, `src/components/ui/CommandPalette.tsx`, `src/App.tsx`, `README.md`, `skill.md/CHANGELOG.md`, `skill.md/skills/ai_secure_vault_multi_provider_skill.md`.
 
 ---

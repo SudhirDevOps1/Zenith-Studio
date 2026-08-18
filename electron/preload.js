@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   runNativeCode: (data) => ipcRenderer.invoke('code:runNative', data),
   execTerminalCommand: (data) => ipcRenderer.invoke('terminal:execCommand', data),
   searchOpenVSX: (query) => ipcRenderer.invoke('openvsx:search', query),
+  getPopularOpenVSX: () => ipcRenderer.invoke('openvsx:popular'),
   getExtensionDetails: (data) => ipcRenderer.invoke('openvsx:extension', data),
   aiFetch: (data) => ipcRenderer.invoke('ai:fetch', data),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

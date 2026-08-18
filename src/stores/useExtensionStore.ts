@@ -14,6 +14,7 @@ interface ExtensionStoreState {
   selectedExtension: ExtensionItem | null;
   isLoadingOnline: boolean;
   onlineExtensions: ExtensionItem[];
+  popularExtensions: ExtensionItem[];
   onlineSearchError: string | null;
 
   initializeExtensions: () => Promise<void>;
@@ -21,6 +22,7 @@ interface ExtensionStoreState {
   uninstallExtension: (id: string) => Promise<void>;
   toggleExtension: (id: string) => Promise<void>;
   searchOpenVSX: (query: string) => Promise<void>;
+  fetchPopularOpenVSX: () => Promise<void>;
   setSelectedExtension: (ext: ExtensionItem | null) => void;
   setActiveTab: (tab: 'marketplace' | 'installed' | 'recommended') => void;
   setSelectedCategory: (cat: ExtensionCategory) => void;
@@ -28,6 +30,44 @@ interface ExtensionStoreState {
 }
 
 let activeSearchAbortController: AbortController | null = null;
+let searchSequenceCounter = 0;
+
+const detectCategory = (extName: string, tags: string[] = [], desc: string = ''): ExtensionCategory => {
+  const text = `${extName} ${tags.join(' ')} ${desc}`.toLowerCase();
+  if (text.includes('theme') || text.includes('color-theme') || text.includes('icon-theme')) return 'Themes';
+  if (text.includes('format') || text.includes('prettier') || text.includes('beautif')) return 'Formatters';
+  if (text.includes('lint') || text.includes('eslint') || text.includes('hint')) return 'Linters';
+  if (text.includes('snippet') || text.includes('template')) return 'Snippets';
+  if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser') || text.includes('server') || text.includes('runner')) return 'AI & Productivity';
+  return 'Programming Languages';
+};
+
+const mapOpenVsxItems = (rawExtensions: any[] = []): ExtensionItem[] => {
+  return rawExtensions.map((item: any) => {
+    const cat = detectCategory(item.name || '', item.tags || [], item.description || '');
+    const downloads = item.downloadCount || 0;
+    return {
+      id: `${item.namespace}.${item.name}`,
+      name: item.name,
+      displayName: item.displayName || item.name,
+      publisher: item.namespace,
+      version: item.version || '1.0.0',
+      description: item.description || `Open VSX Community Extension for Zenith Studio & VS Code.`,
+      category: cat,
+      icon: item.files?.icon,
+      downloads: downloads > 1000000 ? `${(downloads / 1000000).toFixed(1)}M` : downloads > 1000 ? `${(downloads / 1000).toFixed(0)}k` : `${downloads}`,
+      downloadsCount: downloads,
+      rating: item.averageRating ? Number(item.averageRating.toFixed(1)) : 4.8,
+      reviewsCount: item.reviewCount || 12,
+      verified: item.verified || false,
+      installed: false,
+      enabled: false,
+      tags: Array.isArray(item.tags) ? item.tags : [item.name, 'community'],
+      source: 'open-vsx',
+      readme: `# ${item.displayName || item.name}\n\n${item.description || ''}\n\n- **Publisher**: ${item.namespace}\n- **Version**: ${item.version}\n- **Source**: [Open VSX Registry](https://open-vsx.org/extension/${item.namespace}/${item.name})`,
+    };
+  });
+};
 
 export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
   extensions: DEFAULT_EXTENSIONS,
@@ -37,6 +77,7 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
   selectedExtension: null,
   isLoadingOnline: false,
   onlineExtensions: [],
+  popularExtensions: [],
   onlineSearchError: null,
 
   initializeExtensions: async () => {
@@ -66,11 +107,11 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
   },
 
   installExtension: async (id: string) => {
-    const { extensions, onlineExtensions } = get();
+    const { extensions, onlineExtensions, popularExtensions } = get();
     let target = extensions.find((e) => e.id === id);
 
     if (!target) {
-      target = onlineExtensions.find((e) => e.id === id);
+      target = onlineExtensions.find((e) => e.id === id) || popularExtensions.find((e) => e.id === id);
     }
 
     if (!target) return;
@@ -116,12 +157,38 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
     }
   },
 
+  fetchPopularOpenVSX: async () => {
+    if (get().popularExtensions.length > 0) return;
+    try {
+      let data: any = null;
+      if (typeof window !== 'undefined' && (window as any).electronAPI?.getPopularOpenVSX) {
+        data = await (window as any).electronAPI.getPopularOpenVSX();
+      }
+
+      if (!data || !Array.isArray(data.extensions)) {
+        const res = await fetch('https://open-vsx.org/api/-/search?size=50&sortBy=downloadCount&sortOrder=desc');
+        if (res.ok) {
+          data = await res.json();
+        }
+      }
+
+      if (data && Array.isArray(data.extensions)) {
+        const items = mapOpenVsxItems(data.extensions);
+        set({ popularExtensions: items });
+      }
+    } catch (err) {
+      console.warn('Could not fetch popular Open VSX feed:', err);
+    }
+  },
+
   searchOpenVSX: async (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) {
       set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
       return;
     }
+
+    const currentSeq = ++searchSequenceCounter;
 
     if (activeSearchAbortController) {
       activeSearchAbortController.abort();
@@ -151,7 +218,7 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
       if (!data || !Array.isArray(data.extensions)) {
         try {
           const res = await fetch(
-            `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`,
+            `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=50&sortBy=relevance`,
             { signal: activeSearchAbortController.signal }
           );
           if (res.ok) {
@@ -161,10 +228,10 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
           // 3. Web Mode Fallback: Multi-Proxy Failover
           const proxyUrls = [
             `https://corsproxy.io/?${encodeURIComponent(
-              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`
+              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=50&sortBy=relevance`
             )}`,
             `https://api.allorigins.win/raw?url=${encodeURIComponent(
-              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=35`
+              `https://open-vsx.org/api/-/search?query=${encodeURIComponent(searchParam)}&size=50&sortBy=relevance`
             )}`,
           ];
 
@@ -182,52 +249,21 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
         }
       }
 
+      // Sequence guard: Only apply if this is still the latest active search
+      if (currentSeq !== searchSequenceCounter) return;
+
       if (!data || !Array.isArray(data.extensions)) {
         set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
         return;
       }
 
-
-      const detectCategory = (extName: string, tags: string[] = [], desc: string = ''): ExtensionCategory => {
-        const text = `${extName} ${tags.join(' ')} ${desc}`.toLowerCase();
-        if (text.includes('theme') || text.includes('color-theme') || text.includes('icon-theme')) return 'Themes';
-        if (text.includes('format') || text.includes('prettier') || text.includes('beautif')) return 'Formatters';
-        if (text.includes('lint') || text.includes('eslint') || text.includes('hint')) return 'Linters';
-        if (text.includes('snippet') || text.includes('template')) return 'Snippets';
-        if (text.includes('ai') || text.includes('copilot') || text.includes('git') || text.includes('preview') || text.includes('browser') || text.includes('server') || text.includes('runner')) return 'AI & Productivity';
-        return 'Programming Languages';
-      };
-
-      const items: ExtensionItem[] = (data.extensions || []).map((item: any) => {
-        const cat = detectCategory(item.name || '', item.tags || [], item.description || '');
-        const downloads = item.downloadCount || 0;
-        return {
-          id: `${item.namespace}.${item.name}`,
-          name: item.name,
-          displayName: item.displayName || item.name,
-          publisher: item.namespace,
-          version: item.version || '1.0.0',
-          description: item.description || `Open VSX Community Extension for CodeStudio & VS Code.`,
-          category: cat,
-          icon: item.files?.icon,
-          downloads: downloads > 1000000 ? `${(downloads / 1000000).toFixed(1)}M` : downloads > 1000 ? `${(downloads / 1000).toFixed(0)}k` : `${downloads}`,
-          downloadsCount: downloads,
-          rating: item.averageRating ? Number(item.averageRating.toFixed(1)) : 4.8,
-          reviewsCount: item.reviewCount || 12,
-          verified: item.verified || false,
-          installed: false,
-          enabled: false,
-          tags: Array.isArray(item.tags) ? item.tags : [item.name, 'community'],
-          source: 'open-vsx',
-          readme: `# ${item.displayName || item.name}\n\n${item.description || ''}\n\n- **Publisher**: ${item.namespace}\n- **Version**: ${item.version}\n- **Source**: [Open VSX Registry](https://open-vsx.org/extension/${item.namespace}/${item.name})`,
-        };
-      });
-
+      const items = mapOpenVsxItems(data.extensions);
       set({ onlineExtensions: items, isLoadingOnline: false, onlineSearchError: null });
     } catch (err: any) {
       if (err.name === 'AbortError') return;
-      // Graceful fallback without scary red error so local catalog shines
-      set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
+      if (currentSeq === searchSequenceCounter) {
+        set({ onlineExtensions: [], isLoadingOnline: false, onlineSearchError: null });
+      }
     }
   },
 

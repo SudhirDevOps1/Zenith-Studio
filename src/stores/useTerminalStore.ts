@@ -178,12 +178,15 @@ export const DEFAULT_QUICK_COMMANDS: QuickCommand[] = [
 ];
 
 interface TerminalState {
+  isOpen: boolean;
   sessions: TerminalSession[];
   activeSessionId: string;
   splitSessionId: string | null;
   settings: TerminalSettings;
 
   // Actions
+  setIsOpen: (open: boolean) => void;
+  toggleOpen: () => void;
   createSession: (type?: TerminalShellType, name?: string, initialCwd?: string) => string;
   removeSession: (id: string) => void;
   setActiveSession: (id: string) => void;
@@ -230,10 +233,14 @@ const createInitialSession = (cwd = ''): TerminalSession => ({
 export const useTerminalStore = create<TerminalState>()(
   persist(
     (set, get) => ({
+      isOpen: false,
       sessions: [createInitialSession()],
       activeSessionId: 'term-default',
       splitSessionId: null,
       settings: DEFAULT_SETTINGS,
+
+      setIsOpen: (open: boolean) => set({ isOpen: open }),
+      toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),
 
       createSession: (type = 'powershell', name, initialCwd = '') => {
         const id = 'term-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);

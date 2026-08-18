@@ -27,6 +27,7 @@ interface Window {
     execTerminalCommand: (data: { command: string; cwd?: string; shell?: string }) => Promise<any>;
 
     searchOpenVSX: (query: string) => Promise<any>;
+    getPopularOpenVSX: () => Promise<any>;
     getExtensionDetails: (data: { namespace: string; name: string }) => Promise<any>;
     aiFetch: (data: { url: string; method?: string; headers?: Record<string, string>; body?: any }) => Promise<{
       ok: boolean;

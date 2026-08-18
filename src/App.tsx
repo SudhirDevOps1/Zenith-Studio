@@ -44,6 +44,7 @@ import { useComposerStore } from './stores/useComposerStore';
 import { useDebugStore } from './stores/useDebugStore';
 import { useUpdateStore } from './stores/useUpdateStore';
 import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
+import { useTerminalStore } from './stores/useTerminalStore';
 
 import { applyAccentToDOM } from './utils/accentThemes';
 import { X, PanelRightClose, PanelLeftClose } from 'lucide-react';
@@ -92,10 +93,10 @@ export default function App() {
   const { checkForUpdates } = useUpdateStore();
   const { isProblemsOpen, setProblemsOpen } = useDiagnosticsStore();
 
+  const { isOpen: showTerminal, setIsOpen: setShowTerminal, toggleOpen: toggleTerminal } = useTerminalStore();
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [editorSplitPct, setEditorSplitPct] = useState(50);
   const [scrollPercentage, setScrollPercentage] = useState<number>(0);
-  const [showTerminal, setShowTerminal] = useState(false);
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
@@ -228,7 +229,7 @@ export default function App() {
         setShowFindReplace(true);
       } else if ((e.ctrlKey || e.metaKey) && (e.key === '`' || e.key === '~')) {
         e.preventDefault();
-        setShowTerminal((prev) => !prev);
+        toggleTerminal();
       } else if (e.key === 'F1' || ((e.ctrlKey || e.metaKey) && e.key === '/')) {
         e.preventDefault();
         setShortcutsModalOpen(true);
@@ -247,18 +248,21 @@ export default function App() {
     // Bug #11: CustomEvent listeners for quick-open and goto-line (synthetic KB events don't work)
     const handleQuickOpenEvent = () => setQuickOpenMode('file');
     const handleGotoLineEvent = () => setQuickOpenMode('line');
+    const handleToggleTerminalEvent = () => toggleTerminal();
 
     window.addEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
     window.addEventListener('zenith:quick-open', handleQuickOpenEvent);
     window.addEventListener('zenith:goto-line', handleGotoLineEvent);
+    window.addEventListener('zenith:toggle-terminal', handleToggleTerminalEvent);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
       window.removeEventListener('zenith:quick-open', handleQuickOpenEvent);
       window.removeEventListener('zenith:goto-line', handleGotoLineEvent);
+      window.removeEventListener('zenith:toggle-terminal', handleToggleTerminalEvent);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder, handleOpenSnapshot]);
+  }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder, handleOpenSnapshot, toggleTerminal, setShowTerminal]);
 
 
   // Mouse move resize handling
