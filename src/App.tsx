@@ -41,7 +41,9 @@ import { DebugToolbar } from './components/debugger/DebugToolbar';
 import { AiComposerModal } from './components/composer/AiComposerModal';
 import { AiSetupModal } from './components/ui/AiSetupModal'; // Bug #19: Global modal
 import { ExtensionDetailModal } from './components/extensions/ExtensionDetailModal';
+import { WorkspaceSwitcherModal } from './components/workspace/WorkspaceSwitcherModal';
 import { useComposerStore } from './stores/useComposerStore';
+import { useWorkspaceStore } from './stores/useWorkspaceStore';
 import { useDebugStore } from './stores/useDebugStore';
 import { useUpdateStore } from './stores/useUpdateStore';
 import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
@@ -228,6 +230,9 @@ export default function App() {
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
         e.preventDefault();
         setShowFindReplace(true);
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        useWorkspaceStore.getState().setSwitcherOpen(true);
       } else if ((e.ctrlKey || e.metaKey) && (e.key === '`' || e.key === '~')) {
         e.preventDefault();
         toggleTerminal();
@@ -575,6 +580,7 @@ export default function App() {
       {/* Bug #19: Global AiSetupModal — not inside CommandPalette so it doesn't unmount on palette close */}
       <AiSetupModal isOpen={isAiSetupOpen} onClose={() => setAiSetupOpen(false)} />
       <ExtensionDetailModal />
+      <WorkspaceSwitcherModal />
       
       {/* Global App Dialog */}
 

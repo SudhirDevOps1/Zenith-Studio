@@ -5,11 +5,13 @@ import { useDialogStore } from '../../stores/useDialogStore';
 import { useUpdateStore } from '../../stores/useUpdateStore';
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { useTerminalStore } from '../../stores/useTerminalStore';
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 import { createZipFromFiles, isElectron } from '../../utils/fileUtils';
 import { formatCode } from '../../utils/codeFormatter';
 import {
   Code2,
   FilePlus,
+  Folder,
   FolderPlus,
   Save,
   Download,
@@ -174,6 +176,19 @@ export const MenuBar: React.FC = () => {
                   <FolderPlus className="w-3.5 h-3.5 text-emerald-400" /> Add Folder to Workspace...
                 </span>
                 <span className="text-[10px] text-emerald-400 font-mono">Multi-Root</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  useWorkspaceStore.getState().setSwitcherOpen(true);
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Folder className="w-3.5 h-3.5 text-cyan-400" /> Switch Workspace / Recent Projects...
+                </span>
+                <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+R</kbd>
               </button>
 
               <div className="border-t border-slate-800 my-1" />
@@ -589,11 +604,15 @@ export const MenuBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Center Project / Workspace Badge */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/60 border border-slate-800/80 rounded-full text-[11px] font-mono text-slate-300 shadow-inner hidden md:flex" style={{ WebkitAppRegion: 'no-drag' } as any}>
-        {/* Bug #17: Badge dot color = amber if unsaved files exist, green if workspace is clean */}
+      {/* Center Project / Workspace Badge (Clickable to switch workspaces) */}
+      <button
+        onClick={() => useWorkspaceStore.getState().setSwitcherOpen(true)}
+        className="flex items-center gap-2 px-3 py-1 bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-full text-[11px] font-mono text-slate-300 shadow-inner hidden md:flex cursor-pointer transition group"
+        title="Switch Workspace / Recent Projects (Ctrl+R)"
+        style={{ WebkitAppRegion: 'no-drag' } as any}
+      >
         <span className={`w-2 h-2 rounded-full animate-pulse ${files.some(f => f.isModified) ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-        <span className="text-slate-400">workspace:</span>
+        <span className="text-slate-400 group-hover:text-cyan-300">workspace:</span>
         <span className="font-semibold text-white truncate max-w-[180px]">{folderName}</span>
         {activeFile && (
           <>
@@ -601,7 +620,7 @@ export const MenuBar: React.FC = () => {
             <span className="text-cyan-300 font-bold truncate max-w-[160px]">{activeFile.name}</span>
           </>
         )}
-      </div>
+      </button>
 
       {/* Right Native Window Actions for Electron Desktop */}
       {isDesktop && (
