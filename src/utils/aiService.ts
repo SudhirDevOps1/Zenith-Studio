@@ -127,31 +127,23 @@ async function safeAiFetch(
   body?: any
 ): Promise<{ ok: boolean; status: number; data: any; error?: string }> {
 
-  // 1. Electron Native IPC (Zero CORS, Chromium network stack)
+  // 1. Electron Native IPC (Zero CORS, Node.js Direct HTTPS Socket)
   const electronApi = (window as any).electronAPI;
   const isElectron = !!electronApi?.aiFetch;
 
   if (isElectron) {
-    let ipcResult: any;
     try {
-      ipcResult = await electronApi.aiFetch({ url, method, headers, body });
+      const ipcResult = await electronApi.aiFetch({ url, method, headers, body });
+      if (ipcResult && typeof ipcResult.status === 'number' && ipcResult.status > 0) {
+        return ipcResult;
+      }
+      console.warn('[AI Service] Electron native IPC returned status 0, attempting direct web fetch fallback...');
     } catch (e: any) {
-      throw new Error(`IPC bridge error: ${e?.message || e}`);
+      console.warn('[AI Service] Electron IPC bridge error, attempting direct web fetch fallback:', e);
     }
-
-    if (!ipcResult) {
-      throw new Error('No response from Electron IPC bridge. Restart the app and try again.');
-    }
-
-    if (typeof ipcResult.status === 'number' && ipcResult.status > 0) {
-      return ipcResult;
-    }
-
-    const errMsg = ipcResult.error || ipcResult.statusText || 'Unable to connect to AI server (network error 0). Check your internet connection or proxy.';
-    throw new Error(errMsg);
   }
 
-  // 2. Web Mode: Direct Browser Fetch
+  // 2. Direct Browser Fetch
   try {
     const fetchOptions: RequestInit = {
       method,
@@ -178,7 +170,7 @@ async function safeAiFetch(
 
     // 3. Web Mode: CORS Proxy Fallback
     try {
-      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
       const proxyOptions: RequestInit = {
         method,
         headers: {
