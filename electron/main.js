@@ -24,7 +24,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     title: 'Zenith Studio',
-
+    icon: path.join(__dirname, '../public/icon.png'),
     backgroundColor: '#14141f',
     frame: false, // Custom styled window titlebar
     titleBarStyle: 'hidden',
