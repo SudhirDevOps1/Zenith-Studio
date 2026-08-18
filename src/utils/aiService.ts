@@ -249,11 +249,30 @@ export async function detectProviderModels(settings: Partial<EditorSettings>): P
         });
         if (!res.ok) throw new Error(`Groq API Error (${res.status}): ${res.data?.error?.message || res.error}`);
         const data = res.data;
-        const models: ModelInfo[] = (data.data || []).map((m: any) => ({
-          id: m.id,
-          name: m.id,
-          description: `Context: ${m.context_window || 'N/A'} tokens`,
-        }));
+        const preferredOrder = [
+          'llama-3.3-70b-versatile',
+          'llama-3.1-8b-instant',
+          'deepseek-r1-distill-llama-70b',
+          'llama-3.1-70b-versatile',
+          'mixtral-8x7b-32768',
+          'gemma2-9b-it',
+        ];
+
+        const rawList = (data.data || []).filter((m: any) => m.active !== false && !m.id.startsWith('openai/gpt-oss'));
+        const models: ModelInfo[] = rawList
+          .sort((a: any, b: any) => {
+            const idxA = preferredOrder.indexOf(a.id);
+            const idxB = preferredOrder.indexOf(b.id);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return a.id.localeCompare(b.id);
+          })
+          .map((m: any) => ({
+            id: m.id,
+            name: m.id,
+            description: `Context: ${m.context_window || 'N/A'} tokens`,
+          }));
         return models.length > 0 ? models : DEFAULT_PROVIDER_MODELS.groq.map((id) => ({ id, name: id }));
       }
 
