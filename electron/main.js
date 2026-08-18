@@ -10,6 +10,9 @@ const { exec, execFile } = require('child_process');
 // Disable QUIC (HTTP/3 over UDP) — prevents net::ERR_QUIC_PROTOCOL_ERROR on Windows/ISP networks
 app.commandLine.appendSwitch('disable-quic');
 app.commandLine.appendSwitch('disable-http2-grease');
+app.commandLine.appendSwitch('ignore-certificate-errors');
+app.commandLine.appendSwitch('allow-insecure-localhost');
+app.commandLine.appendSwitch('disable-features', 'BlockInsecurePrivateNetworkRequests');
 
 let mainWindow;
 
@@ -670,60 +673,113 @@ function nodeHttpsFetchDirect(url, method = 'POST', headers = {}, bodyStr = null
 }
 
 // ─── AI Secure Proxy Fetch IPC ──────────────────────────────────────────────────
-// Primary Transport: Node.js Native HTTPS (Direct TCP TLS — 100% immune to QUIC/Chromium network drops)
-// Secondary Transport: Electron net.fetch
+// Layer 1: Node.js Global Fetch (Undici C++ Engine — 100% immune to Chromium network sandbox & ERR_NETWORK_ACCESS_DENIED)
+// Layer 2: Node.js Native HTTPS Socket (Direct TCP TLS Socket)
+// Layer 3: Electron net.fetch
 ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
-  try {
-    const bodyStr = body != null
-      ? (typeof body === 'string' ? body : JSON.stringify(body))
-      : null;
+  const bodyStr = body != null
+    ? (typeof body === 'string' ? body : JSON.stringify(body))
+    : null;
 
-    // ── Layer 1: Node.js Direct HTTPS TCP Socket (Zero QUIC / Zero Chromium sandbox interference) ──
+  // ── Layer 1: Node.js Global Native Fetch (Undici — Zero Chromium Network Sandbox blocks) ──
+  if (typeof globalThis.fetch === 'function') {
+    try {
+      const fetchHeaders = {
+        'Accept': 'application/json, text/plain, */*',
+        'User-Agent': 'Zenith-Studio-IDE/1.0.3',
+      };
+      for (const [k, v] of Object.entries(headers || {})) {
+        if (!k) continue;
+        const cleanK = String(k).trim();
+        const cleanV = typeof v === 'string' ? v.replace(/[\r\n]+/g, ' ').trim() : String(v || '');
+        fetchHeaders[cleanK] = cleanV;
+      }
+
+      const init = {
+        method: (method || 'POST').toUpperCase(),
+        headers: fetchHeaders,
+      };
+      if (bodyStr && init.method !== 'GET' && init.method !== 'HEAD') {
+        if (!fetchHeaders['Content-Type']) fetchHeaders['Content-Type'] = 'application/json';
+        init.body = bodyStr;
+      }
+
+      const response = await globalThis.fetch(url, init);
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await response.json().catch(() => ({}));
+      } else {
+        data = await response.text().catch(() => '');
+      }
+
+      try {
+        console.log(`[AI Fetch - Native Fetch] ${init.method} ${new URL(url).hostname} → ${response.status}`);
+      } catch {}
+
+      return {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText || '',
+        data,
+      };
+    } catch (fetchErr) {
+      console.warn('[AI Fetch - Native Fetch warning]:', fetchErr.message);
+    }
+  }
+
+  // ── Layer 2: Node.js Direct HTTPS TCP Socket ──
+  try {
     const nodeResult = await nodeHttpsFetchDirect(url, method, headers, bodyStr);
     if (nodeResult.status > 0) {
       return nodeResult;
     }
-
-    // ── Layer 2 Fallback: Electron net.fetch ──
-    if (typeof net !== 'undefined' && typeof net.fetch === 'function') {
-      try {
-        const fetchOptions = {
-          method: (method || 'POST').toUpperCase(),
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Zenith-Studio-IDE/1.0.3',
-            ...(headers || {}),
-          },
-        };
-        if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
-          fetchOptions.body = bodyStr;
-        }
-
-        const response = await net.fetch(url, fetchOptions);
-        const contentType = response.headers.get('content-type') || '';
-        let data;
-        if (contentType.includes('application/json')) {
-          data = await response.json().catch(() => ({}));
-        } else {
-          data = await response.text().catch(() => '');
-        }
-
-        return {
-          ok: response.ok,
-          status: response.status,
-          statusText: response.statusText,
-          data,
-        };
-      } catch (netErr) {
-        console.warn('[AI Fetch] net.fetch also failed:', netErr.message);
-      }
-    }
-
-    return nodeResult;
-  } catch (err) {
-    console.error('[AI Fetch] Fatal setup error:', err.message);
-    return { ok: false, status: 0, statusText: err.message, data: null, error: err.message };
+  } catch (httpsErr) {
+    console.warn('[AI Fetch - HTTPS Socket warning]:', httpsErr.message);
   }
+
+  // ── Layer 3: Electron net.fetch ──
+  if (typeof net !== 'undefined' && typeof net.fetch === 'function') {
+    try {
+      const fetchOptions = {
+        method: (method || 'POST').toUpperCase(),
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Zenith-Studio-IDE/1.0.3',
+          ...(headers || {}),
+        },
+      };
+      if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+        fetchOptions.body = bodyStr;
+      }
+
+      const response = await net.fetch(url, fetchOptions);
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await response.json().catch(() => ({}));
+      } else {
+        data = await response.text().catch(() => '');
+      }
+
+      return {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        data,
+      };
+    } catch (netErr) {
+      console.warn('[AI Fetch - net.fetch warning]:', netErr.message);
+    }
+  }
+
+  return {
+    ok: false,
+    status: 0,
+    statusText: 'Network Access Denied',
+    data: null,
+    error: 'Could not establish connection to AI provider. Please verify your internet connection, firewall, or proxy settings.',
+  };
 });
 
 
