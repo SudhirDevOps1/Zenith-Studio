@@ -18,9 +18,7 @@ import {
   Download,
   MoreVertical,
   UploadCloud,
-  RotateCcw,
   FolderTree,
-  Sparkles,
   FileArchive,
   ExternalLink,
 } from 'lucide-react';
@@ -40,7 +38,6 @@ export const FileTree: React.FC = () => {
     duplicateFileItem,
     moveFileItem,
     collapseAllFolders: collapseAllStoreFolders,
-    resetToDefaultFiles,
     importFilesFromOS,
     openSystemFolder,
     addFolderToWorkspace,
@@ -176,19 +173,6 @@ export const FileTree: React.FC = () => {
 
   const collapseAllFolders = () => {
     collapseAllStoreFolders();
-  };
-
-  const createTemplateFile = (type: 'react' | 'html' | 'mermaid' | 'ts') => {
-    const templates = {
-      react: { name: 'Component.tsx', content: `import React from 'react';\n\nexport const MyComponent: React.FC = () => {\n  return <div>Hello Zenith Studio!</div>;\n};\n` },
-
-      html: { name: 'index.html', content: `<!DOCTYPE html>\n<html>\n<head>\n  <title>New Page</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>\n` },
-      mermaid: { name: 'diagram.mermaid', content: `graph TD\n    A[Start] --> B[Process]\n    B --> C[Done]\n` },
-      ts: { name: 'utils.ts', content: `export const multiply = (a: number, b: number): number => a * b;\n` },
-    };
-
-    const tmpl = templates[type];
-    createFile(tmpl.name, null, tmpl.content);
   };
 
   const renderTreeNodes = (parentId: string | null, depth = 0) => {
@@ -369,14 +353,22 @@ export const FileTree: React.FC = () => {
       {/* Main File Tree List */}
       <div className="flex-1 overflow-y-auto py-1 space-y-0.5">
         {rootFiles.length === 0 ? (
-          <div className="p-4 text-center text-xs text-slate-500 space-y-2">
-            <p>No files in project workspace.</p>
-            <button
-              onClick={resetToDefaultFiles}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition"
-            >
-              Reset Sample Project
-            </button>
+          <div className="p-4 text-center text-xs text-slate-500 space-y-3">
+            <p className="font-medium text-slate-400">No files in workspace</p>
+            <div className="space-y-1.5 pt-1">
+              <button
+                onClick={() => showCreateFileDialog(null)}
+                className="w-full py-1.5 px-3 bg-blue-600/30 hover:bg-blue-600/50 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold transition"
+              >
+                + New File
+              </button>
+              <button
+                onClick={openSystemFolder}
+                className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
+              >
+                Open Folder...
+              </button>
+            </div>
           </div>
         ) : (
           renderTreeNodes(null)
@@ -389,13 +381,6 @@ export const FileTree: React.FC = () => {
           <FileArchive className="w-3 h-3" />
           Drag files or ZIP to upload
         </span>
-        <button
-          onClick={resetToDefaultFiles}
-          className="hover:text-slate-300 flex items-center gap-1 transition"
-          title="Reset to default sample files"
-        >
-          <RotateCcw className="w-3 h-3" /> Reset
-        </button>
       </div>
 
       {/* Context Menu Popup & Backdrop */}
@@ -454,31 +439,6 @@ export const FileTree: React.FC = () => {
             >
               <FolderOpen className="w-3.5 h-3.5 text-cyan-400" />
               <span>Open Folder from System</span>
-            </button>
-          </div>
-
-          {/* Quick Starter Templates */}
-          <div className="py-1">
-            <span className="px-3 py-1 text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-400" /> Templates
-            </span>
-            <button
-              onClick={() => {
-                createTemplateFile('react');
-                closeContextMenu();
-              }}
-              className="w-full flex items-center gap-2 px-3 py-1 hover:bg-blue-600 hover:text-white transition text-left text-[11px]"
-            >
-              React Component (.tsx)
-            </button>
-            <button
-              onClick={() => {
-                createTemplateFile('mermaid');
-                closeContextMenu();
-              }}
-              className="w-full flex items-center gap-2 px-3 py-1 hover:bg-blue-600 hover:text-white transition text-left text-[11px]"
-            >
-              Mermaid Diagram (.mermaid)
             </button>
           </div>
 

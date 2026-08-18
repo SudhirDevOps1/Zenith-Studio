@@ -1,7 +1,6 @@
 import { get, set } from 'idb-keyval';
 import { FileItem } from '../types/fileSystem';
 import { EditorSettings, DEFAULT_SETTINGS } from '../types/settings';
-import { INITIAL_SAMPLE_FILES } from './fileUtils';
 
 const FILES_KEY = 'zenith_studio_files_v1';
 const SETTINGS_KEY = 'zenith_studio_settings_v1';
@@ -10,21 +9,29 @@ const LEGACY_SETTINGS_KEY = 'codestudio_settings_v1';
 
 export const loadFilesFromStorage = async (): Promise<FileItem[]> => {
   try {
-    let savedFiles = await get<FileItem[]>(FILES_KEY);
-    if (!savedFiles || !Array.isArray(savedFiles) || savedFiles.length === 0) {
-      savedFiles = await get<FileItem[]>(LEGACY_FILES_KEY);
+    const savedFiles = await get<FileItem[]>(FILES_KEY);
+    if (savedFiles !== undefined && savedFiles !== null) {
+      if (Array.isArray(savedFiles)) {
+        return savedFiles.filter(
+          (f) => f.id !== 'folder-docs' && f.parentId !== 'folder-docs' && !f.path?.startsWith('docs/')
+        );
+      }
+      return [];
     }
-    if (savedFiles && Array.isArray(savedFiles) && savedFiles.length > 0) {
-      // Filter out legacy demo docs folder if present from earlier runs
-      const cleaned = savedFiles.filter(
-        (f) => f.id !== 'folder-docs' && f.parentId !== 'folder-docs' && !f.path?.startsWith('docs/')
-      );
-      return cleaned.length > 0 ? cleaned : INITIAL_SAMPLE_FILES;
+
+    const legacy = await get<FileItem[]>(LEGACY_FILES_KEY);
+    if (legacy !== undefined && legacy !== null) {
+      if (Array.isArray(legacy)) {
+        return legacy.filter(
+          (f) => f.id !== 'folder-docs' && f.parentId !== 'folder-docs' && !f.path?.startsWith('docs/')
+        );
+      }
+      return [];
     }
   } catch (err) {
     console.error('Failed to load files from IndexedDB:', err);
   }
-  return INITIAL_SAMPLE_FILES;
+  return [];
 };
 
 
