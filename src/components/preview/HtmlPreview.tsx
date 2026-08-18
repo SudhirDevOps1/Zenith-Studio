@@ -12,6 +12,41 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
   const [key, setKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Enhance unstyled HTML with high-contrast default styles for pristine readability
+  const formattedHtml = React.useMemo(() => {
+    if (!htmlContent) return '';
+    if (!htmlContent.includes('<style') && !htmlContent.includes('<link rel="stylesheet"')) {
+      return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0d1117;
+      color: #e6edf3;
+      padding: 2.5rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    h1, h2, h3, h4, h5, h6 { color: #58a6ff; font-weight: 600; margin-top: 0; }
+    p, li { color: #c9d1d9; font-size: 15px; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { background: rgba(110,118,129,0.4); padding: 0.2em 0.4em; border-radius: 6px; font-family: monospace; }
+  </style>
+</head>
+<body>
+${htmlContent}
+</body>
+</html>`;
+    }
+    return htmlContent;
+  }, [htmlContent]);
+
   useEffect(() => {
     // Hot reload iframe content
     setKey(prev => prev + 1);
@@ -22,7 +57,7 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
   };
 
   const handleOpenNewTab = () => {
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blob = new Blob([formattedHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   };
@@ -88,9 +123,9 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
           <iframe
             key={key}
             ref={iframeRef}
-            srcDoc={htmlContent}
+            srcDoc={formattedHtml}
             title="HTML Preview Frame"
-            className="w-full h-full border-0"
+            className="w-full h-full border-0 bg-[#0d1117]"
             sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
           />
         </div>
