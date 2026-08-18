@@ -50,6 +50,7 @@ import { useDiagnosticsStore } from './stores/useDiagnosticsStore';
 import { useTerminalStore } from './stores/useTerminalStore';
 
 import { applyAccentToDOM } from './utils/accentThemes';
+import { formatCode } from './utils/codeFormatter';
 import { X, PanelRightClose, PanelLeftClose } from 'lucide-react';
 import { ZenithLogo } from './components/ui/ZenithLogo';
 
@@ -227,6 +228,29 @@ export default function App() {
         e.preventDefault();
         const untitledNum = useFileStore.getState().files.filter(f => f.name.startsWith('Untitled')).length + 1;
         useFileStore.getState().createFile(`Untitled-${untitledNum}.txt`, null, '');
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        setSidebarOpen(prev => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        setSettingsOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'H')) {
+        e.preventDefault();
+        setShowFindReplace(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '`' || e.key === '~')) {
+        e.preventDefault();
+        const termStore = useTerminalStore.getState();
+        termStore.createSession();
+        if (!showTerminal) toggleTerminal();
+      } else if (e.shiftKey && e.altKey && (e.key === 'F' || e.key === 'f')) {
+        e.preventDefault();
+        if (activeFile && activeFile.content) {
+          const res = formatCode(activeFile.content, activeFile.extension || 'js', 2);
+          if (res.formatted) {
+            useFileStore.getState().updateFileContent(activeFile.id, res.formatted);
+            addToast({ type: 'success', title: 'Formatted', message: 'Document formatted.' });
+          }
+        }
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
         e.preventDefault();
         if (activeFileId) closeTab(activeFileId);

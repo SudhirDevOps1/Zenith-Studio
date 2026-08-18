@@ -3,8 +3,12 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useFileStore } from '../../stores/useFileStore';
 import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useDialogStore } from '../../stores/useDialogStore';
+import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
+import { useTerminalStore } from '../../stores/useTerminalStore';
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 import { ThemeMode } from '../../types/settings';
 import { createZipFromFiles } from '../../utils/fileUtils';
+import { formatCode } from '../../utils/codeFormatter';
 import {
   Terminal,
   FilePlus,
@@ -26,11 +30,6 @@ import {
   Camera,
 } from 'lucide-react';
 
-
-import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
-import { useTerminalStore } from '../../stores/useTerminalStore';
-import { formatCode } from '../../utils/codeFormatter';
-
 interface CommandItem {
   id: string;
   title: string;
@@ -42,14 +41,13 @@ interface CommandItem {
 
 export const CommandPalette: React.FC = () => {
   const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab, settings, setAiSetupOpen } = useSettingsStore();
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, updateFileContent, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
+  const { createFile, createFolder, saveCurrentFile, saveFileAs, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, updateFileContent, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
   const { setActiveTab } = useExtensionStore();
   const { toggleProblemsOpen } = useDiagnosticsStore();
   const { openDialog } = useDialogStore();
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  // Bug #19: Removed local showAiSetup state — now uses global store setAiSetupOpen
 
   const activeFile = files.find((f) => f.id === activeFileId);
 
@@ -58,7 +56,6 @@ export const CommandPalette: React.FC = () => {
       id: 'ai-assistant',
       title: 'AI: Open Zenith Studio AI Assistant Chat',
       category: 'AI & Copilot',
-
       icon: <Bot className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+Shift+A',
       action: () => {
@@ -71,11 +68,9 @@ export const CommandPalette: React.FC = () => {
       category: 'AI & Copilot',
       icon: <SlidersHorizontal className="w-4 h-4 text-purple-400" />,
       action: () => {
-        // Bug #19: Use global store state — modal lives in App.tsx, won't unmount with palette
         setAiSetupOpen(true);
       },
     },
-
     {
       id: 'format-document',
       title: 'Format: Format Document (Prettier Engine)',
@@ -91,7 +86,6 @@ export const CommandPalette: React.FC = () => {
         }
       },
     },
-
     {
       id: 'code-snapshot',
       title: 'Tools: Capture & Export Beautiful Code Snapshot Image',
@@ -102,7 +96,6 @@ export const CommandPalette: React.FC = () => {
         window.dispatchEvent(new CustomEvent('zenith:open-snapshot'));
       },
     },
-
     {
       id: 'toggle-terminal',
       title: 'Terminal: Toggle Integrated Terminal',
@@ -128,14 +121,12 @@ export const CommandPalette: React.FC = () => {
     {
       id: 'problems-panel',
       title: 'View: Toggle Problems & Diagnostics Panel',
-
       category: 'View',
       icon: <AlertCircle className="w-4 h-4 text-red-400" />,
       action: () => {
         toggleProblemsOpen();
       },
     },
-
     {
       id: 'open-webview',
       title: 'Simple Browser: Show / Open Webview (Internet & Localhost)',
@@ -173,7 +164,6 @@ export const CommandPalette: React.FC = () => {
       icon: <FilePlus className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+P',
       action: () => {
-        // Bug #11: Synthetic KeyboardEvent doesn't work — use CustomEvent that App.tsx listens to
         window.dispatchEvent(new CustomEvent('zenith:quick-open'));
       },
     },
@@ -199,7 +189,7 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'open-file',
-      title: 'Open File from System...',
+      title: 'File: Open File from System...',
       category: 'File Operations',
       icon: <FilePlus className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+O',
@@ -207,7 +197,7 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'open-folder',
-      title: 'Open Folder from System...',
+      title: 'File: Open Folder from System...',
       category: 'File Operations',
       icon: <FolderPlus className="w-4 h-4 text-indigo-400" />,
       shortcut: 'Ctrl+Shift+O',
@@ -215,9 +205,10 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'new-file',
-      title: 'Create New File',
+      title: 'File: Create New File',
       category: 'File Operations',
       icon: <FilePlus className="w-4 h-4 text-blue-400" />,
+      shortcut: 'Ctrl+N',
       action: async () => {
         const filename = await openDialog({ type: 'file', title: 'Create New File', message: 'Enter filename with extension.', placeholder: 'app.tsx', confirmText: 'Create File', cancelText: 'Cancel' });
         if (filename) createFile(filename, null);
@@ -225,7 +216,7 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'new-folder',
-      title: 'Create New Folder',
+      title: 'File: Create New Folder',
       category: 'File Operations',
       icon: <FolderPlus className="w-4 h-4 text-amber-400" />,
       action: async () => {
@@ -235,36 +226,53 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'save-file',
-      title: 'Save Active File',
+      title: 'File: Save Active File',
       category: 'File Operations',
       icon: <Save className="w-4 h-4 text-emerald-400" />,
       shortcut: 'Ctrl+S',
       action: () => saveCurrentFile(),
     },
     {
+      id: 'save-file-as',
+      title: 'File: Save As... (Choose Location & Name)',
+      category: 'File Operations',
+      icon: <Save className="w-4 h-4 text-cyan-400" />,
+      shortcut: 'Ctrl+Shift+S',
+      action: () => saveFileAs(),
+    },
+    {
       id: 'save-all',
-      title: 'Save All Modified Files',
+      title: 'File: Save All Modified Files',
       category: 'File Operations',
       icon: <Save className="w-4 h-4 text-emerald-500" />,
       action: () => saveAllFiles(),
     },
     {
+      id: 'switch-workspace',
+      title: 'Workspaces: Switch Workspace / Recent Projects...',
+      category: 'Navigation',
+      icon: <Terminal className="w-4 h-4 text-purple-400" />,
+      shortcut: 'Ctrl+R',
+      action: () => useWorkspaceStore.getState().setSwitcherOpen(true),
+    },
+    {
       id: 'toggle-zen',
-      title: 'Toggle Zen Mode (Distraction-Free)',
+      title: 'View: Toggle Zen Mode (Distraction-Free)',
       category: 'View',
       icon: <Maximize2 className="w-4 h-4 text-purple-400" />,
       action: () => toggleZenMode(),
     },
     {
       id: 'open-settings',
-      title: 'Open Settings & Preferences',
+      title: 'Preferences: Open Settings & Preferences',
       category: 'Preferences',
       icon: <Settings className="w-4 h-4 text-slate-400" />,
+      shortcut: 'Ctrl+,',
       action: () => setSettingsOpen(true),
     },
     {
       id: 'export-zip',
-      title: 'Export Workspace as ZIP Archive',
+      title: 'Export: Export Workspace as ZIP Archive',
       category: 'Export',
       icon: <Download className="w-4 h-4 text-emerald-400" />,
       action: async () => {
@@ -274,20 +282,19 @@ export const CommandPalette: React.FC = () => {
         a.href = url;
         a.download = 'zenith-studio-workspace.zip';
         a.click();
-        // Bug #15: Revoke blob URL to prevent memory leak
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       },
     },
     {
       id: 'split-preview',
-      title: 'Set Preview Mode to Split Edit',
+      title: 'View: Set Preview Mode to Split Edit',
       category: 'View',
       icon: <Layers className="w-4 h-4 text-cyan-400" />,
       action: () => setActivePreviewMode('split-edit'),
     },
     {
       id: 'preview-only',
-      title: 'Set Preview Mode to Full Preview',
+      title: 'View: Set Preview Mode to Full Preview',
       category: 'View',
       icon: <Layers className="w-4 h-4 text-cyan-400" />,
       action: () => setActivePreviewMode('preview-only'),
@@ -342,7 +349,6 @@ export const CommandPalette: React.FC = () => {
         }
       },
     },
-
   ];
 
   const filteredCommands = commands.filter(c =>
@@ -354,7 +360,6 @@ export const CommandPalette: React.FC = () => {
     setSelectedIndex(0);
   }, [query]);
 
-  // Handle Keyboard Navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
