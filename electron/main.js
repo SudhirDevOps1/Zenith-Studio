@@ -7,8 +7,12 @@ const os = require('os');
 const https = require('https');
 const { exec, execFile } = require('child_process');
 
+// Disable QUIC (HTTP/3 over UDP) — prevents net::ERR_QUIC_PROTOCOL_ERROR on Windows/ISP networks
+app.commandLine.appendSwitch('disable-quic');
+app.commandLine.appendSwitch('disable-http2-grease');
 
 let mainWindow;
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -538,58 +542,123 @@ ipcMain.handle('openvsx:extension', async (_, { namespace, name }) => {
   }
 });
 
-// ─── AI Secure Proxy Fetch IPC ──────────────────────────────────────────────────
-// Uses Electron's built-in net.request() (Chromium network stack)
-// → Follows system proxy settings, respects cert management, zero CORS, zero Node version issues
-// Inspired by Study Tracker's proven secure-proxy-fetch pattern
-ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
+// Helper: Direct Node.js TCP HTTPS fetch (Zero QUIC dependency, immune to UDP drops)
+function nodeHttpsFetchDirect(url, method, headers, bodyStr) {
   return new Promise((resolve) => {
     try {
-      const { net } = require('electron');
       const urlObj = new URL(url);
+      const isHttps = urlObj.protocol === 'https:';
+      const transport = isHttps ? https : require('http');
 
-      // ── Security Whitelist: Only known AI providers + localhost are allowed ──
-      const ALLOWED_AI_HOSTS = [
-        'generativelanguage.googleapis.com', // Google Gemini
-        'api.groq.com',                      // Groq
-        'api.openai.com',                    // OpenAI
-        'api.anthropic.com',                 // Anthropic Claude
-        'openrouter.ai',                     // OpenRouter
-        'api.deepseek.com',                  // DeepSeek
-        'api.mistral.ai',                    // Mistral
-        'api.cohere.com',                    // Cohere
-        'api.together.xyz',                  // Together AI
-        'api.cerebras.ai',                   // Cerebras
-        'api.x.ai',                          // xAI / Grok
-        'api.perplexity.ai',                 // Perplexity
-        'corsproxy.io',                      // CORS proxy fallback
-        'localhost',                         // Local Ollama / LM Studio
-        '127.0.0.1',                         // Local Ollama / LM Studio
-        '0.0.0.0',                           // Local dev
-      ];
-
-      const isAllowed = ALLOWED_AI_HOSTS.some(
-        (host) => urlObj.hostname === host || urlObj.hostname.endsWith('.' + host)
-      );
-
-      if (!isAllowed) {
-        // Allow custom endpoints for advanced users (just log a warning)
-        console.warn(`[AI Fetch] Non-whitelisted host: ${urlObj.hostname} — proceeding anyway for custom provider support.`);
-      }
-
-      // Prepare headers
       const reqHeaders = {
         'Content-Type': 'application/json',
         'User-Agent': 'Zenith-Studio-IDE/1.0.3',
         ...(headers || {}),
       };
+      if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+        reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr, 'utf8').toString();
+      }
 
-      const bodyStr = body != null
-        ? (typeof body === 'string' ? body : JSON.stringify(body))
-        : null;
+      const req = transport.request(
+        {
+          hostname: urlObj.hostname,
+          port: urlObj.port ? Number(urlObj.port) : (isHttps ? 443 : 80),
+          path: urlObj.pathname + urlObj.search,
+          method: (method || 'POST').toUpperCase(),
+          headers: reqHeaders,
+          timeout: 35000,
+        },
+        (res) => {
+          const chunks = [];
+          res.on('data', (c) => chunks.push(c));
+          res.on('end', () => {
+            const raw = Buffer.concat(chunks).toString('utf-8');
+            let data;
+            try {
+              data = JSON.parse(raw);
+            } catch {
+              data = raw;
+            }
+            console.log(`[AI Fetch - Node HTTPS] ${method.toUpperCase()} ${urlObj.hostname} → ${res.statusCode}`);
+            resolve({
+              ok: res.statusCode >= 200 && res.statusCode < 300,
+              status: res.statusCode,
+              statusText: res.statusMessage || '',
+              data,
+            });
+          });
+        }
+      );
 
-      // ── Method 1: net.fetch (Electron 21+ Chromium Network Stack, 100% Reliable) ──
-      if (typeof net.fetch === 'function') {
+      req.on('error', (err) => {
+        console.error('[AI Fetch - Node HTTPS] Error:', err.message);
+        resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, status: 0, statusText: 'Request timeout (35s)', data: null, error: 'Request timeout (35s)' });
+      });
+
+      if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+        req.write(bodyStr);
+      }
+      req.end();
+    } catch (e) {
+      resolve({ ok: false, status: 0, statusText: e.message, data: null, error: e.message });
+    }
+  });
+}
+
+// ─── AI Secure Proxy Fetch IPC ──────────────────────────────────────────────────
+// Dual-Layer Transport:
+// 1. Electron net.fetch (Chromium network stack with disable-quic flag)
+// 2. Node.js Native HTTPS (Direct TCP TLS — 100% immune to QUIC/UDP protocol drops)
+ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body = null }) => {
+  try {
+    const urlObj = new URL(url);
+
+    // ── Security Whitelist: Only known AI providers + localhost are allowed ──
+    const ALLOWED_AI_HOSTS = [
+      'generativelanguage.googleapis.com', // Google Gemini
+      'api.groq.com',                      // Groq
+      'api.openai.com',                    // OpenAI
+      'api.anthropic.com',                 // Anthropic Claude
+      'openrouter.ai',                     // OpenRouter
+      'api.deepseek.com',                  // DeepSeek
+      'api.mistral.ai',                    // Mistral
+      'api.cohere.com',                    // Cohere
+      'api.together.xyz',                  // Together AI
+      'api.cerebras.ai',                   // Cerebras
+      'api.x.ai',                          // xAI / Grok
+      'api.perplexity.ai',                 // Perplexity
+      'corsproxy.io',                      // CORS proxy fallback
+      'localhost',                         // Local Ollama / LM Studio
+      '127.0.0.1',                         // Local Ollama / LM Studio
+      '0.0.0.0',                           // Local dev
+    ];
+
+    const isAllowed = ALLOWED_AI_HOSTS.some(
+      (host) => urlObj.hostname === host || urlObj.hostname.endsWith('.' + host)
+    );
+
+    if (!isAllowed) {
+      console.warn(`[AI Fetch] Non-whitelisted host: ${urlObj.hostname} — proceeding for custom provider support.`);
+    }
+
+    const reqHeaders = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Zenith-Studio-IDE/1.0.3',
+      ...(headers || {}),
+    };
+
+    const bodyStr = body != null
+      ? (typeof body === 'string' ? body : JSON.stringify(body))
+      : null;
+
+    // ── Layer 1: Electron net.fetch ──
+    if (typeof net.fetch === 'function') {
+      try {
         const fetchOptions = {
           method: (method || 'POST').toUpperCase(),
           headers: reqHeaders,
@@ -598,86 +667,38 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
           fetchOptions.body = bodyStr;
         }
 
-        net.fetch(url, fetchOptions)
-          .then(async (response) => {
-            const contentType = response.headers.get('content-type') || '';
-            let data;
-            if (contentType.includes('application/json')) {
-              data = await response.json().catch(() => ({}));
-            } else {
-              data = await response.text().catch(() => '');
-            }
+        const response = await net.fetch(url, fetchOptions);
+        const contentType = response.headers.get('content-type') || '';
+        let data;
+        if (contentType.includes('application/json')) {
+          data = await response.json().catch(() => ({}));
+        } else {
+          data = await response.text().catch(() => '');
+        }
 
-            console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${response.status}`);
-            resolve({
-              ok: response.ok,
-              status: response.status,
-              statusText: response.statusText,
-              data,
-            });
-          })
-          .catch((err) => {
-            console.error('[AI Fetch] net.fetch error:', err.message);
-            resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
-          });
-        return;
+        console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${response.status}`);
+        return {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          data,
+        };
+      } catch (netErr) {
+        console.warn('[AI Fetch] net.fetch failed (e.g. QUIC error), falling back to Node HTTPS:', netErr.message);
+        // Fallback to Layer 2: Node.js direct HTTPS TCP socket
+        return await nodeHttpsFetchDirect(url, method, headers, bodyStr);
       }
-
-      // ── Method 2: net.request using direct `url` string ──
-      const req = net.request({
-        method: (method || 'POST').toUpperCase(),
-        url: url,
-      });
-
-      for (const [k, v] of Object.entries(reqHeaders)) {
-        if (v != null) req.setHeader(k, String(v));
-      }
-
-      let responseBody = '';
-
-      req.on('response', (res) => {
-        res.on('data', (chunk) => {
-          responseBody += chunk.toString();
-        });
-
-        res.on('end', () => {
-          let data;
-          try {
-            data = JSON.parse(responseBody);
-          } catch {
-            data = responseBody;
-          }
-          console.log(`[AI Fetch] ${method.toUpperCase()} ${urlObj.hostname} → ${res.statusCode}`);
-          resolve({
-            ok: res.statusCode >= 200 && res.statusCode < 300,
-            status: res.statusCode,
-            statusText: res.statusMessage || '',
-            data,
-          });
-        });
-
-        res.on('error', (err) => {
-          console.error('[AI Fetch] Response stream error:', err.message);
-          resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
-        });
-      });
-
-      req.on('error', (err) => {
-        console.error('[AI Fetch] net.request error:', err.message);
-        resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
-      });
-
-      if (bodyStr && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
-        req.write(bodyStr);
-      }
-      req.end();
-
-    } catch (err) {
-      console.error('[AI Fetch] Setup error:', err.message);
-      resolve({ ok: false, status: 0, statusText: err.message, data: null, error: err.message });
     }
-  });
+
+    // ── Layer 2 Direct fallback ──
+    return await nodeHttpsFetchDirect(url, method, headers, bodyStr);
+
+  } catch (err) {
+    console.error('[AI Fetch] Fatal setup error:', err.message);
+    return { ok: false, status: 0, statusText: err.message, data: null, error: err.message };
+  }
 });
+
 
 
 
