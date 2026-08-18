@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCw, ExternalLink, Monitor, Tablet, Smartphone, Code } from 'lucide-react';
 import { isElectron } from '../../utils/fileUtils';
+import { useFileStore } from '../../stores/useFileStore';
 
 interface HtmlPreviewProps {
   htmlContent: string;
@@ -9,14 +10,76 @@ interface HtmlPreviewProps {
 type DeviceWidth = '100%' | '1024px' | '768px' | '375px';
 
 export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
+  const { files } = useFileStore();
   const [deviceWidth, setDeviceWidth] = useState<DeviceWidth>('100%');
   const [key, setKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Enhance unstyled HTML with high-contrast default styles for pristine readability
+  // Bundle linked CSS, JS, and local asset files from workspace into live sandbox
   const formattedHtml = React.useMemo(() => {
     if (!htmlContent) return '';
-    if (!htmlContent.includes('<style') && !htmlContent.includes('<link rel="stylesheet"')) {
+    let result = htmlContent;
+
+    // Helper to find a file in the workspace matching a reference href/src
+    const findWorkspaceFile = (refPath: string, ext?: string) => {
+      const cleanRef = refPath.replace(/^\.\//, '').replace(/^\//, '').toLowerCase();
+      return files.find((f) => {
+        if (f.type !== 'file') return false;
+        if (ext && f.extension?.toLowerCase() !== ext.toLowerCase()) return false;
+        const fname = f.name.toLowerCase();
+        const fpath = (f.path || f.name).replace(/\\/g, '/').toLowerCase();
+        return fname === cleanRef || fpath === cleanRef || fpath.endsWith('/' + cleanRef);
+      });
+    };
+
+    // 1. Inline linked CSS stylesheets: <link rel="stylesheet" href="styles.css"> or <link href="style.css" rel="stylesheet">
+    result = result.replace(
+      /<link\s+[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*\/?>|<link\s+[^>]*href=["']([^"']+)["'][^>]*rel=["']stylesheet["'][^>]*\/?>/gi,
+      (match, href1, href2) => {
+        const href = href1 || href2;
+        if (!href || href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//')) {
+          return match; // Keep external CDN links untouched
+        }
+        const cssFile = findWorkspaceFile(href, 'css');
+        if (cssFile && typeof cssFile.content === 'string') {
+          return `<style data-href="${href}">\n${cssFile.content}\n</style>`;
+        }
+        return match;
+      }
+    );
+
+    // 2. Inline linked JavaScript scripts: <script src="script.js"></script>
+    result = result.replace(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (match, src) => {
+      if (!src || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//')) {
+        return match; // Keep external CDN scripts untouched
+      }
+      const jsFile = findWorkspaceFile(src);
+      if (jsFile && typeof jsFile.content === 'string') {
+        return `<script data-src="${src}">\n${jsFile.content}\n</script>`;
+      }
+      return match;
+    });
+
+    // 3. Inline local images: <img src="image.png">
+    result = result.replace(/<img\s+([^>]*src=["']([^"']+)["'][^>]*)>/gi, (match, fullAttrs, src) => {
+      if (!src || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('blob:')) {
+        return match;
+      }
+      const imgFile = findWorkspaceFile(src);
+      if (imgFile && imgFile.content) {
+        return `<img ${fullAttrs.replace(src, imgFile.content)}>`;
+      }
+      return match;
+    });
+
+    // 4. Fallback default dark styles for plain unstyled HTML snippets
+    const hasExplicitStyles =
+      result.includes('<style') ||
+      result.includes('rel="stylesheet"') ||
+      result.includes("rel='stylesheet'") ||
+      result.includes('data-href');
+
+    if (!hasExplicitStyles) {
       return `<!DOCTYPE html>
 <html>
 <head>
@@ -41,25 +104,26 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({ htmlContent }) => {
   </style>
 </head>
 <body>
-${htmlContent}
+${result}
 </body>
 </html>`;
     }
-    return htmlContent;
-  }, [htmlContent]);
+
+    return result;
+  }, [htmlContent, files]);
 
   useEffect(() => {
-    // Hot reload iframe content
-    setKey(prev => prev + 1);
-  }, [htmlContent]);
+    // Hot reload iframe content when html or workspace files change
+    setKey((prev) => prev + 1);
+  }, [formattedHtml]);
 
   const handleManualRefresh = () => {
-    setKey(prev => prev + 1);
+    setKey((prev) => prev + 1);
   };
 
   const handleOpenNewTab = async () => {
-    if (isElectron() && window.electronAPI?.openHtmlPreview) {
-      await window.electronAPI.openHtmlPreview({ content: formattedHtml });
+    if (isElectron() && (window as any).electronAPI?.openHtmlPreview) {
+      await (window as any).electronAPI.openHtmlPreview({ content: formattedHtml });
     } else {
       const blob = new Blob([formattedHtml], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
@@ -112,7 +176,7 @@ ${htmlContent}
           <button
             onClick={handleOpenNewTab}
             className="p-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded transition border border-slate-700/50"
-            title="Open frame in new tab"
+            title="Open in Browser"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
@@ -130,7 +194,7 @@ ${htmlContent}
             ref={iframeRef}
             srcDoc={formattedHtml}
             title="HTML Preview Frame"
-            className="w-full h-full border-0 bg-[#0d1117]"
+            className="w-full h-full border-0 bg-white"
             sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
           />
         </div>
