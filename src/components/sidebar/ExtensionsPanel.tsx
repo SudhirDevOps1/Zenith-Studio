@@ -9,13 +9,10 @@ import {
   X,
   Sparkles,
   Globe,
-  CheckCircle2,
-  Zap,
 } from 'lucide-react';
 import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { ExtensionCategory, ExtensionItem } from '../../types/extensions';
-import { ExtensionDetailModal } from '../extensions/ExtensionDetailModal';
 import { hasRealEffect } from '../../utils/extensionEffects';
 
 const CATEGORIES: ExtensionCategory[] = [
@@ -392,7 +389,9 @@ export const ExtensionsPanel: React.FC = () => {
                     <h3 className="text-xs font-semibold text-white truncate group-hover:text-cyan-300 transition flex items-center gap-1.5">
                       <span className="truncate">{ext.displayName}</span>
                       {ext.verified && (
-                        <Shield className="w-3 h-3 text-blue-400 shrink-0" title="Verified Publisher" />
+                        <span title="Verified Publisher" className="inline-flex items-center shrink-0">
+                          <Shield className="w-3 h-3 text-blue-400" />
+                        </span>
                       )}
                     </h3>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">

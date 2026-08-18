@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { useExtensionStore } from '../../stores/useExtensionStore';
+import { ExtensionItem } from '../../types/extensions';
 import { useToastStore } from '../../stores/useToastStore';
 import { applyExtensionEffect, getExtensionEffectLabel, hasRealEffect } from '../../utils/extensionEffects';
 

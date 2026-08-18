@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { useFileStore } from './useFileStore';
-import { isElectron } from '../utils/fileUtils';
 import { useToastStore } from './useToastStore';
 
 export interface WorkspaceItem {

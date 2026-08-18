@@ -5,13 +5,11 @@ import {
   Search,
   X,
   Star,
-  Clock,
   ChevronRight,
   Trash2,
-  Sparkles,
   Check,
 } from 'lucide-react';
-import { useWorkspaceStore, WorkspaceItem } from '../../stores/useWorkspaceStore';
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 
 function formatTimeAgo(timestamp: number): string {
   const diffSec = Math.floor((Date.now() - timestamp) / 1000);
