@@ -29,7 +29,6 @@ import {
 
 import { useDiagnosticsStore } from '../../stores/useDiagnosticsStore';
 import { formatCode } from '../../utils/codeFormatter';
-import { AiSetupModal } from './AiSetupModal';
 
 interface CommandItem {
   id: string;
@@ -41,7 +40,7 @@ interface CommandItem {
 }
 
 export const CommandPalette: React.FC = () => {
-  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab, settings } = useSettingsStore();
+  const { isCommandPaletteOpen, setCommandPaletteOpen, setSettingsOpen, toggleZenMode, updateSettings, setActiveSidebarTab, settings, setAiSetupOpen } = useSettingsStore();
   const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, closeTab, closeAllTabs, activeFileId, updateFileContent, setActivePreviewMode, openSystemFile, openSystemFolder } = useFileStore();
   const { setActiveTab } = useExtensionStore();
   const { toggleProblemsOpen } = useDiagnosticsStore();
@@ -49,7 +48,7 @@ export const CommandPalette: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [showAiSetup, setShowAiSetup] = useState(false);
+  // Bug #19: Removed local showAiSetup state — now uses global store setAiSetupOpen
 
   const activeFile = files.find((f) => f.id === activeFileId);
 
@@ -71,7 +70,8 @@ export const CommandPalette: React.FC = () => {
       category: 'AI & Copilot',
       icon: <SlidersHorizontal className="w-4 h-4 text-purple-400" />,
       action: () => {
-        setShowAiSetup(true);
+        // Bug #19: Use global store state — modal lives in App.tsx, won't unmount with palette
+        setAiSetupOpen(true);
       },
     },
 
@@ -150,7 +150,8 @@ export const CommandPalette: React.FC = () => {
       icon: <FilePlus className="w-4 h-4 text-cyan-400" />,
       shortcut: 'Ctrl+P',
       action: () => {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', ctrlKey: true }));
+        // Bug #11: Synthetic KeyboardEvent doesn't work — use CustomEvent that App.tsx listens to
+        window.dispatchEvent(new CustomEvent('zenith:quick-open'));
       },
     },
     {
@@ -160,7 +161,7 @@ export const CommandPalette: React.FC = () => {
       icon: <Terminal className="w-4 h-4 text-amber-400" />,
       shortcut: 'Ctrl+G',
       action: () => {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', ctrlKey: true }));
+        window.dispatchEvent(new CustomEvent('zenith:goto-line'));
       },
     },
     {
@@ -250,6 +251,8 @@ export const CommandPalette: React.FC = () => {
         a.href = url;
         a.download = 'zenith-studio-workspace.zip';
         a.click();
+        // Bug #15: Revoke blob URL to prevent memory leak
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
       },
     },
     {
@@ -414,9 +417,6 @@ export const CommandPalette: React.FC = () => {
           )}
         </div>
       </div>
-
-      <AiSetupModal isOpen={showAiSetup} onClose={() => setShowAiSetup(false)} />
     </div>
   );
 };
-

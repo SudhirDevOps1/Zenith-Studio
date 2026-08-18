@@ -4,6 +4,10 @@
 
 ## Completed Core Deliverables (v1.0.3 Production)
 
+- [x] Zero-Trust OS Encrypted Credential Vault (Windows DPAPI `safeStorage` / Keychain integration).
+- [x] Chromium QUIC/HTTP3 Protocol Immunity & Node.js Native HTTPS TLS Failover.
+- [x] Universal Multi-Provider AI Round-Trip Validation (Gemini, OpenAI, Groq, Anthropic, OpenRouter, DeepSeek, Ollama, Custom).
+- [x] Strict Provider API Key Isolation & Dynamic Welcome Screen Synchronization.
 - [x] Multi-File Agentic AI ("Composer Mode") (`useComposerStore.ts` & `AiComposerModal.tsx` with full diff patching).
 - [x] Interactive Step-by-Step Debugger UI (`DebugToolbar.tsx`, `DebugPanel.tsx`, Monaco Gutter Red Breakpoints).
 - [x] 3-Way Visual Git Merge Conflict Resolver (`conflictParser.ts` & `conflictCodeLens.ts`).

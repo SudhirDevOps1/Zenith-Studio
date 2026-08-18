@@ -89,11 +89,12 @@ export const saveSettingsToStorage = (settings: EditorSettings): void => {
     const electronApi = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
 
     if (electronApi?.setSecret) {
-      // 🛡️ Electron Desktop: Save secrets to OS Encrypted Vault asynchronously
-      if (settings.aiApiKey != null) {
+      // 🛡️ Electron Desktop: Save secrets to OS Encrypted Vault — only when non-empty
+      // Bug #13: Never store empty strings in vault (they decrypt back as '' and cause confusion)
+      if (settings.aiApiKey) {
         electronApi.setSecret(VAULT_AI_KEY, settings.aiApiKey).catch(() => {});
       }
-      if (settings.geminiApiKey != null) {
+      if (settings.geminiApiKey) {
         electronApi.setSecret(VAULT_GEMINI_KEY, settings.geminiApiKey).catch(() => {});
       }
 

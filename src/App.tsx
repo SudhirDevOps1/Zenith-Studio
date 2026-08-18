@@ -39,6 +39,7 @@ import { UpdateModal } from './components/ui/UpdateModal';
 import { DebugPanel } from './components/debugger/DebugPanel';
 import { DebugToolbar } from './components/debugger/DebugToolbar';
 import { AiComposerModal } from './components/composer/AiComposerModal';
+import { AiSetupModal } from './components/ui/AiSetupModal'; // Bug #19: Global modal
 import { useComposerStore } from './stores/useComposerStore';
 import { useDebugStore } from './stores/useDebugStore';
 import { useUpdateStore } from './stores/useUpdateStore';
@@ -82,6 +83,8 @@ export default function App() {
     setSettingsOpen,
     settings,
     initSecureVault,
+    isAiSetupOpen,    // Bug #19
+    setAiSetupOpen,   // Bug #19
   } = useSettingsStore();
 
   const { addToast } = useToastStore();
@@ -241,10 +244,18 @@ export default function App() {
     };
 
     const handleOpenSnapshotEvent = () => handleOpenSnapshot();
+    // Bug #11: CustomEvent listeners for quick-open and goto-line (synthetic KB events don't work)
+    const handleQuickOpenEvent = () => setQuickOpenMode('file');
+    const handleGotoLineEvent = () => setQuickOpenMode('line');
+
     window.addEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
+    window.addEventListener('zenith:quick-open', handleQuickOpenEvent);
+    window.addEventListener('zenith:goto-line', handleGotoLineEvent);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('zenith:open-snapshot', handleOpenSnapshotEvent);
+      window.removeEventListener('zenith:quick-open', handleQuickOpenEvent);
+      window.removeEventListener('zenith:goto-line', handleGotoLineEvent);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [setCommandPaletteOpen, setActiveSidebarTab, saveCurrentFile, activeFileId, closeTab, addToast, setShortcutsModalOpen, setSettingsOpen, isZenMode, toggleZenMode, openSystemFile, openSystemFolder, handleOpenSnapshot]);
@@ -556,6 +567,8 @@ export default function App() {
       <UpdateModal />
       <DebugToolbar />
       <AiComposerModal />
+      {/* Bug #19: Global AiSetupModal — not inside CommandPalette so it doesn't unmount on palette close */}
+      <AiSetupModal isOpen={isAiSetupOpen} onClose={() => setAiSetupOpen(false)} />
       
       {/* Global App Dialog */}
 

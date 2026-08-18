@@ -56,6 +56,8 @@ export const MenuBar: React.FC = () => {
     a.href = url;
     a.download = 'zenith-studio-workspace.zip';
     a.click();
+    // Bug #15: Release the blob URL to prevent memory leak
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     setOpenMenu(null);
   };
 
@@ -288,7 +290,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
               >
                 <span className="flex items-center gap-2">
-                  <Bot className="w-3.5 h-3.5 text-cyan-400" /> AI Assistant (Gemini)
+                  <Bot className="w-3.5 h-3.5 text-cyan-400" /> AI Assistant ({(settings.aiProvider || 'gemini').toUpperCase()})
                 </span>
                 <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+A</kbd>
               </button>
@@ -491,7 +493,8 @@ export const MenuBar: React.FC = () => {
 
       {/* Center Project / Workspace Badge */}
       <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/60 border border-slate-800/80 rounded-full text-[11px] font-mono text-slate-300 shadow-inner hidden md:flex" style={{ WebkitAppRegion: 'no-drag' } as any}>
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        {/* Bug #17: Badge dot color = amber if unsaved files exist, green if workspace is clean */}
+        <span className={`w-2 h-2 rounded-full animate-pulse ${files.some(f => f.isModified) ? 'bg-amber-400' : 'bg-emerald-400'}`} />
         <span className="text-slate-400">workspace:</span>
         <span className="font-semibold text-white truncate max-w-[180px]">{folderName}</span>
         {activeFile && (

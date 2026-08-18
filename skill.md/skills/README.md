@@ -25,6 +25,6 @@ Examples:
 
 | Skill File | Description | Date Added |
 |---|---|---|
-| *(empty — add first skill here)* | | |
+| [`ai_secure_vault_multi_provider_skill.md`](ai_secure_vault_multi_provider_skill.md) | Zero-Trust OS Encrypted Credential Vault & Multi-Provider AI IPC Bridge | 2026-08-18 |
 
 **Linked Files:** [08_SKILL_CREATION.md](../08_SKILL_CREATION.md) | [00_SYSTEM_INSTRUCTIONS.md](../00_SYSTEM_INSTRUCTIONS.md)

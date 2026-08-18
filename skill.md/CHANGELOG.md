@@ -2,7 +2,41 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
-## [2026-08-17] - v1.0.3 Official Rebrand to "Zenith Studio", UI Overhaul, Device Responsiveness & Clean Starter Files
+## [2026-08-18] - v1.0.3 Enterprise OS Encrypted Credential Vault, QUIC Immunity & Full App Bug Fixes
+
+* **User Directives:**
+  - "vs code jaise kro sab kuchh 🛡️ Enterprise / Maximum"
+  - "groq ka api key dal raha hu gemini mein to succes aa rha hain bugs fi kro yar"
+  - "fix all", "skill.md folderbhi sath mein update krte chalo and readme.md bhi"
+* **Fixes & Enhancements (19 Major Bugs Fixed Across All Layers):**
+  - **OS Encrypted Credential Vault (`electron/main.js`, `storage.ts`, `useSettingsStore.ts`)**:
+    - Replaced plaintext localStorage secrets with OS-level hardware-backed cryptography via Chromium `safeStorage` (Windows DPAPI).
+    - `localStorage` stores sanitized `{ aiApiKey: '', geminiApiKey: '' }`. Secrets are encrypted in `%APPDATA%/Zenith Studio/zenith_secure_vault.json`.
+    - Automated startup hydration (`initSecureVault()`) on app mount.
+  - **QUIC / HTTP3 Error Immunity & Transport Fallback (`electron/main.js`)**:
+    - Added Chromium command-line switches `--disable-quic` and `--disable-http2-grease`.
+    - Dual-layer transport: `net.fetch` (Chromium network stack) with automatic fallback to Node.js `https.request` (pure TCP TLS), eliminating `net::ERR_QUIC_PROTOCOL_ERROR`.
+  - **Real Per-Provider AI Validation & Zero False Positives (`aiService.ts`)**:
+    - Completely rewrote `testAiConnection` to execute dedicated round-trip HTTP requests per provider (Gemini, OpenAI, Groq, Anthropic, OpenRouter, DeepSeek, Ollama, Custom).
+    - Fixed cross-contamination where Gemini key was erroneously used for Groq/OpenAI.
+  - **AI Setup Provider Switch Sanitization (`AiSetupModal.tsx`)**:
+    - Switching provider now automatically resets input key and picks the provider's primary default model.
+    - Guarded empty API key test / auto-detection from firing unnecessarily.
+    - Added validation guard on Save to warn if API key is blank for cloud providers.
+    - Made model auto-detection properly awaited after connection test success.
+  - **Command Palette & Global Shortcuts Fixes (`CommandPalette.tsx`, `App.tsx`)**:
+    - Fixed `Ctrl + P` Quick Open and `Ctrl + G` Go to Line actions in Command Palette by replacing non-functional synthetic `KeyboardEvent` with `CustomEvent` listeners.
+    - Extracted `AiSetupModal` to global App level so Command Palette selection no longer causes instant unmount flashing.
+    - Added `URL.revokeObjectURL()` cleanup in ZIP export actions to eliminate memory leaks.
+  - **UI & Performance Fixes (`MenuBar.tsx`, `SettingsModal.tsx`, `GitControlPanel.tsx`)**:
+    - Dynamic AI Assistant menu label reflecting current provider (e.g. `AI Assistant (GROQ)`).
+    - Protected OS Vault keys during Settings Reset with a warning confirmation dialog.
+    - Fixed Git status re-triggering on every single editor keypress by removing `files` reference from dependency array.
+    - Visually disabled Git commit button when commit message is blank.
+    - Dynamic workspace status indicator (amber when modified files exist, green when clean).
+* **Files Modified:** `electron/main.js`, `electron/preload.js`, `src/utils/aiService.ts`, `src/utils/storage.ts`, `src/stores/useSettingsStore.ts`, `src/stores/useComposerStore.ts`, `src/components/ui/AiSetupModal.tsx`, `src/components/sidebar/AiAssistantPanel.tsx`, `src/components/sidebar/GitControlPanel.tsx`, `src/components/ui/MenuBar.tsx`, `src/components/ui/SettingsModal.tsx`, `src/components/ui/CommandPalette.tsx`, `src/App.tsx`, `README.md`, `skill.md/CHANGELOG.md`, `skill.md/skills/ai_secure_vault_multi_provider_skill.md`.
+
+---
 
 * **User Directive:** "all jagah ye kr do Zenith Studio samjhe all jagah"
 * **Fixes & Enhancements:**

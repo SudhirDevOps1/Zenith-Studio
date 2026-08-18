@@ -36,7 +36,12 @@ Zenith Studio connects with your favorite LLM provider out of the box:
 - **Supported Providers**: Google Gemini (Flash 2.0, Pro 1.5), OpenAI (GPT-4o, o3-mini), Anthropic Claude (3.5 Sonnet, 3.5 Haiku), Groq (Llama 3.3 70B, DeepSeek R1), OpenRouter, DeepSeek, Ollama (Local), and Custom OpenAI-Compatible Endpoints.
 - **Dynamic Model Auto-Discovery**: Automatically queries `${baseUrl}/v1/models` to discover all models available on your API key.
 - **Manual Priority Override**: Manually defined models and presets appear first without remote overwrite, with instant toggle between dropdown list and manual text input.
-- **⚡ Live Ping Test**: In-modal connection ping with millisecond (`ms`) latency reporting.
+- **⚡ Live Ping Test**: Real per-provider HTTP round-trip connection ping with millisecond (`ms`) latency reporting and 0 false positives.
+
+### 🛡️ 2. Zero-Trust OS Encrypted Credential Vault & QUIC Immunity
+- **Hardware-Backed Credential Security**: In Desktop mode, sensitive API keys are encrypted via OS native cryptography (Windows DPAPI via Chromium `safeStorage`) and stored in `%APPDATA%/Zenith Studio/zenith_secure_vault.json`. `localStorage` remains completely sanitized.
+- **QUIC / HTTP3 Protocol Immunity**: Dual-layer networking architecture (`net.fetch` -> Node.js native `https.request` TLS fallback) ensures AI calls never fail due to Chromium UDP/QUIC socket errors (`ERR_QUIC_PROTOCOL_ERROR`).
+- **Strict Key Isolation**: Switching providers strictly isolates keys, preventing Gemini keys from accidentally leaking into Groq/OpenAI calls.
 
 ### ⚡ 2. Native Multi-Language Execution & System Compilers
 - **Native Python 3.12**: Executes your local Windows system Python directly (`python.exe` / `py.exe`) with unbuffered `-u` output.

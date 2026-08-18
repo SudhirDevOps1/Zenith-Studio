@@ -147,7 +147,8 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
       setTestResult(result);
 
       if (result.success) {
-        handleDetectModels(false);
+        // Bug #18: await so spinner shows properly during detection
+        await handleDetectModels(false);
         addToast({
           type: 'success',
           title: 'Connection Succeeded',
@@ -166,6 +167,16 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
   };
 
   const handleSave = () => {
+    // Bug #12: Warn if API key is empty for providers that require one
+    if (provider !== 'ollama' && !apiKey.trim()) {
+      addToast({
+        type: 'warning',
+        title: 'API Key Required',
+        message: `${provider.toUpperCase()} requires an API key. Please enter your key before saving.`,
+      });
+      return;
+    }
+
     updateSettings({
       aiProvider: provider,
       aiApiKey: apiKey.trim(),

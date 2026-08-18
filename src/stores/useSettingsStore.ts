@@ -13,6 +13,7 @@ interface SettingsState {
   isShortcutsModalOpen: boolean;
   isZenMode: boolean;
   activeSidebarTab: SidebarTab;
+  isAiSetupOpen: boolean; // Bug #19: Global AI Setup modal state
 
   // Actions
   updateSettings: (newSettings: Partial<EditorSettings>) => void;
@@ -20,6 +21,7 @@ interface SettingsState {
   setSettingsOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
+  setAiSetupOpen: (open: boolean) => void; // Bug #19
   toggleZenMode: () => void;
   setActiveSidebarTab: (tab: SidebarTab) => void;
   resetSettings: () => void;
@@ -43,6 +45,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   isShortcutsModalOpen: false,
   isZenMode: false,
   activeSidebarTab: 'explorer',
+  isAiSetupOpen: false, // Bug #19
 
   updateSettings: (newSettings) => {
     const updated = { ...get().settings, ...newSettings };
@@ -72,15 +75,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
-
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
+  setAiSetupOpen: (open) => set({ isAiSetupOpen: open }), // Bug #19
   toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
   setActiveSidebarTab: (tab) => set({ activeSidebarTab: tab }),
+
+  // Bug #16: Reset also fires a zoom-reset event so Monaco re-applies editorZoom=0 to DOM
   resetSettings: () => {
     set({ settings: DEFAULT_SETTINGS });
     saveSettingsToStorage(DEFAULT_SETTINGS);
     applyAccentToDOM(DEFAULT_SETTINGS.accentColor);
+    window.dispatchEvent(new CustomEvent('zenith:reset-zoom'));
   },
 
   // Zoom: each step = 1 (1pt font size), max +20 / min -5

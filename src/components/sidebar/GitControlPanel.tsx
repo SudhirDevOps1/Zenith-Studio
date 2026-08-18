@@ -151,7 +151,7 @@ export const GitControlPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [isDesktop, rootFolderPath, files]);
+  }, [isDesktop, rootFolderPath]); // Bug #14: removed `files` — it triggered re-fetch on every keystroke
 
   useEffect(() => {
     fetchGitData();
@@ -467,9 +467,9 @@ export const GitControlPanel: React.FC = () => {
               />
               <button
                 type="submit"
-                disabled={loading}
-                style={{ backgroundColor: currentAccent.primary }}
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-white rounded-xl text-xs font-bold shadow-lg transition hover:opacity-90 cursor-pointer"
+                disabled={loading || !commitMsg.trim()}
+                style={commitMsg.trim() ? { backgroundColor: currentAccent.primary } : {}}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-white rounded-xl text-xs font-bold shadow-lg transition hover:opacity-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-700"
               >
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <GitCommit className="w-3.5 h-3.5" />}
                 <span>Commit ({gitStatusFiles.length})</span>
