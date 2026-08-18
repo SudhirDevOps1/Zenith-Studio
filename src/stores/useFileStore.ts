@@ -29,8 +29,8 @@ interface FileStoreState {
   
   createFile: (name: string, parentId: string | null, content?: string) => string;
   createFolder: (name: string, parentId: string | null) => string;
-  renameFileItem: (id: string, newName: string) => void;
-  deleteFileItem: (id: string) => void;
+  renameFileItem: (id: string, newName: string) => Promise<void>;
+  deleteFileItem: (id: string) => Promise<void>;
   duplicateFileItem: (id: string) => void;
   moveFileItem: (sourceId: string, targetParentId: string | null) => void;
   toggleFolderExpand: (folderId: string) => void;
@@ -41,6 +41,8 @@ interface FileStoreState {
   importFilesFromOS: (fileList: FileList, targetParentId?: string | null) => Promise<void>;
   importZipFile: (file: File, targetParentId?: string | null) => Promise<void>;
   openSystemFolder: () => Promise<void>;
+  addFolderToWorkspace: () => Promise<void>;
+  removeFolderFromWorkspace: (folderId: string) => void;
   openSystemFile: () => Promise<void>;
   openFolderFromWeb: (files: FileList) => Promise<void>;
 }
@@ -316,8 +318,8 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     return id;
   },
 
-  renameFileItem: (id, newName) => {
-    const { files, openTabs } = get();
+  renameFileItem: async (id, newName) => {
+    const { files, openTabs, rootFolderPath } = get();
     const target = files.find(f => f.id === id);
     if (!target) return;
 
@@ -325,6 +327,21 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     const parentFolder = files.find(f => f.id === target.parentId);
     const newPath = parentFolder ? `${parentFolder.path}/${newName}` : newName;
     const newExt = target.type === 'file' ? getFileExtension(newName) : undefined;
+
+    // Native disk rename in Electron
+    if (isElectron() && (window as any).electronAPI?.renameItem) {
+      try {
+        let srcPath = oldPath;
+        let dstPath = newPath;
+        if (rootFolderPath && !srcPath.startsWith('/') && !srcPath.includes(':')) {
+          srcPath = `${rootFolderPath}/${srcPath}`.replace(/\\/g, '/');
+          dstPath = `${rootFolderPath}/${dstPath}`.replace(/\\/g, '/');
+        }
+        await (window as any).electronAPI.renameItem({ oldPath: srcPath, newPath: dstPath });
+      } catch (err) {
+        console.warn('Native rename error:', err);
+      }
+    }
 
     const updatedFiles = files.map(item => {
       if (item.id === id) {
@@ -362,21 +379,46 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     saveFilesToStorage(updatedFiles);
   },
 
-  deleteFileItem: (id) => {
-    const { files, openTabs, activeFileId } = get();
+  deleteFileItem: async (id) => {
+    const { files, openTabs, activeFileId, rootFolderPath } = get();
     const target = files.find(f => f.id === id);
     if (!target) return;
+
+    // In Electron Desktop Mode: Delete entire folder or file from real disk!
+    if (isElectron() && (window as any).electronAPI?.deleteItem) {
+      try {
+        let diskPath = target.path;
+        if (rootFolderPath && diskPath && !diskPath.startsWith('/') && !diskPath.includes(':')) {
+          diskPath = `${rootFolderPath}/${diskPath}`.replace(/\\/g, '/');
+        }
+        await (window as any).electronAPI.deleteItem({
+          path: diskPath,
+          isDirectory: target.type === 'folder',
+        });
+      } catch (err) {
+        console.warn('Native delete error:', err);
+      }
+    }
 
     const idsToDelete = new Set<string>();
     const collectIds = (item: FileItem) => {
       idsToDelete.add(item.id);
       if (item.type === 'folder') {
-        const children = files.filter(f => f.parentId === item.id);
+        const children = files.filter(f => f.parentId === item.id || (f.path && f.path.startsWith(item.path + '/')));
         children.forEach(collectIds);
       }
     };
 
     collectIds(target);
+
+    // Also collect by path prefix for safety
+    if (target.type === 'folder') {
+      files.forEach((f) => {
+        if (f.path === target.path || f.path.startsWith(target.path + '/')) {
+          idsToDelete.add(f.id);
+        }
+      });
+    }
 
     const updatedFiles = files.filter(f => !idsToDelete.has(f.id));
     const updatedTabs = openTabs.filter(t => !idsToDelete.has(t.fileId));
@@ -392,6 +434,11 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
       activeFileId: nextActiveId,
     });
     saveFilesToStorage(updatedFiles);
+    useToastStore.getState().addToast({
+      type: 'info',
+      title: `${target.type === 'folder' ? 'Folder' : 'File'} Deleted`,
+      message: `${target.name} and all its contents were deleted.`,
+    });
   },
 
   duplicateFileItem: (id) => {
@@ -849,5 +896,179 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
       }
     };
     input.click();
+  },
+
+  addFolderToWorkspace: async () => {
+    const { addToast } = useToastStore.getState();
+    const { files } = get();
+
+    if (isElectron()) {
+      try {
+        const result = await (window as any).electronAPI.openFolderDialog();
+        if (!result || !result.files || result.files.length === 0) return;
+
+        const folderName = result.folderName || 'Project';
+        const folderRootPath = result.folderPath || folderName;
+        const rootFolderId = `root_folder_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+        // Create the top-level folder entry for this project
+        const rootFolderItem: FileItem = {
+          id: rootFolderId,
+          name: folderName,
+          path: folderRootPath,
+          type: 'folder',
+          parentId: null,
+          isExpanded: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+
+        // Re-parent all files inside this new root folder
+        const mappedFiles: FileItem[] = result.files.map((item: FileItem) => {
+          if (item.parentId === null) {
+            return {
+              ...item,
+              parentId: rootFolderId,
+              path: `${folderName}/${item.path || item.name}`,
+            };
+          }
+          return {
+            ...item,
+            path: `${folderName}/${item.path || item.name}`,
+          };
+        });
+
+        // Merge with existing workspace files
+        const existingIds = new Set(files.map(f => f.id));
+        const newFiles = [rootFolderItem, ...mappedFiles.filter(f => !existingIds.has(f.id))];
+        const mergedFiles = [...files, ...newFiles];
+
+        await saveFilesToStorage(mergedFiles);
+        set({ files: mergedFiles });
+
+        addToast({
+          type: 'success',
+          title: 'Folder Added to Workspace',
+          message: `Added ${folderName} (${mappedFiles.length} items) to workspace.`,
+        });
+      } catch (err: any) {
+        console.error('Failed to add folder to workspace:', err);
+        addToast({
+          type: 'error',
+          title: 'Add Folder Failed',
+          message: err.message || 'Could not add folder.',
+        });
+      }
+    } else {
+      // Modern Web Browser with File System Access API
+      if ('showDirectoryPicker' in window) {
+        try {
+          const dirHandle = await (window as any).showDirectoryPicker();
+          const folderName = dirHandle.name || 'Project';
+          const rootFolderId = `root_folder_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+          const collectedFiles: FileItem[] = [{
+            id: rootFolderId,
+            name: folderName,
+            path: folderName,
+            type: 'folder',
+            parentId: null,
+            isExpanded: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }];
+
+          async function readDir(handle: any, parentPath = '', parentId: string | null = null) {
+            for await (const entry of handle.values()) {
+              const currentPath = parentPath ? `${parentPath}/${entry.name}` : `${folderName}/${entry.name}`;
+              const id = `web_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+              if (entry.kind === 'directory') {
+                if (['node_modules', '.git', 'dist', '.cache'].includes(entry.name)) continue;
+
+                collectedFiles.push({
+                  id,
+                  name: entry.name,
+                  path: currentPath,
+                  type: 'folder',
+                  parentId: parentId || rootFolderId,
+                  isExpanded: false,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                });
+                await readDir(entry, currentPath, id);
+              } else if (entry.kind === 'file') {
+                const fileData = await entry.getFile();
+                const ext = getFileExtension(entry.name);
+                const text = await fileData.text();
+
+                collectedFiles.push({
+                  id,
+                  name: entry.name,
+                  path: currentPath,
+                  type: 'file',
+                  parentId: parentId || rootFolderId,
+                  extension: ext,
+                  content: text,
+                  isModified: false,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                });
+              }
+            }
+          }
+
+          await readDir(dirHandle, '', rootFolderId);
+
+          const merged = [...files, ...collectedFiles];
+          await saveFilesToStorage(merged);
+          set({ files: merged });
+
+          addToast({
+            type: 'success',
+            title: 'Folder Added to Workspace',
+            message: `Added ${folderName} (${collectedFiles.length - 1} items).`,
+          });
+        } catch (err: any) {
+          if (err.name === 'AbortError') return;
+          console.warn('showDirectoryPicker error:', err);
+        }
+      }
+    }
+  },
+
+  removeFolderFromWorkspace: (folderId: string) => {
+    const { files, openTabs, activeFileId } = get();
+    const target = files.find(f => f.id === folderId);
+    if (!target) return;
+
+    const idsToDelete = new Set<string>();
+    const collectIds = (item: FileItem) => {
+      idsToDelete.add(item.id);
+      if (item.type === 'folder') {
+        const children = files.filter(f => f.parentId === item.id || (f.path && f.path.startsWith(item.path + '/')));
+        children.forEach(collectIds);
+      }
+    };
+    collectIds(target);
+
+    const updatedFiles = files.filter(f => !idsToDelete.has(f.id));
+    const updatedTabs = openTabs.filter(t => !idsToDelete.has(t.fileId));
+
+    let nextActiveId = activeFileId;
+    if (activeFileId && idsToDelete.has(activeFileId)) {
+      nextActiveId = updatedTabs.length > 0 ? updatedTabs[0].fileId : null;
+    }
+
+    set({
+      files: updatedFiles,
+      openTabs: updatedTabs,
+      activeFileId: nextActiveId,
+    });
+    saveFilesToStorage(updatedFiles);
+    useToastStore.getState().addToast({
+      type: 'info',
+      title: 'Folder Removed',
+      message: `${target.name} was removed from workspace.`,
+    });
   },
 }));

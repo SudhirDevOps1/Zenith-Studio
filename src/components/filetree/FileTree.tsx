@@ -10,6 +10,8 @@ import {
   FilePlus,
   FolderPlus,
   FolderOpen,
+  FolderInput,
+  FolderMinus,
   Trash2,
   Edit3,
   Copy,
@@ -40,6 +42,8 @@ export const FileTree: React.FC = () => {
     resetToDefaultFiles,
     importFilesFromOS,
     openSystemFolder,
+    addFolderToWorkspace,
+    removeFolderFromWorkspace,
     openSystemFile,
   } = useFileStore();
 
@@ -299,9 +303,16 @@ export const FileTree: React.FC = () => {
           <button
             onClick={openSystemFolder}
             className="p-1 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 rounded transition"
-            title="Open Folder from System (Ctrl+Shift+O)"
+            title="Open Folder (Single-Root Workspace)"
           >
             <FolderOpen className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={addFolderToWorkspace}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 rounded transition"
+            title="Add Folder to Workspace... (Multi-Root: 4-5 Folders Open Together)"
+          >
+            <FolderInput className="w-3.5 h-3.5 text-emerald-400" />
           </button>
           <button
             onClick={collapseAllFolders}
@@ -492,6 +503,25 @@ export const FileTree: React.FC = () => {
 
           {contextMenu.fileId && (
             <div className="py-1">
+              {contextMenu.isFolder && (() => {
+                const target = files.find(f => f.id === contextMenu.fileId);
+                if (target && target.parentId === null) {
+                  return (
+                    <button
+                      onClick={() => {
+                        if (contextMenu.fileId) removeFolderFromWorkspace(contextMenu.fileId);
+                        closeContextMenu();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-amber-600 hover:text-white text-amber-300 transition text-left"
+                    >
+                      <FolderMinus className="w-3.5 h-3.5" />
+                      <span>Remove Folder from Workspace</span>
+                    </button>
+                  );
+                }
+                return null;
+              })()}
+
               <button
                 onClick={() => {
                   if (contextMenu.fileId) deleteFileItem(contextMenu.fileId);
@@ -500,7 +530,7 @@ export const FileTree: React.FC = () => {
                 className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-red-600 hover:text-white text-red-400 transition text-left"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete</span>
+                <span>Delete {contextMenu.isFolder ? 'Folder & Contents' : 'File'}</span>
               </button>
             </div>
           )}

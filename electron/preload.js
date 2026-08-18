@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder'),
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   saveFile: (data) => ipcRenderer.invoke('fs:saveFile', data),
+  deleteItem: (data) => ipcRenderer.invoke('fs:deleteItem', data),
+  renameItem: (data) => ipcRenderer.invoke('fs:renameItem', data),
   runNativeCode: (data) => ipcRenderer.invoke('code:runNative', data),
   execTerminalCommand: (data) => ipcRenderer.invoke('terminal:execCommand', data),
   searchOpenVSX: (query) => ipcRenderer.invoke('openvsx:search', query),

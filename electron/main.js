@@ -265,6 +265,34 @@ ipcMain.handle('fs:saveFile', async (_, { path: targetPath, content }) => {
   }
 });
 
+ipcMain.handle('fs:deleteItem', async (_, { path: itemPath, isDirectory }) => {
+  try {
+    let target = itemPath;
+    if (!target) return { success: false, error: 'No path specified' };
+    if (!path.isAbsolute(target) && activeTerminalCwd) {
+      target = path.resolve(activeTerminalCwd, target);
+    }
+    // Delete file or folder recursively
+    await fs.rm(target, { recursive: true, force: true });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('fs:renameItem', async (_, { oldPath, newPath }) => {
+  try {
+    let src = oldPath;
+    let dest = newPath;
+    if (!path.isAbsolute(src) && activeTerminalCwd) src = path.resolve(activeTerminalCwd, src);
+    if (!path.isAbsolute(dest) && activeTerminalCwd) dest = path.resolve(activeTerminalCwd, dest);
+    await fs.rename(src, dest);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
   const ext = String(extension || '').toLowerCase();
   const isCpp = ['cpp', 'cc', 'cxx'].includes(ext);

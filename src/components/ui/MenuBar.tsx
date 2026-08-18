@@ -37,7 +37,7 @@ import { ZenithLogo } from './ZenithLogo';
 
 
 export const MenuBar: React.FC = () => {
-  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
+  const { createFile, createFolder, saveCurrentFile, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, addFolderToWorkspace, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
   const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab, increaseZoom, decreaseZoom, resetZoom, settings } = useSettingsStore();
   const { toggleProblemsOpen } = useDiagnosticsStore();
   const { openDialog } = useDialogStore();
@@ -161,6 +161,19 @@ export const MenuBar: React.FC = () => {
                   <FolderPlus className="w-3.5 h-3.5 text-indigo-400" /> Open Folder...
                 </span>
                 <kbd className="text-[10px] text-slate-400 font-mono">Ctrl+Shift+O</kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  addFolderToWorkspace();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-blue-600 hover:text-white transition text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <FolderPlus className="w-3.5 h-3.5 text-emerald-400" /> Add Folder to Workspace...
+                </span>
+                <span className="text-[10px] text-emerald-400 font-mono">Multi-Root</span>
               </button>
 
               <div className="border-t border-slate-800 my-1" />
