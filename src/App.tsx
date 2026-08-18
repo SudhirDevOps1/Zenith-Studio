@@ -81,6 +81,7 @@ export default function App() {
     setShortcutsModalOpen,
     setSettingsOpen,
     settings,
+    initSecureVault,
   } = useSettingsStore();
 
   const { addToast } = useToastStore();
@@ -138,10 +139,16 @@ export default function App() {
     applyAccentToDOM(settings.accentColor);
   }, [settings.accentColor]);
 
+  // 🛡️ Enterprise OS Credential Vault: Hydrate secrets on startup
+  useEffect(() => {
+    initSecureVault();
+  }, [initSecureVault]);
+
   // Initialize store (silently)
   useEffect(() => {
     initializeStore();
   }, [initializeStore]);
+
 
 
   // Auto check for releases after startup (silent, with longer delay)

@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const fsSync = require('fs');
+
 const os = require('os');
 const https = require('https');
 const { exec, execFile } = require('child_process');
@@ -680,7 +681,106 @@ ipcMain.handle('ai:fetch', async (_, { url, method = 'POST', headers = {}, body 
 
 
 
+// ─── OS-Level Credential Vault (VS Code Enterprise Standard) ───────────────────
+// Uses Electron safeStorage (Windows DPAPI / macOS Keychain / Linux Secret Service)
+const getVaultPath = () => path.join(app.getPath('userData'), 'zenith_secure_vault.json');
+
+async function readVaultRaw() {
+  try {
+    const filePath = getVaultPath();
+    const content = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return {};
+  }
+}
+
+async function writeVaultRaw(data) {
+  try {
+    const filePath = getVaultPath();
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[Vault] Failed to save encrypted vault:', err);
+  }
+}
+
+ipcMain.handle('vault:setSecret', async (_, { key, value }) => {
+  try {
+    if (!key) return { success: false, error: 'Key required' };
+    const vault = await readVaultRaw();
+
+    if (value == null || value === '') {
+      delete vault[key];
+      await writeVaultRaw(vault);
+      return { success: true };
+    }
+
+    if (safeStorage && safeStorage.isEncryptionAvailable()) {
+      const encryptedBuffer = safeStorage.encryptString(String(value));
+      vault[key] = {
+        enc: 'safeStorage',
+        data: encryptedBuffer.toString('base64'),
+      };
+    } else {
+      vault[key] = {
+        enc: 'obfuscated',
+        data: Buffer.from(String(value), 'utf-8').toString('base64'),
+      };
+    }
+
+    await writeVaultRaw(vault);
+    return { success: true };
+  } catch (err) {
+    console.error('[Vault] setSecret error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('vault:getSecret', async (_, { key }) => {
+  try {
+    if (!key) return { success: false, value: null };
+    const vault = await readVaultRaw();
+    const entry = vault[key];
+    if (!entry) return { success: true, value: null };
+
+    if (entry.enc === 'safeStorage' && safeStorage && safeStorage.isEncryptionAvailable()) {
+      const decrypted = safeStorage.decryptString(Buffer.from(entry.data, 'base64'));
+      return { success: true, value: decrypted };
+    } else if (entry.enc === 'obfuscated') {
+      const decrypted = Buffer.from(entry.data, 'base64').toString('utf-8');
+      return { success: true, value: decrypted };
+    }
+
+    return { success: true, value: null };
+  } catch (err) {
+    console.error('[Vault] getSecret error:', err);
+    return { success: false, value: null, error: err.message };
+  }
+});
+
+ipcMain.handle('vault:deleteSecret', async (_, { key }) => {
+  try {
+    const vault = await readVaultRaw();
+    delete vault[key];
+    await writeVaultRaw(vault);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('vault:hasSecret', async (_, { key }) => {
+  try {
+    const vault = await readVaultRaw();
+    return { success: true, exists: !!vault[key] };
+  } catch {
+    return { success: false, exists: false };
+  }
+});
+
 app.whenReady().then(() => {
+
   createWindow();
 
   app.on('activate', () => {

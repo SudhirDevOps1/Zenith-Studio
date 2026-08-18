@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { EditorSettings, DEFAULT_SETTINGS } from '../types/settings';
-import { loadSettingsFromStorage, saveSettingsToStorage } from '../utils/storage';
+import { loadSettingsFromStorage, saveSettingsToStorage, loadSecureSecretsFromVault } from '../utils/storage';
 import { applyAccentToDOM } from '../utils/accentThemes';
 
 export type SidebarTab = 'explorer' | 'search' | 'git' | 'snippets' | 'extensions' | 'ai' | 'debug' | 'info' | 'settings';
@@ -16,6 +16,7 @@ interface SettingsState {
 
   // Actions
   updateSettings: (newSettings: Partial<EditorSettings>) => void;
+  initSecureVault: () => Promise<void>;
   setSettingsOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
@@ -34,6 +35,7 @@ const initialSettings: EditorSettings = {
 };
 applyAccentToDOM(initialSettings.accentColor);
 
+
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: initialSettings,
   isSettingsOpen: false,
@@ -51,7 +53,26 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
+  // 🛡️ Asynchronously hydrate secrets from OS Credential Vault (Windows DPAPI / Keychain)
+  initSecureVault: async () => {
+    try {
+      const secrets = await loadSecureSecretsFromVault();
+      if (secrets.aiApiKey || secrets.geminiApiKey) {
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            aiApiKey: secrets.aiApiKey || state.settings.aiApiKey,
+            geminiApiKey: secrets.geminiApiKey || state.settings.geminiApiKey,
+          },
+        }));
+      }
+    } catch (err) {
+      console.warn('[Vault] Failed to hydrate secure secrets:', err);
+    }
+  },
+
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
+
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
   toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),

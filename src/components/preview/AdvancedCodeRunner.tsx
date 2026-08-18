@@ -10,15 +10,8 @@ interface AdvancedCodeRunnerProps {
 
 type RunnerLog = { id: string; type: 'out' | 'err' | 'info'; text: string };
 
-declare global {
-  interface Window {
-    loadPyodide?: any;
-    pyodide?: any;
-    electronAPI?: any;
-  }
-}
-
 const isElectronRuntime = () => typeof window !== 'undefined' && Boolean(window.electronAPI);
+
 
 export const AdvancedCodeRunner: React.FC<AdvancedCodeRunnerProps> = ({ code, extension, fileName }) => {
   const { settings } = useSettingsStore();

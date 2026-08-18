@@ -14,6 +14,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+
+  // 🛡️ Enterprise OS Credential Vault (VS Code standard)
+  setSecret: (key, value) => ipcRenderer.invoke('vault:setSecret', { key, value }),
+  getSecret: (key) => ipcRenderer.invoke('vault:getSecret', { key }),
+  deleteSecret: (key) => ipcRenderer.invoke('vault:deleteSecret', { key }),
+  hasSecret: (key) => ipcRenderer.invoke('vault:hasSecret', { key }),
 });
+
 
 
