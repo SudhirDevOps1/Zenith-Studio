@@ -2,7 +2,7 @@
 
 > AI MUST update this file before ending any session where codebase modifications occurred.
 
-## [2026-08-18] - v1.0.4 System Node.js NetBridge, Universal Custom LLMs & Open VSX Marketplace Firewall Immunity
+## [2026-08-18] - v1.0.3 System Node.js NetBridge, Universal Custom LLMs & Open VSX Marketplace Firewall Immunity
 
 * **User Directives:**
   - "arey sale kmine main custom provider dal saku sab support krein samjhe"

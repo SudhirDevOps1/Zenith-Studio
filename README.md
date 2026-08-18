@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/TypeScript-Strict%200%20Errors-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Monaco%20Editor-100%25%20Offline%20Bundled-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Monaco Editor" />
   <img src="https://img.shields.io/badge/Electron-Windows%20Setup%20.exe-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
-  <img src="https://img.shields.io/badge/Version-v1.0.4%20Production-success?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-v1.0.3%20Production-success?style=for-the-badge" alt="Version" />
 </p>
 
 ---
@@ -24,7 +24,7 @@
 - 🌐 **Live Web Application**: [https://zenith-studio-web.pages.dev/](https://zenith-studio-web.pages.dev/)
 - 📦 **GitHub Repository**: [https://github.com/SudhirDevOps1/Zenith-Studio.git](https://github.com/SudhirDevOps1/Zenith-Studio.git)
 - 🚀 **GitHub Releases & `.exe` Downloads**: [https://github.com/SudhirDevOps1/Zenith-Studio/releases](https://github.com/SudhirDevOps1/Zenith-Studio/releases)
-- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `Zenith Studio Setup 1.0.4.exe` NSIS Installer and portable executable in `dist-electron/`)
+- 💻 **Desktop Executable (`.exe`)**: Built via `npm run electron:build` (Outputs `Zenith Studio Setup 1.0.3.exe` NSIS Installer and portable executable in `dist-electron/`)
 - ⚡ **Zero Setup Required**: Open directly in any modern browser or run as a standalone desktop executable on Windows.
 
 ---
@@ -163,7 +163,7 @@ npm run electron:dev
 ### 6. Build Windows Executable Installer (`.exe`)
 ```bash
 npm run electron:build
-# Generates Zenith Studio Setup 1.0.4.exe (NSIS Installer) and Portable executable in dist-electron/
+# Generates Zenith Studio Setup 1.0.3.exe (NSIS Installer) and Portable executable in dist-electron/
 ```
 
 ---

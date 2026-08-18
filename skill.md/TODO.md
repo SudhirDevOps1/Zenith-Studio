@@ -2,7 +2,7 @@
 
 > Keep this updated. Mark completed items with `[x]` and pending with `[ ]`.
 
-## Completed Core Deliverables (v1.0.4 Production)
+## Completed Core Deliverables (v1.0.3 Production)
 
 - [x] System Node.js NetBridge for 100% Windows Defender / Firewall Bypass (`electron/netBridge.js`).
 - [x] Universal Custom Provider Engine with 8 Quick Presets (Together, Cerebras, LM Studio, Ollama, vLLM, DeepInfra, Mistral, SambaNova).

@@ -1,6 +1,6 @@
 # 🚀 FEATURES (CodeStudio Evolution & Matrix)
 
-## 1. What was built recently? (v1.0.4 Release)
+## 1. What was built recently? (v1.0.3 Release)
 * **System Node.js NetBridge (`electron/netBridge.js`):** Standalone subprocess bridge executed via Windows-trusted `node.exe` engine. Completely bypasses Windows Defender / Firewall `ERR_NETWORK_ACCESS_DENIED` blocks on `electron.exe`.
 * **Universal Custom Provider Engine & Presets (`AiSetupModal.tsx`):** 1-click preset integrations for Together AI, Cerebras, LM Studio, Ollama, vLLM, DeepInfra, Mistral, SambaNova, and arbitrary OpenAI-compatible custom endpoints with dual-verification test suites.
 * **Reasoning LLM Multi-Token Support (`aiService.ts`):** Robust response parsing handling `choices[0].message.reasoning` for OpenAI OSS (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) and DeepSeek R1 models.
