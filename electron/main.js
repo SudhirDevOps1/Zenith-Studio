@@ -25,9 +25,10 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       webviewTag: true,
-      webSecurity: false, // Allows webview tag and iframes to access internet URLs & localhost freely
+      webSecurity: true,
       sandbox: false,
     },
+
   });
 
   const isDev = process.env.NODE_ENV === 'development' || process.env.VITE_DEV_SERVER_URL;
