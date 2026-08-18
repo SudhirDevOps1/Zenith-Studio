@@ -434,13 +434,12 @@ export default function App() {
           {/* Open Tabs & Breadcrumbs */}
           {!isZenMode && <TabsBar />}
 
-          {/* Editor and Split Preview Viewport */}
-          {openTabs.length === 0 || !activeFile ? (
-            <WelcomeScreen />
-          ) : (
-            <div id="editor-preview-container" className="flex-1 flex flex-col h-full overflow-hidden relative">
-              {/* Main Editor + Preview Row */}
-              <div className="flex-1 flex h-full overflow-hidden relative">
+          {/* Editor / Welcome Screen Main Region */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+            {openTabs.length === 0 || !activeFile ? (
+              <WelcomeScreen />
+            ) : (
+              <div id="editor-preview-container" className="flex-1 flex min-h-0 overflow-hidden relative">
                 {/* Media-Only View (Images, Video, Audio, PDF) */}
                 {isMediaOnly ? (
                   <div className="flex-1 h-full overflow-hidden bg-[#11111b] flex items-center justify-center p-4">
@@ -515,20 +514,19 @@ export default function App() {
                   </>
                 )}
               </div>
+            )}
 
+            {/* Integrated Terminal (Works globally whether tabs are open or in empty folder) */}
+            {showTerminal && <IntegratedTerminal onClose={() => setShowTerminal(false)} />}
 
-              {/* Integrated Terminal */}
-              {showTerminal && <IntegratedTerminal onClose={() => setShowTerminal(false)} />}
-
-              {/* Problems & Diagnostics Panel */}
-              {isProblemsOpen && (
-                <ProblemsPanel
-                  onClose={() => setProblemsOpen(false)}
-                  onNavigateToLine={handleNavigateToLine}
-                />
-              )}
-            </div>
-          )}
+            {/* Problems & Diagnostics Panel (Works globally) */}
+            {isProblemsOpen && (
+              <ProblemsPanel
+                onClose={() => setProblemsOpen(false)}
+                onNavigateToLine={handleNavigateToLine}
+              />
+            )}
+          </div>
 
 
           {/* Floating Find & Replace Panel */}

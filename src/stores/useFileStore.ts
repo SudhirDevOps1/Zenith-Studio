@@ -669,20 +669,21 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     if (isElectron()) {
       try {
         const result = await (window as any).electronAPI.openFolderDialog();
-        if (!result || !result.files || result.files.length === 0) return;
+        if (!result) return;
 
-        await saveFilesToStorage(result.files);
+        const loadedFiles = Array.isArray(result.files) ? result.files : [];
+        await saveFilesToStorage(loadedFiles);
         if (result.folderPath) {
           localStorage.setItem('codestudio_root_folder_path', result.folderPath);
         }
         set({
-          files: result.files,
+          files: loadedFiles,
           rootFolderPath: result.folderPath || null,
           openTabs: [],
           activeFileId: null,
         });
 
-        const firstFile = result.files.find((f: FileItem) => f.type === 'file');
+        const firstFile = loadedFiles.find((f: FileItem) => f.type === 'file');
         if (firstFile) {
           get().openFileInTab(firstFile.id);
         }
@@ -690,7 +691,7 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
         addToast({
           type: 'success',
           title: 'Folder Opened',
-          message: `Loaded ${result.folderName || 'folder'} (${result.files.length} items).`,
+          message: `Loaded ${result.folderName || 'folder'} (${loadedFiles.length} items).`,
         });
       } catch (err: any) {
         console.error('Failed to open native folder:', err);
@@ -771,25 +772,24 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
 
         await readDirHandle(dirHandle);
 
-        if (collectedFiles.length > 0) {
-          await saveFilesToStorage(collectedFiles);
-          set({
-            files: collectedFiles,
-            openTabs: [],
-            activeFileId: null,
-          });
+        await saveFilesToStorage(collectedFiles);
+        set({
+          files: collectedFiles,
+          rootFolderPath: dirHandle.name,
+          openTabs: [],
+          activeFileId: null,
+        });
 
-          const firstFile = collectedFiles.find(f => f.type === 'file');
-          if (firstFile) {
-            get().openFileInTab(firstFile.id);
-          }
-
-          addToast({
-            type: 'success',
-            title: 'Folder Opened',
-            message: `Loaded ${dirHandle.name} (${collectedFiles.length} items).`,
-          });
+        const firstFile = collectedFiles.find(f => f.type === 'file');
+        if (firstFile) {
+          get().openFileInTab(firstFile.id);
         }
+
+        addToast({
+          type: 'success',
+          title: 'Folder Opened',
+          message: `Loaded ${dirHandle.name} (${collectedFiles.length} items).`,
+        });
         return;
       } catch (err: any) {
         if (err.name === 'AbortError') return; // User cancelled picker
@@ -973,8 +973,9 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
     if (isElectron()) {
       try {
         const result = await (window as any).electronAPI.openFolderDialog();
-        if (!result || !result.files || result.files.length === 0) return;
+        if (!result) return;
 
+        const subFiles = Array.isArray(result.files) ? result.files : [];
         const folderName = result.folderName || 'Project';
         const folderRootPath = result.folderPath || folderName;
         const rootFolderId = `root_folder_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
@@ -992,7 +993,7 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
         };
 
         // Re-parent all files inside this new root folder
-        const mappedFiles: FileItem[] = result.files.map((item: FileItem) => {
+        const mappedFiles: FileItem[] = subFiles.map((item: FileItem) => {
           if (item.parentId === null) {
             return {
               ...item,
