@@ -1,7 +1,7 @@
 {
   "name": "zenith-studio",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Zenith Studio — Modern, lightweight, high-performance AI-Native VS Code alternative with Multi-File Composer, Step-by-Step Debugger, 3-Way Git Merge Conflict Resolver, Extensions Marketplace, and Native Compilers.",
   "author": "SudhirDevOps",
   "main": "electron/main.js",
