@@ -577,13 +577,48 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
 });
 
 
-// Open external URL in system browser
-ipcMain.handle('shell:openExternal', async (_, url) => {
-  if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:'))) {
-    await shell.openExternal(url);
+// Open external URL or local file in default system browser
+ipcMain.handle('shell:openExternal', async (_, urlOrPath) => {
+  if (!urlOrPath) return false;
+  try {
+    let target = String(urlOrPath).trim();
+    if (target.startsWith('localhost:') || target.startsWith('127.0.0.1:')) {
+      target = `http://${target}`;
+    }
+    if (target.startsWith('http://') || target.startsWith('https://') || target.startsWith('mailto:')) {
+      await shell.openExternal(target);
+      return true;
+    }
+    if (target.startsWith('file://')) {
+      await shell.openExternal(target);
+      return true;
+    }
+    if (fsSync.existsSync(target)) {
+      await shell.openPath(target);
+      return true;
+    }
+    await shell.openExternal(target);
     return true;
+  } catch (err) {
+    console.error('Failed to open external:', err);
+    return false;
   }
-  return false;
+});
+
+// Live Browser Preview for HTML/Web files
+ipcMain.handle('browser:openHtmlPreview', async (_, { content, filePath }) => {
+  try {
+    if (filePath && fsSync.existsSync(filePath)) {
+      await shell.openPath(filePath);
+      return { success: true, url: `file://${filePath}` };
+    }
+    const tempFile = path.join(os.tmpdir(), `zenith-preview-${Date.now()}.html`);
+    await fs.writeFile(tempFile, content || '', 'utf-8');
+    await shell.openPath(tempFile);
+    return { success: true, url: `file://${tempFile}` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 // Execute real system shell command in active workspace directory

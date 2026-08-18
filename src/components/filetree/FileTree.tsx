@@ -3,7 +3,7 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useDialogStore } from '../../stores/useDialogStore';
 import { ContextMenuTarget } from '../../types/fileSystem';
 import { FileIcon } from './FileIcon';
-import { downloadFileItem } from '../../utils/fileUtils';
+import { downloadFileItem, isElectron } from '../../utils/fileUtils';
 import {
   ChevronRight,
   ChevronDown,
@@ -22,6 +22,7 @@ import {
   FolderTree,
   Sparkles,
   FileArchive,
+  ExternalLink,
 } from 'lucide-react';
 
 export const FileTree: React.FC = () => {
@@ -522,6 +523,37 @@ export const FileTree: React.FC = () => {
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Download File</span>
               </button>
+
+              {!contextMenu.isFolder && (() => {
+                const target = files.find(f => f.id === contextMenu.fileId);
+                const ext = target?.extension?.toLowerCase();
+                if (['html', 'htm', 'svg', 'md', 'json'].includes(ext || '')) {
+                  return (
+                    <button
+                      onClick={async () => {
+                        if (target) {
+                          if (isElectron() && window.electronAPI?.openHtmlPreview) {
+                            await window.electronAPI.openHtmlPreview({
+                              content: target.content,
+                              filePath: (target as any).filePath,
+                            });
+                          } else {
+                            const blob = new Blob([target.content || ''], { type: 'text/html' });
+                            const url = URL.createObjectURL(blob);
+                            window.open(url, '_blank');
+                          }
+                        }
+                        closeContextMenu();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-blue-600 hover:text-white text-cyan-300 transition text-left"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open in Browser (Live)</span>
+                    </button>
+                  );
+                }
+                return null;
+              })()}
             </div>
           )}
 

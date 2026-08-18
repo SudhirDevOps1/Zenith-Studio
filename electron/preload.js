@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getExtensionDetails: (data) => ipcRenderer.invoke('openvsx:extension', data),
   aiFetch: (data) => ipcRenderer.invoke('ai:fetch', data),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+  openHtmlPreview: (data) => ipcRenderer.invoke('browser:openHtmlPreview', data),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),

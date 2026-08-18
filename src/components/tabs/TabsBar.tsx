@@ -3,12 +3,8 @@ import { useFileStore } from '../../stores/useFileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { FileIcon } from '../filetree/FileIcon';
 import { ACCENT_PALETTE } from '../../utils/accentThemes';
-import { X, ChevronRight, Split, Layers, Columns, Globe, Folder, Play, Camera } from 'lucide-react';
-
-
-
-
-
+import { X, ChevronRight, Split, Layers, Columns, Globe, Folder, Play, Camera, ExternalLink } from 'lucide-react';
+import { isElectron } from '../../utils/fileUtils';
 
 export const TabsBar: React.FC = () => {
   const { openTabs, activeFileId, setActiveFile, closeTab, closeOtherTabs, closeAllTabs, files, activePreviewMode, setActivePreviewMode } = useFileStore();
@@ -18,7 +14,8 @@ export const TabsBar: React.FC = () => {
   const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
   const activeFile = files.find(f => f.id === activeFileId);
   const ext = activeFile?.extension?.toLowerCase() || '';
-  const isRunnable = ['js', 'ts', 'jsx', 'tsx', 'py', 'c', 'cpp', 'cc', 'cxx', 'rs', 'go'].includes(ext);
+  const isRunnable = ['js', 'ts', 'jsx', 'tsx', 'py', 'c', 'cpp', 'cc', 'cxx', 'rs', 'go', 'java', 'php', 'rb', 'kt', 'cs', 'sh', 'bat', 'ps1'].includes(ext);
+  const isWebOrHtml = ['html', 'htm', 'svg'].includes(ext);
 
   // Split path into breadcrumb tokens
   const breadcrumbItems = activeFile ? activeFile.path.split('/') : [];
@@ -87,6 +84,28 @@ export const TabsBar: React.FC = () => {
               >
                 <Play className="w-3 h-3 fill-current" />
                 <span className="hidden sm:inline">Run</span>
+              </button>
+            )}
+
+            {isWebOrHtml && (
+              <button
+                onClick={async () => {
+                  if (isElectron() && window.electronAPI?.openHtmlPreview) {
+                    await window.electronAPI.openHtmlPreview({
+                      content: activeFile.content,
+                      filePath: (activeFile as any).filePath,
+                    });
+                  } else {
+                    const blob = new Blob([activeFile.content || ''], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                  }
+                }}
+                className="flex items-center gap-1 px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-cyan-300 rounded-md text-[11px] font-semibold transition-all border border-cyan-500/30"
+                title="Open Live in Default Browser (Chrome / Edge)"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span className="hidden sm:inline">Browser</span>
               </button>
             )}
 

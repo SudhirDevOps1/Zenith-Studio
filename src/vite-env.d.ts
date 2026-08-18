@@ -37,6 +37,7 @@ interface Window {
       error?: string;
     }>;
     openExternal: (url: string) => Promise<void>;
+    openHtmlPreview: (data: { content?: string; filePath?: string }) => Promise<{ success: boolean; url?: string; error?: string }>;
     minimizeWindow: () => void;
     maximizeWindow: () => void;
     closeWindow: () => void;

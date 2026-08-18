@@ -5,6 +5,8 @@ import {
   Check,
   Search,
   X,
+  ExternalLink,
+  Globe,
 } from 'lucide-react';
 
 import {
@@ -297,6 +299,52 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
     }
   };
 
+  const handleOpenUrl = async (rawUrl: string) => {
+    let target = rawUrl.trim();
+    if (!target.startsWith('http://') && !target.startsWith('https://')) {
+      target = `http://${target}`;
+    }
+    if (isElectron() && window.electronAPI?.openExternal) {
+      await window.electronAPI.openExternal(target);
+    } else {
+      window.open(target, '_blank');
+    }
+  };
+
+  const renderContentWithLinks = (text: string) => {
+    const urlPattern = /(https?:\/\/[^\s]+|localhost:[0-9]+[^\s]*|127\.0\.0\.1:[0-9]+[^\s]*)/gi;
+    const parts = text.split(urlPattern);
+
+    return parts.map((part, index) => {
+      if (part.match(urlPattern)) {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenUrl(part);
+            }}
+            className="underline font-bold text-cyan-300 hover:text-cyan-100 hover:bg-cyan-900/40 px-1 py-0.5 rounded cursor-pointer inline-flex items-center gap-1 transition"
+            title="Ctrl+Click to Open in System Browser"
+          >
+            <span>{part}</span>
+            <ExternalLink className="w-2.5 h-2.5 inline" />
+          </button>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  const detectedServerUrl = React.useMemo(() => {
+    const recent = session.entries.slice(-15);
+    for (const e of recent.reverse()) {
+      const match = e.text.match(/(https?:\/\/(?:localhost|127\.0\.0\.1):[0-9]+[^\s]*)/i);
+      if (match) return match[1];
+    }
+    return null;
+  }, [session.entries]);
+
   const filteredEntries = searchQuery.trim()
     ? session.entries.filter((entry) =>
         entry.text.toLowerCase().includes(searchQuery.toLowerCase())
@@ -318,6 +366,33 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
         lineHeight: settings.lineHeight,
       }}
     >
+      {/* Local Server Live Notification Banner (VS Code Style) */}
+      {detectedServerUrl && (
+        <div className="flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-emerald-950/80 to-slate-900 border-b border-emerald-500/30 text-xs text-emerald-300 font-sans shadow-sm shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="font-semibold text-white truncate">Local Server Running:</span>
+            <span className="font-mono text-cyan-300 underline cursor-pointer truncate" onClick={() => handleOpenUrl(detectedServerUrl)}>{detectedServerUrl}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => handleOpenUrl(detectedServerUrl)}
+              className="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer shadow"
+            >
+              <ExternalLink className="w-3 h-3" /> Open in Browser
+            </button>
+            <button
+              onClick={() => {
+                useFileStore.getState().setActivePreviewMode('webview');
+              }}
+              className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-[11px] transition flex items-center gap-1 cursor-pointer"
+            >
+              <Globe className="w-3 h-3 text-cyan-400" /> Webview
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Mini search bar */}
       {showSearch && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#141522] border-b border-slate-800 text-xs shrink-0">
@@ -376,7 +451,7 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
                 [{entry.timestamp}]
               </span>
             )}
-            {entry.text}
+            {renderContentWithLinks(entry.text)}
           </div>
         ))}
 

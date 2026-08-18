@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCw, ExternalLink, Monitor, Tablet, Smartphone, Code } from 'lucide-react';
+import { isElectron } from '../../utils/fileUtils';
 
 interface HtmlPreviewProps {
   htmlContent: string;
@@ -56,10 +57,14 @@ ${htmlContent}
     setKey(prev => prev + 1);
   };
 
-  const handleOpenNewTab = () => {
-    const blob = new Blob([formattedHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+  const handleOpenNewTab = async () => {
+    if (isElectron() && window.electronAPI?.openHtmlPreview) {
+      await window.electronAPI.openHtmlPreview({ content: formattedHtml });
+    } else {
+      const blob = new Blob([formattedHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
   };
 
   return (
