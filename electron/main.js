@@ -41,6 +41,23 @@ function createWindow() {
 
   const isDev = !app.isPackaged;
 
+  // Intercept all popup windows and external links — open safely in default system browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isDevUrl = url.startsWith('http://localhost:5173') || url.startsWith('http://127.0.0.1:5173');
+    const isFileUrl = url.startsWith('file://');
+    if (!isDevUrl && !isFileUrl && (url.startsWith('http://') || url.startsWith('https://'))) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
   if (isDev) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173').catch(() => {
       mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));

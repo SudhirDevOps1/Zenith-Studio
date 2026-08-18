@@ -40,6 +40,7 @@ import { DebugPanel } from './components/debugger/DebugPanel';
 import { DebugToolbar } from './components/debugger/DebugToolbar';
 import { AiComposerModal } from './components/composer/AiComposerModal';
 import { AiSetupModal } from './components/ui/AiSetupModal'; // Bug #19: Global modal
+import { ExtensionDetailModal } from './components/extensions/ExtensionDetailModal';
 import { useComposerStore } from './stores/useComposerStore';
 import { useDebugStore } from './stores/useDebugStore';
 import { useUpdateStore } from './stores/useUpdateStore';
@@ -573,6 +574,7 @@ export default function App() {
       <AiComposerModal />
       {/* Bug #19: Global AiSetupModal — not inside CommandPalette so it doesn't unmount on palette close */}
       <AiSetupModal isOpen={isAiSetupOpen} onClose={() => setAiSetupOpen(false)} />
+      <ExtensionDetailModal />
       
       {/* Global App Dialog */}
 

@@ -466,8 +466,6 @@ export const ExtensionsPanel: React.FC = () => {
           ))
         )}
       </div>
-
-      <ExtensionDetailModal />
     </div>
   );
 };

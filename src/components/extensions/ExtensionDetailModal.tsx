@@ -50,7 +50,7 @@ export const ExtensionDetailModal: React.FC = () => {
   return (
     <div
       onClick={() => setSelectedExtension(null)}
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -237,9 +237,25 @@ export const ExtensionDetailModal: React.FC = () => {
                   p: ({ node, ...props }) => <p className="text-xs text-slate-300 leading-relaxed mb-3" {...props} />,
                   ul: ({ node, ...props }) => <ul className="list-disc list-inside space-y-1 my-2 text-xs text-slate-300 pl-2" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal list-inside space-y-1 my-2 text-xs text-slate-300 pl-2" {...props} />,
-                  li: ({ node, ...props }) => <li className="text-xs text-slate-300" {...props} />,
-                  a: ({ node, ...props }) => <a className="text-cyan-400 hover:text-cyan-300 underline font-medium" target="_blank" rel="noreferrer" {...props} />,
-                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-cyan-500 bg-slate-900/60 p-2.5 rounded-r my-3 text-xs text-slate-300 italic" {...props} />,
+                  a: ({ node, href, children, ...props }: any) => (
+                    <a
+                      href={href}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (href) {
+                          if (typeof window !== 'undefined' && (window as any).electronAPI?.openExternal) {
+                            (window as any).electronAPI.openExternal(href);
+                          } else {
+                            window.open(href, '_blank', 'noopener,noreferrer');
+                          }
+                        }
+                      }}
+                      className="text-cyan-400 hover:text-cyan-300 underline font-medium cursor-pointer"
+                      {...props}
+                    >
+                      {children}
+                    </a>
+                  ),
                   code: ({ node, inline, className, children, ...props }: any) =>
                     inline ? (
                       <code className="px-1.5 py-0.5 bg-slate-900 text-cyan-300 rounded font-mono text-[11px] border border-slate-800" {...props}>
