@@ -250,15 +250,16 @@ export async function detectProviderModels(settings: Partial<EditorSettings>): P
         if (!res.ok) throw new Error(`Groq API Error (${res.status}): ${res.data?.error?.message || res.error}`);
         const data = res.data;
         const preferredOrder = [
+          'openai/gpt-oss-120b',
+          'openai/gpt-oss-20b',
           'llama-3.3-70b-versatile',
           'llama-3.1-8b-instant',
           'deepseek-r1-distill-llama-70b',
-          'llama-3.1-70b-versatile',
+          'qwen/qwen3.6-27b',
           'mixtral-8x7b-32768',
-          'gemma2-9b-it',
         ];
 
-        const rawList = (data.data || []).filter((m: any) => m.active !== false && !m.id.startsWith('openai/gpt-oss'));
+        const rawList = (data.data || []).filter((m: any) => m.active !== false);
         const models: ModelInfo[] = rawList
           .sort((a: any, b: any) => {
             const idxA = preferredOrder.indexOf(a.id);
@@ -509,7 +510,9 @@ export async function generateAiContent(
     throw new Error(errorMsg);
   }
 
-  return res.data?.choices?.[0]?.message?.content || 'No response generated.';
+  const choice = res.data?.choices?.[0];
+  const responseContent = choice?.message?.content || choice?.message?.reasoning || choice?.text || '';
+  return responseContent || 'No response generated.';
 }
 
 /**
