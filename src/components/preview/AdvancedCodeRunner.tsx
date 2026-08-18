@@ -180,9 +180,9 @@ result = (_stdout.getvalue(), _stderr.getvalue())
     addLog('info', `Running ${fileName}...`);
     const ext = extension.toLowerCase();
     try {
-      if (['js', 'jsx', 'mjs', 'cjs', 'ts', 'tsx', 'mts', 'cts'].includes(ext)) await runJavaScript();
+      if (['js', 'jsx', 'mjs', 'cjs'].includes(ext)) await runJavaScript();
       else if (['py', 'python'].includes(ext)) await runPython();
-      else if (['c', 'cpp', 'cc', 'cxx', 'rs', 'go'].includes(ext)) await runNativeCompiler();
+      else if (['c', 'cpp', 'cc', 'cxx', 'rs', 'go', 'java', 'ts', 'tsx', 'php', 'rb', 'ruby', 'kt', 'kts', 'cs', 'sh', 'bat', 'cmd', 'ps1'].includes(ext)) await runNativeCompiler();
       else await runCloudflareSandbox();
     } finally {
       setRunning(false);
@@ -199,6 +199,15 @@ result = (_stdout.getvalue(), _stderr.getvalue())
         <div className="flex items-center gap-2">
           {['c', 'cpp', 'cc', 'cxx'].includes(extension.toLowerCase()) && (
             <span className="text-[10px] text-orange-300 flex items-center gap-1"><Cpu className="w-3 h-3" /> GCC/G++</span>
+          )}
+          {['java'].includes(extension.toLowerCase()) && (
+            <span className="text-[10px] text-red-400 flex items-center gap-1 font-mono">☕ Java 17</span>
+          )}
+          {['rs', 'rust'].includes(extension.toLowerCase()) && (
+            <span className="text-[10px] text-orange-400 flex items-center gap-1 font-mono">🦀 Rustc</span>
+          )}
+          {['go'].includes(extension.toLowerCase()) && (
+            <span className="text-[10px] text-cyan-400 flex items-center gap-1 font-mono">🐹 Go</span>
           )}
           {['py'].includes(extension.toLowerCase()) && (
             <span className="text-[10px] text-yellow-300 flex items-center gap-1 font-mono">

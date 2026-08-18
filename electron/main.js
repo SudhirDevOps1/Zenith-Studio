@@ -299,10 +299,17 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
   const isC = ext === 'c';
   const isPy = ['py', 'python', 'pyw'].includes(ext);
   const isJs = ['js', 'mjs', 'cjs'].includes(ext);
+  const isTs = ['ts', 'tsx', 'mts', 'cts'].includes(ext);
+  const isJava = ext === 'java';
   const isRust = ['rs', 'rust'].includes(ext);
   const isGo = ['go'].includes(ext);
+  const isPhp = ext === 'php';
+  const isRuby = ['rb', 'ruby'].includes(ext);
+  const isKotlin = ['kt', 'kts'].includes(ext);
+  const isCSharp = ['cs'].includes(ext);
+  const isShell = ['sh', 'bash', 'zsh', 'bat', 'cmd', 'ps1'].includes(ext);
 
-  if (!isCpp && !isC && !isPy && !isJs && !isRust && !isGo) {
+  if (!isCpp && !isC && !isPy && !isJs && !isTs && !isJava && !isRust && !isGo && !isPhp && !isRuby && !isKotlin && !isCSharp && !isShell) {
     return { code: 1, stdout: '', stderr: '', error: `Native execution does not support .${ext} files directly.` };
   }
 
@@ -441,6 +448,116 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
         });
       });
 
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 6. Java Execution (Java 11+ single-file source runner)
+    if (isJava) {
+      const runResult = await new Promise((resolve) => {
+        execFile('java', [sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 7. TypeScript Execution (via npx tsx / ts-node or node)
+    if (isTs) {
+      const runResult = await new Promise((resolve) => {
+        execFile('npx', ['tsx', sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 8. PHP Execution
+    if (isPhp) {
+      const runResult = await new Promise((resolve) => {
+        execFile('php', [sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 9. Ruby Execution
+    if (isRuby) {
+      const runResult = await new Promise((resolve) => {
+        execFile('ruby', [sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 10. Kotlin Execution
+    if (isKotlin) {
+      const runResult = await new Promise((resolve) => {
+        execFile('kotlinc', ['-script', sourcePath], { timeout: 30000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 11. C# Execution (via dotnet-script or csc)
+    if (isCSharp) {
+      const runResult = await new Promise((resolve) => {
+        execFile('dotnet-script', [sourcePath], { timeout: 30000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+      return {
+        code: runResult.error ? (runResult.error.code || 1) : 0,
+        stdout: runResult.stdout || '',
+        stderr: runResult.stderr || '',
+        error: runResult.error ? runResult.error.message : '',
+      };
+    }
+
+    // 12. Shell / Batch / PowerShell Execution
+    if (isShell) {
+      const isPs = ext === 'ps1';
+      const isBat = ['bat', 'cmd'].includes(ext);
+      const cmd = isPs ? 'powershell' : (isBat ? 'cmd' : 'bash');
+      const args = isPs ? ['-ExecutionPolicy', 'Bypass', '-File', sourcePath] : (isBat ? ['/c', sourcePath] : [sourcePath]);
+
+      const runResult = await new Promise((resolve) => {
+        execFile(cmd, args, { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
       return {
         code: runResult.error ? (runResult.error.code || 1) : 0,
         stdout: runResult.stdout || '',
