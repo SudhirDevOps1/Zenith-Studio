@@ -362,7 +362,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       for (const pyCmd of pythonCommands) {
         try {
           const runResult = await new Promise((resolve) => {
-            execFile(pyCmd, ['-u', sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+            execFile(pyCmd, ['-u', sourcePath], { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
               resolve({ error, stdout, stderr });
             });
           });
@@ -392,7 +392,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 2. Node.js JavaScript Execution
     if (isJs) {
       const runResult = await new Promise((resolve) => {
-        execFile('node', [sourcePath], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('node', [sourcePath], { timeout: 15000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -407,7 +407,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 3. Go Execution
     if (isGo) {
       const runResult = await new Promise((resolve) => {
-        execFile('go', ['run', sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('go', ['run', sourcePath], { timeout: 25000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -428,7 +428,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
         : [sourcePath, '-O2', '-std=c11', '-o', outputPath];
 
       const compileResult = await new Promise((resolve) => {
-        execFile(compiler, compilerArgs, { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile(compiler, compilerArgs, { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -443,7 +443,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       }
 
       const runResult = await new Promise((resolve) => {
-        execFile(outputPath, [], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile(outputPath, [], { timeout: 15000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -460,7 +460,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     if (isRust) {
       const outputPath = path.join(tempDir, process.platform === 'win32' ? 'program.exe' : 'program');
       const compileResult = await new Promise((resolve) => {
-        execFile('rustc', [sourcePath, '-O', '-o', outputPath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('rustc', [sourcePath, '-O', '-o', outputPath], { timeout: 25000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -475,7 +475,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       }
 
       const runResult = await new Promise((resolve) => {
-        execFile(outputPath, [], { timeout: 15000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile(outputPath, [], { timeout: 15000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -491,7 +491,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 6. Java Execution (Java 11+ single-file source runner)
     if (isJava) {
       const runResult = await new Promise((resolve) => {
-        execFile('java', [sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('java', [sourcePath], { timeout: 25000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -503,25 +503,50 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       };
     }
 
-    // 7. TypeScript Execution (via npx tsx / ts-node or node)
+    // 7. TypeScript Execution (Native stripped JS + npx tsx fallback)
     if (isTs) {
+      // Create stripped JS execution file for instant offline Node execution
+      const jsOutPath = path.join(tempDir, 'output.js');
+      const strippedJs = code
+        .replace(/:\s*(string|number|boolean|any|void|unknown|never|object|symbol|bigint|Array<[^>]+>|[A-Z][a-zA-Z0-9_]*(\[\])?)\s*(=|,|\)|;|\{)/g, '$2')
+        .replace(/interface\s+[A-Za-z0-9_]+\s*\{[^}]*\}/g, '')
+        .replace(/type\s+[A-Za-z0-9_]+\s*=[^;]+;/g, '');
+      await fs.writeFile(jsOutPath, strippedJs, 'utf-8');
+
+      const nodeResult = await new Promise((resolve) => {
+        execFile('node', [jsOutPath], { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      if (!nodeResult.error) {
+        return {
+          code: 0,
+          stdout: nodeResult.stdout || '',
+          stderr: nodeResult.stderr || '',
+          error: '',
+        };
+      }
+
+      // Fallback to tsx / ts-node
+      const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
       const runResult = await new Promise((resolve) => {
-        execFile('npx', ['tsx', sourcePath], { timeout: 25000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile(npxCmd, ['--yes', 'tsx', sourcePath], { timeout: 25000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
       return {
         code: runResult.error ? (runResult.error.code || 1) : 0,
-        stdout: runResult.stdout || '',
-        stderr: runResult.stderr || '',
-        error: runResult.error ? runResult.error.message : '',
+        stdout: runResult.stdout || nodeResult.stdout || '',
+        stderr: runResult.stderr || nodeResult.stderr || '',
+        error: runResult.error ? (runResult.stderr || runResult.error.message) : '',
       };
     }
 
     // 8. PHP Execution
     if (isPhp) {
       const runResult = await new Promise((resolve) => {
-        execFile('php', [sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('php', [sourcePath], { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -536,7 +561,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 9. Ruby Execution
     if (isRuby) {
       const runResult = await new Promise((resolve) => {
-        execFile('ruby', [sourcePath], { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('ruby', [sourcePath], { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -551,7 +576,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 10. Kotlin Execution
     if (isKotlin) {
       const runResult = await new Promise((resolve) => {
-        execFile('kotlinc', ['-script', sourcePath], { timeout: 30000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('kotlinc', ['-script', sourcePath], { timeout: 30000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -566,7 +591,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
     // 11. C# Execution (via dotnet-script or csc)
     if (isCSharp) {
       const runResult = await new Promise((resolve) => {
-        execFile('dotnet-script', [sourcePath], { timeout: 30000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile('dotnet-script', [sourcePath], { timeout: 30000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -586,7 +611,7 @@ ipcMain.handle('code:runNative', async (_, { code, extension, fileName }) => {
       const args = isPs ? ['-ExecutionPolicy', 'Bypass', '-File', sourcePath] : (isBat ? ['/c', sourcePath] : [sourcePath]);
 
       const runResult = await new Promise((resolve) => {
-        execFile(cmd, args, { timeout: 20000, shell: true, env: process.env }, (error, stdout, stderr) => {
+        execFile(cmd, args, { timeout: 20000, env: process.env }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
