@@ -477,8 +477,76 @@ ipcMain.handle('terminal:execCommand', async (_, { command, cwd }) => {
   });
 });
 
-// Helper for native HTTPS GET requests (Zero CORS, auto-redirect up to 5 hops)
-function fetchJsonDirect(url, hops = 0) {
+function runSystemNetBridge(url, method = 'POST', headers = {}, body = null) {
+  return new Promise((resolve) => {
+    try {
+      const bridgeScript = path.join(__dirname, 'netBridge.js');
+      const bridge = spawn('node', [bridgeScript], {
+        windowsHide: true,
+        env: { ...process.env },
+      });
+      let stdout = '';
+      let stderr = '';
+
+      bridge.stdout.on('data', (d) => { stdout += d; });
+      bridge.stderr.on('data', (d) => { stderr += d; });
+
+      bridge.on('error', (err) => {
+        console.warn('[AI Fetch - System Bridge spawn error]:', err.message);
+        resolve({ ok: false, status: 0, error: err.message });
+      });
+
+      bridge.on('close', (code) => {
+        if (!stdout.trim()) {
+          resolve({ ok: false, status: 0, error: stderr || `Bridge exited with code ${code}` });
+          return;
+        }
+        try {
+          const parsed = JSON.parse(stdout);
+          resolve(parsed);
+        } catch (e) {
+          resolve({ ok: false, status: 0, error: stdout });
+        }
+      });
+
+      bridge.stdin.write(JSON.stringify({ url, method, headers, body }));
+      bridge.stdin.end();
+    } catch (e) {
+      resolve({ ok: false, status: 0, error: e.message });
+    }
+  });
+}
+
+// Helper for native HTTPS GET requests (Zero CORS, auto-redirect up to 5 hops, System Bridge supported)
+async function fetchJsonDirect(url, hops = 0) {
+  // Method 1: System Node.js NetBridge (100% bypasses Windows Firewall restriction on electron.exe)
+  try {
+    const bridgeResult = await runSystemNetBridge(url, 'GET', {
+      Accept: 'application/json',
+      'User-Agent': 'Zenith-Studio-IDE/1.0.3 (VSCodium Compatible Open VSX Client)',
+    });
+    if (bridgeResult && bridgeResult.status >= 200 && bridgeResult.status < 300 && bridgeResult.data) {
+      return bridgeResult.data;
+    }
+  } catch (bridgeErr) {
+    console.warn('[Open VSX Bridge warning]:', bridgeErr.message);
+  }
+
+  // Method 2: Global fetch fallback
+  if (typeof globalThis.fetch === 'function') {
+    try {
+      const res = await globalThis.fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Zenith-Studio-IDE/1.0.3 (VSCodium Compatible Open VSX Client)',
+        },
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {}
+  }
+
   return new Promise((resolve, reject) => {
     if (hops > 5) {
       return reject(new Error('Too many redirects'));
@@ -497,6 +565,7 @@ function fetchJsonDirect(url, hops = 0) {
               Accept: 'application/json',
             },
             timeout: 20000,
+            rejectUnauthorized: false,
           },
           (res) => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -668,46 +737,6 @@ function nodeHttpsFetchDirect(url, method = 'POST', headers = {}, bodyStr = null
     } catch (e) {
       console.error('[AI Fetch - Node HTTPS Exception]:', e.message);
       resolve({ ok: false, status: 0, statusText: e.message, data: null, error: e.message });
-    }
-  });
-}
-
-function runSystemNetBridge(url, method = 'POST', headers = {}, body = null) {
-  return new Promise((resolve) => {
-    try {
-      const bridgeScript = path.join(__dirname, 'netBridge.js');
-      const bridge = spawn('node', [bridgeScript], {
-        windowsHide: true,
-        env: { ...process.env },
-      });
-      let stdout = '';
-      let stderr = '';
-
-      bridge.stdout.on('data', (d) => { stdout += d; });
-      bridge.stderr.on('data', (d) => { stderr += d; });
-
-      bridge.on('error', (err) => {
-        console.warn('[AI Fetch - System Bridge spawn error]:', err.message);
-        resolve({ ok: false, status: 0, error: err.message });
-      });
-
-      bridge.on('close', (code) => {
-        if (!stdout.trim()) {
-          resolve({ ok: false, status: 0, error: stderr || `Bridge exited with code ${code}` });
-          return;
-        }
-        try {
-          const parsed = JSON.parse(stdout);
-          resolve(parsed);
-        } catch (e) {
-          resolve({ ok: false, status: 0, error: stdout });
-        }
-      });
-
-      bridge.stdin.write(JSON.stringify({ url, method, headers, body }));
-      bridge.stdin.end();
-    } catch (e) {
-      resolve({ ok: false, status: 0, error: e.message });
     }
   });
 }
