@@ -522,9 +522,23 @@ export async function testAiConnection(settings: Partial<EditorSettings>): Promi
 
       case 'groq': {
         if (!apiKey) throw new Error('Groq API Key is required. Please enter your key.');
-        res = await safeAiFetch('https://api.groq.com/openai/v1/models', 'GET', {
-          Authorization: `Bearer ${apiKey}`,
-        });
+        // Fast test with chat/completions endpoint (identical to production generation)
+        res = await safeAiFetch(
+          'https://api.groq.com/openai/v1/chat/completions',
+          'POST',
+          { Authorization: `Bearer ${apiKey}` },
+          {
+            model: 'llama-3.1-8b-instant',
+            messages: [{ role: 'user', content: 'hi' }],
+            max_tokens: 2,
+          }
+        );
+        if (!res.ok && res.status !== 401 && res.status !== 403) {
+          // Fallback to models list check
+          res = await safeAiFetch('https://api.groq.com/openai/v1/models', 'GET', {
+            Authorization: `Bearer ${apiKey}`,
+          });
+        }
         if (!res.ok) {
           const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
           throw new Error(`Groq Auth Failed (${res.status}): ${msg}. Make sure you selected "Groq" as provider.`);

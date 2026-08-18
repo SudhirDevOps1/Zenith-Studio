@@ -618,6 +618,7 @@ function nodeHttpsFetchDirect(url, method = 'POST', headers = {}, bodyStr = null
           method: (method || 'POST').toUpperCase(),
           headers: reqHeaders,
           timeout: 45000,
+          rejectUnauthorized: false,
         },
         (res) => {
           // Handle 301, 302, 307, 308 HTTP Redirects
