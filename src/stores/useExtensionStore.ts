@@ -267,7 +267,50 @@ export const useExtensionStore = create<ExtensionStoreState>((set, get) => ({
     }
   },
 
-  setSelectedExtension: (ext) => set({ selectedExtension: ext }),
+  setSelectedExtension: async (ext: ExtensionItem | null) => {
+    set({ selectedExtension: ext });
+    if (!ext) return;
+
+    // If it's an Open VSX extension and doesn't have a full README yet, fetch it dynamically
+    if (ext.source === 'open-vsx' && (!ext.readme || ext.readme.length < 200)) {
+      try {
+        let data: any = null;
+        if (typeof window !== 'undefined' && (window as any).electronAPI?.openvsx?.getExtension) {
+          data = await (window as any).electronAPI.openvsx.getExtension({
+            namespace: ext.publisher,
+            name: ext.name,
+          });
+        } else {
+          const res = await fetch(`https://open-vsx.org/api/${encodeURIComponent(ext.publisher)}/${encodeURIComponent(ext.name)}`);
+          if (res.ok) data = await res.json();
+        }
+
+        if (data) {
+          const readmeContent = data.readme || data.description || '';
+          set((state) => {
+            const updatedExt = {
+              ...ext,
+              description: data.description || ext.description,
+              readme: readmeContent || ext.readme,
+              version: data.version || ext.version,
+              tags: data.tags || ext.tags,
+              homepage: data.homepage,
+              repository: data.repository,
+            };
+            return {
+              selectedExtension: updatedExt,
+              extensions: state.extensions.map((e) => (e.id === ext.id ? updatedExt : e)),
+              onlineExtensions: state.onlineExtensions.map((e) => (e.id === ext.id ? updatedExt : e)),
+              popularExtensions: state.popularExtensions.map((e) => (e.id === ext.id ? updatedExt : e)),
+            };
+          });
+        }
+      } catch (err) {
+        console.warn('Could not fetch full extension details:', err);
+      }
+    }
+  },
+
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedCategory: (cat) => set({ selectedCategory: cat }),
   setSearchQuery: (q) => set({ searchQuery: q }),

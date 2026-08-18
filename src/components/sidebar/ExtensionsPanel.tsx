@@ -40,6 +40,37 @@ const QUICK_SEARCH_TAGS = [
   'GitLens',
 ];
 
+const ExtensionIcon: React.FC<{ ext: ExtensionItem }> = ({ ext }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (ext.icon && !hasError) {
+    return (
+      <div className="w-10 h-10 rounded bg-slate-800/60 p-1 border border-slate-700/50 flex items-center justify-center shrink-0">
+        <img
+          src={ext.icon}
+          alt=""
+          onError={() => setHasError(true)}
+          className="w-full h-full object-contain rounded"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        backgroundColor: ext.iconBg || (ext.iconColor ? `${ext.iconColor}20` : '#0284c720'),
+        borderColor: ext.iconColor || '#0284c7',
+      }}
+      className="w-10 h-10 rounded border flex items-center justify-center text-sm font-bold shrink-0 shadow-sm"
+    >
+      <span style={{ color: ext.iconColor || '#38bdf8' }}>
+        {ext.displayName ? ext.displayName.charAt(0).toUpperCase() : 'E'}
+      </span>
+    </div>
+  );
+};
+
 export const ExtensionsPanel: React.FC = () => {
   const {
     extensions,
@@ -349,79 +380,30 @@ export const ExtensionsPanel: React.FC = () => {
             <div
               key={ext.id}
               onClick={() => setSelectedExtension(ext)}
-              className="p-2.5 bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-slate-700 rounded-lg transition cursor-pointer group flex flex-col gap-1.5"
+              className="p-2.5 bg-slate-900/70 hover:bg-slate-800/90 border border-slate-800/90 hover:border-cyan-800/60 rounded-md transition cursor-pointer group flex items-start gap-3"
             >
-              <div className="flex items-start gap-2.5">
-                {/* Icon Box */}
-                <div
-                  style={{
-                    backgroundColor: ext.iconBg || (ext.iconColor ? `${ext.iconColor}20` : '#3b82f620'),
-                    borderColor: ext.iconColor || '#3b82f6',
-                  }}
-                  className="w-8 h-8 rounded-md border flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 shadow-sm overflow-hidden"
-                >
-                  {ext.icon ? (
-                    <img src={ext.icon} alt="" className="w-6 h-6 object-contain rounded" />
-                  ) : (
-                    <span style={{ color: ext.iconColor || '#60a5fa' }}>{ext.displayName.charAt(0)}</span>
-                  )}
-                </div>
+              {/* Icon Box with Error Fallback */}
+              <ExtensionIcon ext={ext} />
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <h3 className="text-xs font-semibold text-white truncate group-hover:text-cyan-300 transition">
-                      {ext.displayName}
+              {/* Details & Metadata */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-1.5">
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-semibold text-white truncate group-hover:text-cyan-300 transition flex items-center gap-1.5">
+                      <span className="truncate">{ext.displayName}</span>
+                      {ext.verified && (
+                        <Shield className="w-3 h-3 text-blue-400 shrink-0" title="Verified Publisher" />
+                      )}
                     </h3>
-                    {ext.verified && (
-                      <span title="Verified Publisher">
-                        <Shield className="w-3 h-3 text-blue-400 shrink-0" />
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                      <span className="text-cyan-400/90 font-medium truncate max-w-[100px]">{ext.publisher}</span>
+                      <span className="text-slate-500 font-mono text-[9px]">v{ext.version}</span>
+                    </div>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-snug mt-0.5">
-                    {ext.description}
-                  </p>
-
-                  <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1.5 flex-wrap">
-                    <span className="text-cyan-400 font-medium truncate max-w-[90px]">{ext.publisher}</span>
-                    <span className="flex items-center gap-0.5">
-                      <Download className="w-2.5 h-2.5" /> {ext.downloads}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-amber-400">
-                      <Star className="w-2.5 h-2.5 fill-amber-400" /> {ext.rating}
-                    </span>
-                    {ext.installed && ext.enabled && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-950/60 text-emerald-400 rounded-full border border-emerald-800/50 font-semibold">
-                        <CheckCircle2 className="w-2.5 h-2.5" /> Active
-                      </span>
-                    )}
-                    {hasRealEffect(ext) && (
-                      <span className="flex items-center gap-0.5 px-1 py-0.5 bg-blue-950/50 text-blue-300 rounded text-[9px] font-mono border border-blue-800/40">
-                        <Zap className="w-2 h-2" /> Real Effect
-                      </span>
-                    )}
-                    {ext.source === 'open-vsx' && (
-                      <span className="px-1 py-0.2 bg-blue-500/20 text-blue-300 rounded text-[9px] font-mono">
-                        Open VSX
-                      </span>
-                    )}
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div
-                className="flex items-center justify-between pt-1 border-t border-slate-800/50 mt-0.5"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="text-[9px] text-slate-500 font-mono">v{ext.version}</span>
-
-                <div className="flex items-center gap-1.5">
-                  {ext.installed ? (
-                    <>
+                  {/* Install / Manage Button */}
+                  <div onClick={(e) => e.stopPropagation()} className="shrink-0 pt-0.5">
+                    {ext.installed ? (
                       <button
                         onClick={() => {
                           toggleExtension(ext.id);
@@ -433,27 +415,50 @@ export const ExtensionsPanel: React.FC = () => {
                         }}
                         className={`px-2 py-0.5 rounded text-[10px] font-medium transition ${
                           ext.enabled
-                            ? 'bg-slate-800 text-emerald-400 hover:bg-slate-700'
+                            ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/60'
                             : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                         }`}
                       >
                         {ext.enabled ? 'Enabled' : 'Disabled'}
                       </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleInstall(ext)}
-                      disabled={installingId === ext.id}
-                      className="px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-[10px] font-semibold transition flex items-center gap-1 shadow-sm"
-                    >
-                      {installingId === ext.id ? (
-                        <>
-                          <Loader2 className="w-2.5 h-2.5 animate-spin" /> Installing...
-                        </>
-                      ) : (
-                        'Install'
-                      )}
-                    </button>
+                    ) : (
+                      <button
+                        onClick={() => handleInstall(ext)}
+                        disabled={installingId === ext.id}
+                        className="px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-[10px] font-semibold transition flex items-center gap-1 shadow-sm"
+                      >
+                        {installingId === ext.id ? (
+                          <>
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" /> Installing...
+                          </>
+                        ) : (
+                          'Install'
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 line-clamp-2 leading-snug mt-1">
+                  {ext.description}
+                </p>
+
+                <div className="flex items-center gap-2.5 text-[10px] text-slate-500 mt-1.5 flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <Download className="w-2.5 h-2.5 text-slate-400" /> {ext.downloads}
+                  </span>
+                  <span className="flex items-center gap-1 text-amber-400">
+                    <Star className="w-2.5 h-2.5 fill-amber-400" /> {ext.rating}
+                  </span>
+                  {hasRealEffect(ext) && (
+                    <span className="px-1 py-0.2 bg-blue-950/60 text-blue-300 rounded text-[9px] font-mono border border-blue-800/40">
+                      Real Effect
+                    </span>
+                  )}
+                  {ext.source === 'open-vsx' && (
+                    <span className="px-1 py-0.2 bg-slate-800 text-slate-400 rounded text-[9px] font-mono">
+                      Open VSX
+                    </span>
                   )}
                 </div>
               </div>

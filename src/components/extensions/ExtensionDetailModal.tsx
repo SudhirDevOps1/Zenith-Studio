@@ -7,6 +7,37 @@ import { useExtensionStore } from '../../stores/useExtensionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { applyExtensionEffect, getExtensionEffectLabel, hasRealEffect } from '../../utils/extensionEffects';
 
+const ExtensionModalIcon: React.FC<{ ext: ExtensionItem }> = ({ ext }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (ext.icon && !hasError) {
+    return (
+      <div className="w-14 h-14 rounded-xl bg-slate-800/80 p-2 border border-slate-700/60 flex items-center justify-center shrink-0 shadow-md">
+        <img
+          src={ext.icon}
+          alt={ext.displayName}
+          onError={() => setHasError(true)}
+          className="w-full h-full object-contain rounded"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        backgroundColor: ext.iconBg || (ext.iconColor ? `${ext.iconColor}20` : '#0284c720'),
+        borderColor: ext.iconColor || '#0284c7',
+      }}
+      className="w-14 h-14 rounded-xl border flex items-center justify-center text-xl font-bold shrink-0 shadow-md"
+    >
+      <span style={{ color: ext.iconColor || '#38bdf8' }}>
+        {ext.displayName ? ext.displayName.charAt(0).toUpperCase() : 'E'}
+      </span>
+    </div>
+  );
+};
+
 export const ExtensionDetailModal: React.FC = () => {
   const { selectedExtension, setSelectedExtension, installExtension, uninstallExtension, toggleExtension } = useExtensionStore();
   const { addToast } = useToastStore();
@@ -19,26 +50,17 @@ export const ExtensionDetailModal: React.FC = () => {
   return (
     <div
       onClick={() => setSelectedExtension(null)}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[85vh] bg-[#181825] border border-slate-700 shadow-2xl rounded-xl flex flex-col overflow-hidden text-slate-200 font-sans animate-fade-in-up"
+        className="w-full max-w-3xl max-h-[88vh] bg-[#181825] border border-slate-700 shadow-2xl rounded-xl flex flex-col overflow-hidden text-slate-200 font-sans animate-fade-in-up"
       >
         {/* Header */}
         <div className="p-5 border-b border-slate-800 bg-[#1e1e2e] flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div
-              style={{ backgroundColor: ext.iconBg || (ext.iconColor ? `${ext.iconColor}20` : '#3b82f620'), borderColor: ext.iconColor || '#3b82f6' }}
-              className="w-14 h-14 rounded-xl border flex items-center justify-center text-xl font-bold shrink-0 shadow-md"
-            >
-              {ext.icon ? (
-                <img src={ext.icon} alt={ext.displayName} className="w-10 h-10 object-contain rounded" />
-              ) : (
-                <span style={{ color: ext.iconColor || '#60a5fa' }}>{ext.displayName.charAt(0)}</span>
-              )}
-            </div>
-            <div className="space-y-1">
+          <div className="flex items-start gap-4">
+            <ExtensionModalIcon ext={ext} />
+            <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-white">{ext.displayName}</h2>
                 <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400">
@@ -204,8 +226,44 @@ export const ExtensionDetailModal: React.FC = () => {
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs text-slate-300 leading-relaxed">
           {activeTab === 'overview' && (
-            <div className="markdown-body space-y-3">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            <div className="space-y-4 max-w-none text-slate-300">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={{
+                  h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-white border-b border-slate-700 pb-2 mb-3 mt-4" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="text-base font-semibold text-cyan-300 border-b border-slate-800 pb-1 mb-2 mt-4" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-sm font-semibold text-slate-100 mb-2 mt-3" {...props} />,
+                  p: ({ node, ...props }) => <p className="text-xs text-slate-300 leading-relaxed mb-3" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc list-inside space-y-1 my-2 text-xs text-slate-300 pl-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside space-y-1 my-2 text-xs text-slate-300 pl-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="text-xs text-slate-300" {...props} />,
+                  a: ({ node, ...props }) => <a className="text-cyan-400 hover:text-cyan-300 underline font-medium" target="_blank" rel="noreferrer" {...props} />,
+                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-cyan-500 bg-slate-900/60 p-2.5 rounded-r my-3 text-xs text-slate-300 italic" {...props} />,
+                  code: ({ node, inline, className, children, ...props }: any) =>
+                    inline ? (
+                      <code className="px-1.5 py-0.5 bg-slate-900 text-cyan-300 rounded font-mono text-[11px] border border-slate-800" {...props}>
+                        {children}
+                      </code>
+                    ) : (
+                      <div className="relative my-3 rounded-lg overflow-hidden border border-slate-800 bg-[#0d1117]">
+                        <pre className="p-3 overflow-x-auto text-xs font-mono text-slate-200">
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        </pre>
+                      </div>
+                    ),
+                  table: ({ node, ...props }) => (
+                    <div className="overflow-x-auto my-3 border border-slate-800 rounded-lg">
+                      <table className="min-w-full divide-y divide-slate-800 text-xs" {...props} />
+                    </div>
+                  ),
+                  th: ({ node, ...props }) => <th className="bg-slate-900 px-3 py-2 text-left font-semibold text-slate-200 border-b border-slate-800" {...props} />,
+                  td: ({ node, ...props }) => <td className="px-3 py-2 text-slate-300 border-b border-slate-800/50" {...props} />,
+                  img: ({ node, ...props }) => <img className="max-w-full h-auto rounded my-2 inline-block" {...props} />,
+                }}
+              >
                 {ext.readme}
               </ReactMarkdown>
             </div>
