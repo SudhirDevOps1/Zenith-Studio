@@ -18,6 +18,7 @@ interface ComposerStoreState {
   selectedFiles: string[]; // List of file paths to include in context
   patches: ComposerFilePatch[];
   logs: string[];
+  textResponse: string | null;
 
   // Actions
   setIsOpen: (open: boolean) => void;
@@ -38,6 +39,7 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
   selectedFiles: [],
   patches: [],
   logs: [],
+  textResponse: null,
 
   setIsOpen: (isOpen) => set({ isOpen }),
   setPrompt: (prompt) => set({ prompt }),
@@ -60,7 +62,7 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
     const { files } = useFileStore.getState();
     const { settings } = useSettingsStore.getState();
 
-    // Bug #6: Validate API key before attempting any AI call
+    // Validate API key before attempting any AI call
     const provider = settings.aiProvider || 'gemini';
     const apiKey = (
       provider === 'gemini'
@@ -71,6 +73,7 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
     if (!apiKey && provider !== 'ollama') {
       set({
         isGenerating: false,
+        textResponse: null,
         logs: [
           '[Composer] ❌ No API Key configured.',
           `[Composer] → Open AI Setup (top bar) and save your ${provider.toUpperCase()} API key first.`,
@@ -79,7 +82,7 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
       return;
     }
 
-    set({ isGenerating: true, logs: ['[Composer] Scanning selected workspace files...'], patches: [] });
+    set({ isGenerating: true, textResponse: null, logs: ['[Composer] Scanning selected workspace files...'], patches: [] });
 
     try {
       // Gather selected files or fallback to first 6 workspace files
@@ -92,18 +95,19 @@ export const useComposerStore = create<ComposerStoreState>((set, get) => ({
         .join('\n\n');
 
       const systemPrompt = `You are Zenith Studio AI Composer (Multi-File Agent). 
-Your task is to plan and execute code modifications across the provided files based on the user's request.
+Your task is to answer the user request and optionally plan and execute code modifications across the provided files.
 
-
-CRITICAL OUTPUT FORMAT:
-For every file that needs changes or creation, output a block strictly formatted as:
+OUTPUT GUIDELINES:
+1. If the user asks for explanations, analysis, or advice (e.g. "explain kro", "what does this code do?"), provide a clear, comprehensive, and helpful markdown explanation.
+2. If code changes or file creations are requested:
+For EVERY file to create or modify, format as:
 
 ### FILE: <file_path>
 \`\`\`<language>
 <complete new file content>
 \`\`\`
 
-Do not leave placeholder comments like "// rest of code remains the same". Always provide the complete updated file content so it can be directly patched.`;
+Always output complete file contents in file blocks so they can be directly patched without placeholder comments.`;
 
       const userQuery = `USER REQUEST:\n${prompt}\n\nWORKSPACE FILES CONTEXT:\n${contextPayload}`;
 
@@ -111,8 +115,7 @@ Do not leave placeholder comments like "// rest of code remains the same". Alway
 
       const responseText = await generateAiContent(userQuery, systemPrompt, settings);
 
-      set((state) => ({ logs: [...state.logs, '[Composer] Parsing multi-file patches...'] }));
-
+      set((state) => ({ logs: [...state.logs, '[Composer] Processing AI response...'] }));
 
       // Parse multi-file blocks
       const patches: ComposerFilePatch[] = [];
@@ -136,21 +139,46 @@ Do not leave placeholder comments like "// rest of code remains the same". Alway
         });
       }
 
+      // If no ### FILE: blocks found, check if there is a single markdown code block and 1 selected file
+      if (patches.length === 0 && targetFiles.length === 1) {
+        const singleBlockRegex = /```(?:[a-zA-Z0-9_-]+)?\r?\n([\s\S]*?)```/;
+        const singleMatch = responseText.match(singleBlockRegex);
+        const lowerPrompt = prompt.toLowerCase();
+        const isCodeEditPrompt = lowerPrompt.includes('change') || lowerPrompt.includes('add') || lowerPrompt.includes('fix') || lowerPrompt.includes('refactor') || lowerPrompt.includes('update') || lowerPrompt.includes('kro') || lowerPrompt.includes('banao');
+        
+        if (singleMatch && isCodeEditPrompt && !lowerPrompt.includes('explain') && !lowerPrompt.includes('samjhao')) {
+          const singleFile = targetFiles[0];
+          patches.push({
+            filePath: singleFile.path || singleFile.name,
+            fileId: singleFile.id,
+            oldContent: singleFile.content || '',
+            newContent: singleMatch[1].trim(),
+            status: 'pending',
+          });
+        }
+      }
+
+      // Clean text response (strip out file blocks if present so it doesn't duplicate)
+      const cleanExplanation = responseText.replace(fileBlockRegex, '').trim();
+
       if (patches.length === 0) {
         set((state) => ({
           isGenerating: false,
-          logs: [...state.logs, '[Composer] AI generated response without standard file blocks.'],
+          textResponse: responseText,
+          logs: [...state.logs, '[Composer] AI response received successfully!'],
         }));
       } else {
         set((state) => ({
           isGenerating: false,
           patches,
-          logs: [...state.logs, `[Composer] Successfully generated ${patches.length} file patch(es)!`],
+          textResponse: cleanExplanation.length > 20 ? cleanExplanation : null,
+          logs: [...state.logs, `[Composer] Generated ${patches.length} file patch(es)!`],
         }));
       }
     } catch (err: any) {
       set((state) => ({
         isGenerating: false,
+        textResponse: null,
         logs: [...state.logs, `[Composer Error] ${err.message || String(err)}`],
       }));
     }
