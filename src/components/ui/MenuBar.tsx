@@ -32,6 +32,8 @@ import {
   ZoomOut,
   Search,
   Camera,
+  PanelLeft,
+  PanelBottom,
 } from 'lucide-react';
 
 import { AiSetupModal } from './AiSetupModal';
@@ -40,7 +42,8 @@ import { ZenithLogo } from './ZenithLogo';
 
 export const MenuBar: React.FC = () => {
   const { createFile, createFolder, saveCurrentFile, saveFileAs, saveAllFiles, resetToDefaultFiles, files, setActivePreviewMode, openSystemFile, openSystemFolder, addFolderToWorkspace, rootFolderPath, activeFileId, updateFileContent } = useFileStore();
-  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab, increaseZoom, decreaseZoom, resetZoom, settings } = useSettingsStore();
+  const { setSettingsOpen, setCommandPaletteOpen, toggleZenMode, setActiveSidebarTab, increaseZoom, decreaseZoom, resetZoom, settings, sidebarOpen, toggleSidebar } = useSettingsStore();
+  const { isOpen: isTerminalOpen, toggleOpen: toggleTerminal } = useTerminalStore();
   const { toggleProblemsOpen } = useDiagnosticsStore();
   const { openDialog } = useDialogStore();
   const { checkForUpdates, hasUpdate } = useUpdateStore();
@@ -635,32 +638,60 @@ export const MenuBar: React.FC = () => {
         )}
       </button>
 
-      {/* Right Native Window Actions for Electron Desktop */}
-      {isDesktop && (
-        <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          <button
-            onClick={() => (window as any).electronAPI?.minimizeWindow?.()}
-            className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
-            title="Minimize"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => (window as any).electronAPI?.maximizeWindow?.()}
-            className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
-            title="Maximize / Restore"
-          >
-            <Square className="w-3 h-3" />
-          </button>
-          <button
-            onClick={() => (window as any).electronAPI?.closeWindow?.()}
-            className="p-1.5 hover:bg-red-600/90 rounded-lg text-slate-400 hover:text-white transition"
-            title="Close"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      {/* Right Controls: VS Code Layout Toggles & Native Window Actions */}
+      <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
+        {/* Toggle Primary Sidebar (VS Code Style) */}
+        <button
+          onClick={toggleSidebar}
+          className={`p-1.5 rounded-lg text-xs transition flex items-center justify-center ${
+            sidebarOpen
+              ? 'text-cyan-300 bg-cyan-950/40 border border-cyan-500/30'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+          }`}
+          title={sidebarOpen ? "Hide Primary Side Bar (Ctrl+B)" : "Show Primary Side Bar (Ctrl+B)"}
+        >
+          <PanelLeft className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Toggle Integrated Terminal (VS Code Style) */}
+        <button
+          onClick={toggleTerminal}
+          className={`p-1.5 rounded-lg text-xs transition flex items-center justify-center ${
+            isTerminalOpen
+              ? 'text-cyan-300 bg-cyan-950/40 border border-cyan-500/30'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+          }`}
+          title="Toggle Terminal Panel (Ctrl+`)"
+        >
+          <PanelBottom className="w-3.5 h-3.5" />
+        </button>
+
+        {isDesktop && (
+          <div className="flex items-center gap-0.5 ml-1 pl-1.5 border-l border-slate-800">
+            <button
+              onClick={() => (window as any).electronAPI?.minimizeWindow?.()}
+              className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
+              title="Minimize"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => (window as any).electronAPI?.maximizeWindow?.()}
+              className="p-1.5 hover:bg-slate-800/90 rounded-lg text-slate-400 hover:text-white transition"
+              title="Maximize / Restore"
+            >
+              <Square className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => (window as any).electronAPI?.closeWindow?.()}
+              className="p-1.5 hover:bg-red-600/90 rounded-lg text-slate-400 hover:text-white transition"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* AI Setup Configuration Modal */}
       <AiSetupModal isOpen={showAiSetup} onClose={() => setShowAiSetup(false)} />

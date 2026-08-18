@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useFileStore } from '../../stores/useFileStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useDialogStore } from '../../stores/useDialogStore';
 import { ContextMenuTarget } from '../../types/fileSystem';
 import { FileIcon } from './FileIcon';
@@ -21,6 +22,7 @@ import {
   FolderTree,
   FileArchive,
   ExternalLink,
+  PanelLeftClose,
 } from 'lucide-react';
 
 export const FileTree: React.FC = () => {
@@ -327,6 +329,13 @@ export const FileTree: React.FC = () => {
             title="Upload Files / ZIP"
           >
             <UploadCloud className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => useSettingsStore.getState().setSidebarOpen(false)}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition ml-1 border-l border-slate-700/50 pl-1.5"
+            title="Hide Primary Side Bar (Ctrl+B)"
+          >
+            <PanelLeftClose className="w-3.5 h-3.5" />
           </button>
           <input
             ref={fileInputRef}

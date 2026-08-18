@@ -51,7 +51,7 @@ import { useTerminalStore } from './stores/useTerminalStore';
 
 import { applyAccentToDOM } from './utils/accentThemes';
 import { formatCode } from './utils/codeFormatter';
-import { X, PanelRightClose, PanelLeftClose } from 'lucide-react';
+import { X } from 'lucide-react';
 import { ZenithLogo } from './components/ui/ZenithLogo';
 
 
@@ -81,6 +81,9 @@ export default function App() {
   const {
     activeSidebarTab,
     setActiveSidebarTab,
+    sidebarOpen,
+    setSidebarOpen,
+    toggleSidebar,
     isZenMode,
     toggleZenMode,
     setCommandPaletteOpen,
@@ -102,7 +105,6 @@ export default function App() {
   const [editorSplitPct, setEditorSplitPct] = useState(50);
   const [scrollPercentage, setScrollPercentage] = useState<number>(0);
   const [showFindReplace, setShowFindReplace] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSnapshot, setShowSnapshot] = useState(false);
 
   const [selectedSnapshotCode, setSelectedSnapshotCode] = useState<string | null>(null);
@@ -230,7 +232,7 @@ export default function App() {
         useFileStore.getState().createFile(`Untitled-${untitledNum}.txt`, null, '');
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
         e.preventDefault();
-        setSidebarOpen(prev => !prev);
+        toggleSidebar();
       } else if ((e.ctrlKey || e.metaKey) && e.key === ',') {
         e.preventDefault();
         setSettingsOpen(true);
@@ -538,29 +540,6 @@ export default function App() {
               onClose={() => setShowFindReplace(false)}
             />
           )}
-
-          {/* Sidebar Toggle Buttons */}
-          {!sidebarOpen && !isZenMode && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="absolute top-2 left-2 z-30 p-1.5 bg-[#1e1e2e] border border-slate-700 rounded shadow-lg text-slate-400 hover:text-white hover:bg-slate-700 transition"
-              title="Open Explorer (Ctrl+Shift+E)"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </button>
-          )}
-
-          {sidebarOpen && !isZenMode && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="absolute top-2 left-14 z-30 p-1.5 bg-[#1e1e2e] border border-slate-700 rounded shadow-lg text-slate-400 hover:text-white hover:bg-slate-700 transition"
-              title="Close Sidebar"
-            >
-              <PanelRightClose className="w-4 h-4" />
-            </button>
-          )}
-
-
 
           {/* Zen Mode Exit Button */}
           {isZenMode && (

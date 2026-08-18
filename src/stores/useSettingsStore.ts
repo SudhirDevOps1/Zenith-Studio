@@ -12,6 +12,7 @@ interface SettingsState {
   isCommandPaletteOpen: boolean;
   isShortcutsModalOpen: boolean;
   isZenMode: boolean;
+  sidebarOpen: boolean;
   activeSidebarTab: SidebarTab;
   isAiSetupOpen: boolean; // Bug #19: Global AI Setup modal state
 
@@ -22,6 +23,8 @@ interface SettingsState {
   setCommandPaletteOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
   setAiSetupOpen: (open: boolean) => void; // Bug #19
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
   toggleZenMode: () => void;
   setActiveSidebarTab: (tab: SidebarTab) => void;
   resetSettings: () => void;
@@ -44,6 +47,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   isCommandPaletteOpen: false,
   isShortcutsModalOpen: false,
   isZenMode: false,
+  sidebarOpen: true,
   activeSidebarTab: 'explorer',
   isAiSetupOpen: false, // Bug #19
 
@@ -78,6 +82,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
   setAiSetupOpen: (open) => set({ isAiSetupOpen: open }), // Bug #19
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
   setActiveSidebarTab: (tab) => set({ activeSidebarTab: tab }),
 

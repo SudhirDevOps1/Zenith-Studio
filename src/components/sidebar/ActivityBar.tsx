@@ -34,6 +34,8 @@ export const ActivityBar: React.FC = () => {
   const {
     activeSidebarTab,
     setActiveSidebarTab,
+    sidebarOpen,
+    setSidebarOpen,
     setSettingsOpen,
     setCommandPaletteOpen,
     setShortcutsModalOpen,
@@ -41,6 +43,15 @@ export const ActivityBar: React.FC = () => {
     toggleZenMode,
     settings,
   } = useSettingsStore();
+
+  const handleTabClick = (tab: any) => {
+    if (activeSidebarTab === tab && sidebarOpen) {
+      setSidebarOpen(false);
+    } else {
+      setActiveSidebarTab(tab);
+      setSidebarOpen(true);
+    }
+  };
 
   const { files } = useFileStore();
   const currentAccent = ACCENT_PALETTE[settings.accentColor] || ACCENT_PALETTE.blue;
@@ -69,28 +80,25 @@ export const ActivityBar: React.FC = () => {
       <div className="flex flex-col items-center gap-2 overflow-y-auto pr-0.5 min-h-0 w-full px-1.5" style={{ scrollbarWidth: 'thin' }}>
         {/* Logo Icon */}
         <div
-          onClick={() => setActiveSidebarTab('explorer')}
+          onClick={() => handleTabClick('explorer')}
           className="cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 mb-2.5"
           title="Zenith Studio Home"
         >
           <ZenithLogo size={34} className="rounded-xl border border-cyan-500/40 p-0.5 bg-slate-900 shadow-lg" />
         </div>
 
-
-
-
         {/* Explorer */}
         <button
-          onClick={() => setActiveSidebarTab('explorer')}
-          style={activeSidebarTab === 'explorer' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('explorer')}
+          style={activeSidebarTab === 'explorer' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'explorer'
+            activeSidebarTab === 'explorer' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
-          title="File Explorer (Ctrl+Shift+E)"
+          title="File Explorer (Ctrl+Shift+E / Ctrl+B)"
         >
-          {activeSidebarTab === 'explorer' && (
+          {activeSidebarTab === 'explorer' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Files style={{ width: "18px", height: "18px" }} />
@@ -98,16 +106,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* Search */}
         <button
-          onClick={() => setActiveSidebarTab('search')}
-          style={activeSidebarTab === 'search' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('search')}
+          style={activeSidebarTab === 'search' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'search'
+            activeSidebarTab === 'search' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Search in Workspace (Ctrl+Shift+F)"
         >
-          {activeSidebarTab === 'search' && (
+          {activeSidebarTab === 'search' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Search style={{ width: "18px", height: "18px" }} />
@@ -115,16 +123,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* Git Control */}
         <button
-          onClick={() => setActiveSidebarTab('git')}
-          style={activeSidebarTab === 'git' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('git')}
+          style={activeSidebarTab === 'git' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'git'
+            activeSidebarTab === 'git' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
-          title="Source Control / Git"
+          title="Source Control / Git (Ctrl+Shift+G)"
         >
-          {activeSidebarTab === 'git' && (
+          {activeSidebarTab === 'git' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <GitBranch style={{ width: "18px", height: "18px" }} />
@@ -135,16 +143,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* Snippets Library */}
         <button
-          onClick={() => setActiveSidebarTab('snippets')}
-          style={activeSidebarTab === 'snippets' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('snippets')}
+          style={activeSidebarTab === 'snippets' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'snippets'
+            activeSidebarTab === 'snippets' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Snippet Library"
         >
-          {activeSidebarTab === 'snippets' && (
+          {activeSidebarTab === 'snippets' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Sparkles style={{ width: "18px", height: "18px" }} />
@@ -152,17 +160,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* AI Assistant */}
         <button
-          onClick={() => setActiveSidebarTab('ai')}
-          style={activeSidebarTab === 'ai' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('ai')}
+          style={activeSidebarTab === 'ai' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'ai'
+            activeSidebarTab === 'ai' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Zenith Studio AI Assistant"
-
         >
-          {activeSidebarTab === 'ai' && (
+          {activeSidebarTab === 'ai' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Bot style={{ width: "18px", height: "18px" }} />
@@ -171,16 +178,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* Run & Debug */}
         <button
-          onClick={() => setActiveSidebarTab('debug')}
-          style={activeSidebarTab === 'debug' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('debug')}
+          style={activeSidebarTab === 'debug' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'debug'
+            activeSidebarTab === 'debug' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Run & Debug (Ctrl+Shift+D)"
         >
-          {activeSidebarTab === 'debug' && (
+          {activeSidebarTab === 'debug' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Bug style={{ width: "18px", height: "18px" }} />
@@ -188,16 +195,16 @@ export const ActivityBar: React.FC = () => {
 
         {/* Extensions Marketplace */}
         <button
-          onClick={() => setActiveSidebarTab('extensions')}
-          style={activeSidebarTab === 'extensions' ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
+          onClick={() => handleTabClick('extensions')}
+          style={activeSidebarTab === 'extensions' && sidebarOpen ? { backgroundColor: currentAccent.bgSubtle, borderColor: currentAccent.borderSubtle, color: currentAccent.primary } : {}}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all relative border ${
-            activeSidebarTab === 'extensions'
+            activeSidebarTab === 'extensions' && sidebarOpen
               ? 'shadow-inner'
               : 'border-transparent hover:text-slate-100 hover:bg-slate-800/50 text-slate-400'
           }`}
           title="Extensions Marketplace (Ctrl+Shift+X)"
         >
-          {activeSidebarTab === 'extensions' && (
+          {activeSidebarTab === 'extensions' && sidebarOpen && (
             <span style={{ backgroundColor: currentAccent.primary, boxShadow: `0 0 8px ${currentAccent.glow}` }} className="absolute -left-1.5 top-2 bottom-2 w-1 rounded-r-full shadow-sm" />
           )}
           <Blocks style={{ width: "18px", height: "18px" }} />
