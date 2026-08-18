@@ -602,20 +602,43 @@ export async function testAiConnection(settings: Partial<EditorSettings>): Promi
       }
 
       case 'custom': {
-        const ep = settings.aiCustomEndpoint || '';
-        if (!ep) throw new Error('Custom API Endpoint URL is required.');
-        let baseUrl = ep.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, '');
-        if (!baseUrl.endsWith('/v1') && ep.includes('/v1')) {
-          baseUrl = baseUrl.split('/v1')[0] + '/v1';
-        }
+        const ep = settings.aiCustomEndpoint?.trim() || '';
+        if (!ep) throw new Error('Custom API Endpoint URL is required. (e.g. https://api.together.xyz/v1/chat/completions)');
+        const customModel = settings.aiCustomModelName?.trim() || settings.aiModel?.trim() || 'gpt-4o';
+        const headers: Record<string, string> = {};
+        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+        // 1. First attempt: Direct chat/completions POST (1-token test prompt)
         res = await safeAiFetch(
-          `${baseUrl}/models`,
-          'GET',
-          apiKey ? { Authorization: `Bearer ${apiKey}` } : {}
+          ep,
+          'POST',
+          headers,
+          {
+            model: customModel,
+            messages: [{ role: 'user', content: 'hi' }],
+            max_tokens: 2,
+          }
         );
+
+        // 2. Second attempt if not 200 and not explicit auth error: try models list
+        if (!res.ok && res.status !== 401 && res.status !== 403) {
+          let baseUrl = ep.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, '');
+          if (!baseUrl.endsWith('/v1') && ep.includes('/v1')) {
+            baseUrl = baseUrl.split('/v1')[0] + '/v1';
+          }
+          const modelsRes = await safeAiFetch(
+            `${baseUrl}/models`,
+            'GET',
+            headers
+          );
+          if (modelsRes.ok) {
+            res = modelsRes;
+          }
+        }
+
         if (!res.ok) {
-          const msg = res.data?.error?.message || res.error || `HTTP ${res.status}`;
-          throw new Error(`Custom Provider Failed (${res.status}): ${msg}`);
+          const msg = res.data?.error?.message || res.data?.message || res.error || `HTTP ${res.status}`;
+          throw new Error(`Custom Provider Auth/Endpoint Error (${res.status}): ${msg}`);
         }
         break;
       }

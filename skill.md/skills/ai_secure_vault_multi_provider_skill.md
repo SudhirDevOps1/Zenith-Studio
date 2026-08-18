@@ -83,3 +83,14 @@ Never validate keys using model list endpoints that have default fallback catch 
 | DeepSeek | `https://api.deepseek.com/models` (Bearer Token) |
 | OpenRouter | `https://openrouter.ai/api/v1/models` (Bearer Token) |
 | Ollama | `${endpoint}/api/tags` |
+| Custom (Universal) | `${endpoint}` (Direct 1-token POST test + `${baseUrl}/models` fallback) |
+
+---
+
+## 🚀 4. Universal Custom Provider Architecture (100% Extensible)
+
+Zenith Studio supports **ANY OpenAI-compatible provider** without restriction:
+- **Cloud LLM APIs**: Together AI, Cerebras, DeepInfra, Mistral AI, SambaNova, Groq, OpenRouter, Perplexity, Hyperbolic.
+- **Local Self-Hosted LLMs**: LM Studio, Ollama, vLLM, LocalAI, FastChat, Text Generation WebUI, or custom Python/FastAPI endpoints.
+- **Dual-Phase Ping & Verification**: Sends an ultra-fast 1-token test prompt directly to the user's custom endpoint (`/v1/chat/completions`) with automatic fallback to `${baseUrl}/models` for 100% connection reliability.
+- **1-Click Quick Presets**: Built-in instant preset configuration chips in the AI Setup Configuration modal.

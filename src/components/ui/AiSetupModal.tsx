@@ -376,12 +376,48 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
           </div>
 
 
-          {/* 4. CUSTOM PROVIDER SETTINGS BOX (Matches screenshot exactly) */}
+          {/* 4. CUSTOM PROVIDER SETTINGS BOX */}
           {provider === 'custom' && (
-            <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/15 space-y-3 animate-fade-in-up">
-              <div className="flex items-center gap-2 text-purple-300 font-bold text-xs">
-                <Cpu className="w-4 h-4 text-purple-400" />
-                <span>Custom Provider Settings</span>
+            <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/15 space-y-3.5 animate-fade-in-up">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-purple-300 font-bold text-xs">
+                  <Cpu className="w-4 h-4 text-purple-400" />
+                  <span>Universal Custom Provider Settings</span>
+                </div>
+                <span className="text-[10px] text-purple-400/80 font-mono">OpenAI-Compatible</span>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Quick Presets
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { name: 'Together AI', ep: 'https://api.together.xyz/v1/chat/completions', m: 'meta-llama/Llama-3-70b-chat-hf' },
+                    { name: 'Cerebras', ep: 'https://api.cerebras.ai/v1/chat/completions', m: 'llama3.1-70b' },
+                    { name: 'LM Studio (Local)', ep: 'http://localhost:1234/v1/chat/completions', m: 'local-model' },
+                    { name: 'Ollama (Local)', ep: 'http://localhost:11434/v1/chat/completions', m: 'llama3.3' },
+                    { name: 'vLLM (Local)', ep: 'http://localhost:8000/v1/chat/completions', m: 'default' },
+                    { name: 'DeepInfra', ep: 'https://api.deepinfra.com/v1/openai/chat/completions', m: 'meta-llama/Meta-Llama-3.1-70B-Instruct' },
+                    { name: 'Mistral AI', ep: 'https://api.mistral.ai/v1/chat/completions', m: 'mistral-large-latest' },
+                    { name: 'SambaNova', ep: 'https://api.sambanova.ai/v1/chat/completions', m: 'Meta-Llama-3.1-70B-Instruct' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => {
+                        setCustomProviderName(preset.name);
+                        setCustomEndpoint(preset.ep);
+                        setCustomModelName(preset.m);
+                        setModel(preset.m);
+                      }}
+                      className="px-2.5 py-1 text-[10px] rounded-lg border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/60 hover:text-white text-purple-300 transition cursor-pointer font-mono"
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Provider Name */}
@@ -393,7 +429,7 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
                   type="text"
                   value={customProviderName}
                   onChange={(e) => setCustomProviderName(e.target.value)}
-                  placeholder="e.g., My Custom API, Claude Instance..."
+                  placeholder="e.g., Together AI, Cerebras, LM Studio, vLLM..."
                   className="w-full bg-[#11121d] border border-purple-900/60 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-purple-400 font-mono transition"
                 />
               </div>
@@ -401,13 +437,13 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
               {/* API Endpoint URL */}
               <div className="space-y-1">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  API Endpoint URL
+                  API Endpoint URL (chat/completions or root)
                 </label>
                 <input
                   type="text"
                   value={customEndpoint}
                   onChange={(e) => setCustomEndpoint(e.target.value)}
-                  placeholder="https://api.example.com/v1/chat/completions"
+                  placeholder="https://api.together.xyz/v1/chat/completions"
                   className="w-full bg-[#11121d] border border-purple-900/60 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-purple-400 font-mono transition"
                 />
               </div>
@@ -415,13 +451,16 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
               {/* Custom Model Name */}
               <div className="space-y-1">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Model Name
+                  Model Identifier
                 </label>
                 <input
                   type="text"
                   value={customModelName}
-                  onChange={(e) => setCustomModelName(e.target.value)}
-                  placeholder="e.g., gpt-4, claude-3-sonnet, llama2..."
+                  onChange={(e) => {
+                    setCustomModelName(e.target.value);
+                    setModel(e.target.value);
+                  }}
+                  placeholder="e.g., meta-llama/Llama-3-70b-chat-hf, llama3.1-70b, deepseek-r1..."
                   className="w-full bg-[#11121d] border border-purple-900/60 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-purple-400 font-mono transition"
                 />
               </div>
@@ -430,7 +469,7 @@ export const AiSetupModal: React.FC<AiSetupModalProps> = ({ isOpen, onClose }) =
               <div className="p-2.5 bg-black/30 rounded-lg border border-purple-900/40 text-[11px] text-purple-200/90 leading-relaxed flex items-start gap-2">
                 <span className="text-amber-400 mt-0.5">💡</span>
                 <span>
-                  Custom provider must support OpenAI-compatible API format. Ensure endpoint accepts POST requests with <code className="font-mono text-cyan-300">model</code>, <code className="font-mono text-cyan-300">messages</code>, and <code className="font-mono text-cyan-300">temperature</code> fields.
+                  Connect to <strong>ANY</strong> OpenAI-compatible LLM server (vLLM, LM Studio, Ollama, Together, Cerebras, DeepInfra, Mistral, FastChat, local Python backends, etc.).
                 </span>
               </div>
             </div>
